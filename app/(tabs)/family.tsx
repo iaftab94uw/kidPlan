@@ -40,6 +40,7 @@ export default function Family() {
   const [showAddScheduleModal, setShowAddScheduleModal] = useState(false);
   const [showParentDropdown, setShowParentDropdown] = useState(false);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  const [showDateRangePicker, setShowDateRangePicker] = useState(false);
   const [scheduleFilter, setScheduleFilter] = useState('all'); // 'all', 'primary', 'secondary'
   const [coParents, setCoParents] = useState([
     {
