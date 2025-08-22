@@ -15,17 +15,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
-import { 
-  Filter,
-  Plus,
-  Grid3X3,
-  List,
-  Camera,
-  FolderPlus,
-  X,
-  Check,
-  Search
-} from 'lucide-react-native';
+import { Filter, Plus, Grid3x3 as Grid3X3, List, Camera, FolderPlus, X, Check, Search } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
 
