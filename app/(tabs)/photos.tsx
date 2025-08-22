@@ -19,8 +19,6 @@ import {
   Camera, 
   Grid2x2 as Grid, 
   List, 
-  Heart, 
-  Share, 
   Filter,
   X,
   Image as ImageIcon,
@@ -69,6 +67,10 @@ export default function Photos() {
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
   const [showMemberGallery, setShowMemberGallery] = useState(false);
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [activeFilter, setActiveFilter] = useState('all'); // 'all', 'recent', 'album', 'member'
+  const [selectedFilterMember, setSelectedFilterMember] = useState<string>('');
+  const [selectedFilterAlbum, setSelectedFilterAlbum] = useState<number | null>(null);
 
   const [familyMembers] = useState<FamilyMember[]>([
     {
@@ -183,6 +185,39 @@ export default function Photos() {
     albumId: null as number | null
   });
 
+  const getFilteredPhotos = () => {
+    switch (activeFilter) {
+      case 'recent':
+        return photos.filter(photo => photo.date === 'Today' || photo.date === 'Yesterday');
+      case 'member':
+        return selectedFilterMember ? photos.filter(photo => photo.taggedMember === selectedFilterMember) : photos;
+      case 'album':
+        return selectedFilterAlbum ? photos.filter(photo => photo.albumId === selectedFilterAlbum) : photos;
+      default:
+        return photos;
+    }
+  };
+
+  const getFilterDisplayText = () => {
+    switch (activeFilter) {
+      case 'recent':
+        return 'Recent Photos';
+      case 'member':
+        return selectedFilterMember ? `${selectedFilterMember}'s Photos` : 'All Photos';
+      case 'album':
+        const album = albums.find(a => a.id === selectedFilterAlbum);
+        return album ? `${album.name} Album` : 'All Photos';
+      default:
+        return 'All Photos';
+    }
+  };
+
+  const applyFilter = (filterType: string, member?: string, albumId?: number) => {
+    setActiveFilter(filterType);
+    if (member) setSelectedFilterMember(member);
+    if (albumId) setSelectedFilterAlbum(albumId);
+    setShowFilterModal(false);
+  };
   const handleSelectPhoto = async () => {
     try {
       Alert.alert(
@@ -323,9 +358,6 @@ export default function Photos() {
 
   const renderPhotoItem = ({ item }: { item: Photo }) => {
     if (viewMode === 'grid') {
-      return (
-        <TouchableOpacity style={styles.gridPhotoItem}>
-          <Image source={{ uri: item.url }} style={styles.gridPhoto} />
           <TouchableOpacity style={styles.likeButton}>
             <Heart size={16} color="#FFFFFF" />
           </TouchableOpacity>
@@ -337,14 +369,6 @@ export default function Photos() {
       <TouchableOpacity style={styles.listPhotoItem}>
         <Image source={{ uri: item.url }} style={styles.listPhoto} />
         <View style={styles.listPhotoInfo}>
-          <Text style={styles.listPhotoCaption}>{item.caption}</Text>
-          <Text style={styles.listPhotoDetails}>Tagged: {item.taggedMember} • {item.date}</Text>
-        </View>
-        <View style={styles.listPhotoActions}>
-          <TouchableOpacity style={styles.actionButton}>
-            <Heart size={20} color="#6B7280" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton}>
             <Share size={20} color="#6B7280" />
           </TouchableOpacity>
         </View>
@@ -372,20 +396,30 @@ export default function Photos() {
                 <Grid size={20} color="#ffffff" />
               )}
             </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.addButton}
-              onPress={() => setShowUploadPhotoModal(true)}
-            >
-              <Plus size={20} color="#FFFFFF" />
-            </TouchableOpacity>
           </View>
         </View>
 
+        {/* Active Filter Display */}
+        {activeFilter !== 'all' && (
+          <View style={styles.activeFilterContainer}>
+            <Text style={styles.activeFilterText}>Showing: {getFilterDisplayText()}</Text>
+            <TouchableOpacity 
+              style={styles.clearFilterButton}
+              onPress={() => {
+                setActiveFilter('all');
+                setSelectedFilterMember('');
+                setSelectedFilterAlbum(null);
+              }}
+            >
+              <Text style={styles.clearFilterText}>Clear Filter</Text>
+            </TouchableOpacity>
+          </View>
+        )}
         {/* Quick Stats */}
         <View style={styles.statsCard}>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{photos.length}</Text>
-            <Text style={styles.statLabel}>Total Photos</Text>
+            <Text style={styles.statNumber}>{getFilteredPhotos().length}</Text>
+            <Text style={styles.statLabel}>{activeFilter === 'all' ? 'Total Photos' : 'Filtered'}</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
@@ -418,12 +452,6 @@ export default function Photos() {
               <Plus size={24} color="#0e3c67" />
             </View>
             <Text style={styles.quickActionText}>Create Album</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.quickAction}>
-            <View style={[styles.quickActionIcon, { backgroundColor: '#E6F3FF' }]}>
-              <Share size={24} color="#0e3c67" />
-            </View>
-            <Text style={styles.quickActionText}>Share All</Text>
           </TouchableOpacity>
         </View>
 
@@ -486,9 +514,9 @@ export default function Photos() {
 
         {/* Recent Photos */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Recent Photos</Text>
+          <Text style={styles.sectionTitle}>{getFilterDisplayText()}</Text>
           <FlatList
-            data={photos.slice(0, 9)}
+            data={getFilteredPhotos().slice(0, 9)}
             renderItem={renderPhotoItem}
             numColumns={viewMode === 'grid' ? 3 : 1}
             key={viewMode}
@@ -497,6 +525,131 @@ export default function Photos() {
           />
         </View>
 
+        {/* Filter Modal */}
+        <Modal
+          visible={showFilterModal}
+          animationType="slide"
+          presentationStyle="formSheet"
+        >
+          <SafeAreaView style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <View style={styles.modalHeaderContent}>
+                <TouchableOpacity 
+                  onPress={() => setShowFilterModal(false)}
+                  style={styles.closeButton}
+                >
+                  <X size={20} color="#6B7280" />
+                </TouchableOpacity>
+                <View style={styles.modalTitleContainer}>
+                  <Text style={styles.modalTitle}>Filter Photos</Text>
+                  <Text style={styles.modalSubtitle}>Choose how to view your photos</Text>
+                </View>
+                <TouchableOpacity 
+                  style={styles.saveButton}
+                  onPress={() => setShowFilterModal(false)}
+                >
+                  <Text style={styles.saveButtonText}>Done</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.modalHeaderDivider} />
+            </View>
+
+            <ScrollView style={styles.modalContent}>
+              {/* Filter Options */}
+              <View style={styles.filterSection}>
+                <Text style={styles.filterSectionTitle}>Filter Options</Text>
+                
+                <TouchableOpacity
+                  style={[
+                    styles.filterOption,
+                    activeFilter === 'all' && styles.filterOptionSelected
+                  ]}
+                  onPress={() => applyFilter('all')}
+                >
+                  <Text style={[
+                    styles.filterOptionText,
+                    activeFilter === 'all' && styles.filterOptionTextSelected
+                  ]}>All Photos</Text>
+                  {activeFilter === 'all' && <Check size={20} color="#FFFFFF" />}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.filterOption,
+                    activeFilter === 'recent' && styles.filterOptionSelected
+                  ]}
+                  onPress={() => applyFilter('recent')}
+                >
+                  <Text style={[
+                    styles.filterOptionText,
+                    activeFilter === 'recent' && styles.filterOptionTextSelected
+                  ]}>Recent Photos</Text>
+                  {activeFilter === 'recent' && <Check size={20} color="#FFFFFF" />}
+                </TouchableOpacity>
+              </View>
+
+              {/* Filter by Family Member */}
+              <View style={styles.filterSection}>
+                <Text style={styles.filterSectionTitle}>Filter by Family Member</Text>
+                {familyMembers.map((member) => (
+                  <TouchableOpacity
+                    key={member.id}
+                    style={[
+                      styles.filterOption,
+                      activeFilter === 'member' && selectedFilterMember === member.name && styles.filterOptionSelected
+                    ]}
+                    onPress={() => applyFilter('member', member.name)}
+                  >
+                    <Image source={{ uri: member.avatar }} style={styles.filterMemberAvatar} />
+                    <View style={styles.filterMemberInfo}>
+                      <Text style={[
+                        styles.filterOptionText,
+                        activeFilter === 'member' && selectedFilterMember === member.name && styles.filterOptionTextSelected
+                      ]}>{member.name}</Text>
+                      <Text style={[
+                        styles.filterMemberRole,
+                        activeFilter === 'member' && selectedFilterMember === member.name && styles.filterMemberRoleSelected
+                      ]}>{member.role}</Text>
+                    </View>
+                    {activeFilter === 'member' && selectedFilterMember === member.name && (
+                      <Check size={20} color="#FFFFFF" />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Filter by Album */}
+              <View style={styles.filterSection}>
+                <Text style={styles.filterSectionTitle}>Filter by Album</Text>
+                {albums.map((album) => (
+                  <TouchableOpacity
+                    key={album.id}
+                    style={[
+                      styles.filterOption,
+                      activeFilter === 'album' && selectedFilterAlbum === album.id && styles.filterOptionSelected
+                    ]}
+                    onPress={() => applyFilter('album', undefined, album.id)}
+                  >
+                    <Image source={{ uri: album.coverPhoto }} style={styles.filterAlbumCover} />
+                    <View style={styles.filterAlbumInfo}>
+                      <Text style={[
+                        styles.filterOptionText,
+                        activeFilter === 'album' && selectedFilterAlbum === album.id && styles.filterOptionTextSelected
+                      ]}>{album.name}</Text>
+                      <Text style={[
+                        styles.filterAlbumCount,
+                        activeFilter === 'album' && selectedFilterAlbum === album.id && styles.filterAlbumCountSelected
+                      ]}>{album.photoCount} photos</Text>
+                    </View>
+                    {activeFilter === 'album' && selectedFilterAlbum === album.id && (
+                      <Check size={20} color="#FFFFFF" />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
+          </SafeAreaView>
+        </Modal>
         {/* Create Album Modal */}
         <Modal
           visible={showCreateAlbumModal}
@@ -758,9 +911,6 @@ export default function Photos() {
                 <Text style={styles.albumDetailTitle}>{selectedAlbum?.name}</Text>
                 <Text style={styles.albumDetailCount}>{selectedAlbum?.photoCount} photos</Text>
               </View>
-              <TouchableOpacity style={styles.albumActionButton}>
-                <Share size={20} color="#0e3c67" />
-              </TouchableOpacity>
             </View>
             
             {selectedAlbum && (
@@ -795,9 +945,6 @@ export default function Photos() {
                   {selectedMember && getPhotosForMember(selectedMember.name).length} photos
                 </Text>
               </View>
-              <TouchableOpacity style={styles.memberActionButton}>
-                <Share size={20} color="#0e3c67" />
-              </TouchableOpacity>
             </View>
 
             {/* Member Details */}
@@ -866,13 +1013,32 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 8,
   },
-  addButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+  activeFilterContainer: {
+    backgroundColor: '#E6F3FF',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    justifyContent: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    marginHorizontal: 20,
+    marginTop: 16,
+    borderRadius: 8,
+  },
+  activeFilterText: {
+    fontSize: 14,
+    color: '#0e3c67',
+    fontWeight: '600',
+  },
+  clearFilterButton: {
+    backgroundColor: '#0e3c67',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  clearFilterText: {
+    fontSize: 12,
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
   statsCard: {
     backgroundColor: '#FFFFFF',
@@ -972,7 +1138,8 @@ const styles = StyleSheet.create({
   },
   quickActions: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'center',
+    gap: 40,
     paddingHorizontal: 20,
     marginBottom: 24,
   },
@@ -1044,17 +1211,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  likeButton: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   listPhotoItem: {
     backgroundColor: '#FFFFFF',
     flexDirection: 'row',
@@ -1086,17 +1242,78 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6B7280',
   },
-  listPhotoActions: {
-    flexDirection: 'row',
-    gap: 8,
+  // Filter Modal Styles
+  filterSection: {
+    marginBottom: 32,
   },
-  actionButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#F3F4F6',
+  filterSectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 16,
+  },
+  filterOption: {
+    backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 8,
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  filterOptionSelected: {
+    backgroundColor: '#0e3c67',
+    borderColor: '#0e3c67',
+  },
+  filterOptionText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#111827',
+    flex: 1,
+  },
+  filterOptionTextSelected: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  filterMemberAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 12,
+  },
+  filterMemberInfo: {
+    flex: 1,
+  },
+  filterMemberRole: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginTop: 2,
+  },
+  filterMemberRoleSelected: {
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  filterAlbumCover: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    marginRight: 12,
+  },
+  filterAlbumInfo: {
+    flex: 1,
+  },
+  filterAlbumCount: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginTop: 2,
+  },
+  filterAlbumCountSelected: {
+    color: 'rgba(255, 255, 255, 0.8)',
   },
   // Modal Styles
   modalContainer: {
@@ -1374,14 +1591,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6B7280',
   },
-  albumActionButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F3F4F6',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   albumPhotosGrid: {
     padding: 20,
     gap: 8,
@@ -1413,14 +1622,6 @@ const styles = StyleSheet.create({
   memberGallerySubtitle: {
     fontSize: 14,
     color: '#6B7280',
-  },
-  memberActionButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F3F4F6',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   memberDetailsCard: {
     backgroundColor: '#FFFFFF',
