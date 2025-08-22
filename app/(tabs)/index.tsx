@@ -9,6 +9,7 @@ import {
   Image,
   Dimensions
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { 
   Bell,
   Plus,
@@ -17,12 +18,15 @@ import {
   MapPin,
   Users,
   ChevronRight,
-  User
+  User,
+  Camera
 } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
 
 export default function Dashboard() {
+  const router = useRouter();
+
   const upcomingEvents = [
     {
       id: 1,
@@ -55,19 +59,22 @@ export default function Dashboard() {
       icon: User,
       title: "Add Member",
       color: "#10B981",
-      background: "#ECFDF5"
+      background: "#ECFDF5",
+      action: () => router.push('/add-family-member')
     },
     {
       icon: Users,
       title: "Schedule",
       color: "#8B5CF6",
-      background: "#F3E8FF"
+      background: "#F3E8FF",
+      action: () => router.push('/schedule')
     },
     {
-      icon: MapPin,
-      title: "Locations",
+      icon: Camera,
+      title: "Add Photos",
       color: "#F59E0B",
-      background: "#FFFBEB"
+      background: "#FFFBEB",
+      action: () => router.push('/add-photo')
     }
   ];
 
@@ -127,7 +134,11 @@ export default function Dashboard() {
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.quickActionsGrid}>
             {quickActions.map((action, index) => (
-              <TouchableOpacity key={index} style={[styles.quickActionCard, { backgroundColor: action.background }]}>
+              <TouchableOpacity 
+                key={index} 
+                style={[styles.quickActionCard, { backgroundColor: action.background }]}
+                onPress={action.action}
+              >
                 <action.icon size={24} color={action.color} />
                 <Text style={[styles.quickActionText, { color: action.color }]}>{action.title}</Text>
               </TouchableOpacity>
@@ -139,14 +150,21 @@ export default function Dashboard() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Today's Schedule</Text>
-            <TouchableOpacity style={styles.seeAllButton}>
+            <TouchableOpacity 
+              style={styles.seeAllButton}
+              onPress={() => router.push('/today-schedule')}
+            >
               <Text style={styles.seeAllText}>See All</Text>
               <ChevronRight size={16} color="#0e3c67" />
             </TouchableOpacity>
           </View>
           
           {upcomingEvents.map((event) => (
-            <TouchableOpacity key={event.id} style={styles.eventCard}>
+            <TouchableOpacity 
+              key={event.id} 
+              style={styles.eventCard}
+              onPress={() => router.push(`/event-detail/${event.id}`)}
+            >
               <Image source={{ uri: event.avatar }} style={styles.eventAvatar} />
               <View style={styles.eventInfo}>
                 <Text style={styles.eventTitle}>{event.title}</Text>
@@ -170,14 +188,20 @@ export default function Dashboard() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Family Members</Text>
-            <TouchableOpacity style={styles.seeAllButton}>
+            <TouchableOpacity 
+              style={styles.seeAllButton}
+              onPress={() => router.push('/(tabs)/family')}
+            >
               <Text style={styles.seeAllText}>Manage</Text>
               <ChevronRight size={16} color="#0e3c67" />
             </TouchableOpacity>
           </View>
           
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.membersScroll}>
-            <TouchableOpacity style={styles.memberCard}>
+            <TouchableOpacity 
+              style={styles.memberCard}
+              onPress={() => router.push('/member-detail/1')}
+            >
               <Image 
                 source={{ uri: "https://images.pexels.com/photos/1169084/pexels-photo-1169084.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2" }} 
                 style={styles.memberAvatar} 
@@ -185,7 +209,10 @@ export default function Dashboard() {
               <Text style={styles.memberName}>Emma</Text>
               <Text style={styles.memberAge}>8 years</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.memberCard}>
+            <TouchableOpacity 
+              style={styles.memberCard}
+              onPress={() => router.push('/member-detail/2')}
+            >
               <Image 
                 source={{ uri: "https://images.pexels.com/photos/1765110/pexels-photo-1765110.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2" }} 
                 style={styles.memberAvatar} 
@@ -193,7 +220,10 @@ export default function Dashboard() {
               <Text style={styles.memberName}>Jack</Text>
               <Text style={styles.memberAge}>6 years</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.addMemberCard}>
+            <TouchableOpacity 
+              style={styles.addMemberCard}
+              onPress={() => router.push('/add-family-member')}
+            >
               <Plus size={24} color="#6B7280" />
               <Text style={styles.addMemberText}>Add Member</Text>
             </TouchableOpacity>
@@ -204,13 +234,19 @@ export default function Dashboard() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>This Week's Schedule</Text>
-            <TouchableOpacity style={styles.seeAllButton}>
+            <TouchableOpacity 
+              style={styles.seeAllButton}
+              onPress={() => router.push('/week-schedule')}
+            >
               <Text style={styles.seeAllText}>View All</Text>
               <ChevronRight size={16} color="#0e3c67" />
             </TouchableOpacity>
           </View>
           
-          <View style={styles.scheduleCard}>
+          <TouchableOpacity 
+            style={styles.scheduleCard}
+            onPress={() => router.push('/schedule-detail/1')}
+          >
             <View style={styles.scheduleHeader}>
               <View style={styles.scheduleInfo}>
                 <Text style={styles.scheduleTitle}>Weekend with Dad</Text>
@@ -227,9 +263,12 @@ export default function Dashboard() {
               </View>
               <Text style={styles.scheduleActivities}>Swimming, Movie night, Cooking together</Text>
             </View>
-          </View>
+          </TouchableOpacity>
 
-          <View style={styles.scheduleCard}>
+          <TouchableOpacity 
+            style={styles.scheduleCard}
+            onPress={() => router.push('/schedule-detail/2')}
+          >
             <View style={styles.scheduleHeader}>
               <View style={styles.scheduleInfo}>
                 <Text style={styles.scheduleTitle}>School Week</Text>
@@ -246,7 +285,7 @@ export default function Dashboard() {
               </View>
               <Text style={styles.scheduleActivities}>School, homework, piano lessons</Text>
             </View>
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* Bottom Spacing */}
