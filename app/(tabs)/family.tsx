@@ -10,9 +10,12 @@ import {
   Modal,
   TextInput,
   Alert,
-  Dimensions
+  Dimensions,
+  KeyboardAvoidingView,
+  Platform
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { 
   Plus,
   Settings,
@@ -40,7 +43,8 @@ export default function Family() {
   const [showAddScheduleModal, setShowAddScheduleModal] = useState(false);
   const [showParentDropdown, setShowParentDropdown] = useState(false);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
-  const [showDateRangePicker, setShowDateRangePicker] = useState(false);
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [scheduleFilter, setScheduleFilter] = useState('all'); // 'all', 'primary', 'secondary'
   const [coParents, setCoParents] = useState([
     {
@@ -78,8 +82,8 @@ export default function Family() {
 
   const [newSchedule, setNewSchedule] = useState({
     name: '',
-    startDate: new Date(),
-    endDate: new Date(),
+    startDate: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
+    endDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // Day after tomorrow
     parent: '',
     location: '',
     activities: '',
@@ -167,13 +171,12 @@ export default function Family() {
   ];
 
   const locationOptions = [
-    'Dad\'s House',
-    'Mom\'s House',
+    "Dad's House",
+    "Mom's House",
     'Grandparents House',
-    'Dance Studio',
-    'Dentist',
-    'Doctor Surgery',
     'School',
+    'Community Center',
+    'Park',
     'Other'
   ];
 
@@ -666,183 +669,244 @@ export default function Family() {
           animationType="slide"
           presentationStyle="formSheet"
         >
-          <SafeAreaView style={styles.modalContainer}>
-            {/* Modal Header */}
-            <View style={styles.modalHeader}>
-              <View style={styles.modalHeaderContent}>
-                <TouchableOpacity 
-                  onPress={() => setShowAddScheduleModal(false)}
-                  style={styles.closeButton}
-                >
-                  <X size={20} color="#6B7280" />
-                </TouchableOpacity>
-                <View style={styles.modalTitleContainer}>
-                  <Text style={styles.modalTitle}>Add Schedule</Text>
-                  <Text style={styles.modalSubtitle}>Create a new co-parenting schedule</Text>
+          <KeyboardAvoidingView 
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.keyboardAvoidingView}
+          >
+            <SafeAreaView style={styles.modalContainer}>
+              {/* Modal Header */}
+              <View style={styles.modalHeader}>
+                <View style={styles.modalHeaderContent}>
+                  <TouchableOpacity 
+                    onPress={() => setShowAddScheduleModal(false)}
+                    style={styles.closeButton}
+                  >
+                    <X size={20} color="#6B7280" />
+                  </TouchableOpacity>
+                  <View style={styles.modalTitleContainer}>
+                    <Text style={styles.modalTitle}>Add Schedule</Text>
+                    <Text style={styles.modalSubtitle}>Create a new co-parenting schedule</Text>
+                  </View>
+                  <TouchableOpacity 
+                    style={[
+                      styles.saveButton,
+                      (!newSchedule.name.trim() || !newSchedule.parent || !newSchedule.location.trim()) && styles.saveButtonDisabled
+                    ]}
+                    onPress={handleSaveSchedule}
+                    disabled={!newSchedule.name.trim() || !newSchedule.parent || !newSchedule.location.trim()}
+                  >
+                    <Text style={[
+                      styles.saveButtonText,
+                      (!newSchedule.name.trim() || !newSchedule.parent || !newSchedule.location.trim()) && styles.saveButtonTextDisabled
+                    ]}>Save</Text>
+                  </TouchableOpacity>
                 </View>
-                <TouchableOpacity 
-                  style={[
-                    styles.saveButton,
-                    (!newSchedule.name.trim() || !newSchedule.parent || !newSchedule.location.trim()) && styles.saveButtonDisabled
-                  ]}
-                  onPress={handleSaveSchedule}
-                  disabled={!newSchedule.name.trim() || !newSchedule.parent || !newSchedule.location.trim()}
-                >
-                  <Text style={[
-                    styles.saveButtonText,
-                    (!newSchedule.name.trim() || !newSchedule.parent || !newSchedule.location.trim()) && styles.saveButtonTextDisabled
-                  ]}>Save</Text>
-                </TouchableOpacity>
-              </View>
-              <View style={styles.modalHeaderDivider} />
-            </View>
-
-            <ScrollView style={styles.modalContent}>
-              {/* Schedule Name */}
-              <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>Name of Schedule</Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={newSchedule.name}
-                  onChangeText={(text) => setNewSchedule(prev => ({ ...prev, name: text }))}
-                  placeholder="Weekend with dad"
-                  placeholderTextColor="#9CA3AF"
-                />
+                <View style={styles.modalHeaderDivider} />
               </View>
 
-              {/* Date Range */}
-              <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>Date Range</Text>
-                <TouchableOpacity
-                  style={styles.dateRangeButton}
-                  onPress={() => setShowDateRangePicker(true)}
-                >
-                  <Calendar size={20} color="#6B7280" />
-                  <Text style={styles.dateRangeText}>
-                    {formatDateRange(newSchedule.startDate, newSchedule.endDate)}
-                  </Text>
-                </TouchableOpacity>
-              </View>
+              <ScrollView style={styles.modalContent}>
+                {/* Schedule Name */}
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.fieldLabel}>Name of Schedule</Text>
+                  <TextInput
+                    style={styles.textInput}
+                    value={newSchedule.name}
+                    onChangeText={(text) => setNewSchedule(prev => ({ ...prev, name: text }))}
+                    placeholder="Weekend with dad"
+                    placeholderTextColor="#9CA3AF"
+                  />
+                </View>
 
-              {/* Parent Selection */}
-              <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>Parent</Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={newSchedule.parent ? parentOptions.find(p => p.id === newSchedule.parent)?.label : ''}
-                  placeholder="Select parent"
-                  placeholderTextColor="#9CA3AF"
-                  editable={false}
-                  onPress={() => setShowParentDropdown(!showParentDropdown)}
-                />
-                <TouchableOpacity
-                  style={styles.dropdownTrigger}
-                  onPress={() => setShowParentDropdown(!showParentDropdown)}
-                />
-                
-                {showParentDropdown && (
-                  <View style={styles.dropdownMenu}>
-                    {parentOptions.map((parent) => (
-                      <TouchableOpacity
-                        key={parent.id}
-                        style={[
-                          styles.dropdownItem,
-                          newSchedule.parent === parent.id && styles.dropdownItemSelected
-                        ]}
-                        onPress={() => {
-                          setNewSchedule(prev => ({ ...prev, parent: parent.id }));
-                          setShowParentDropdown(false);
-                        }}
-                      >
-                        <Text style={[
-                          styles.dropdownItemText,
-                          newSchedule.parent === parent.id && styles.dropdownItemTextSelected
-                        ]}>
-                          {parent.label}
+                {/* Date Range */}
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.fieldLabel}>Date Range</Text>
+                  <View style={styles.dateRangeContainer}>
+                    <TouchableOpacity
+                      style={styles.dateButton}
+                      onPress={() => setShowStartDatePicker(true)}
+                    >
+                      <Calendar size={16} color="#6B7280" />
+                      <View style={styles.dateButtonContent}>
+                        <Text style={styles.dateButtonLabel}>Start Date</Text>
+                        <Text style={styles.dateButtonText}>
+                          {newSchedule.startDate.toLocaleDateString('en-GB', { 
+                            day: 'numeric', 
+                            month: 'short',
+                            year: 'numeric'
+                          })}
                         </Text>
-                        {newSchedule.parent === parent.id && (
-                          <Check size={16} color="#FFFFFF" />
-                        )}
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                )}
-              </View>
-
-              {/* Location */}
-              <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>Location</Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={newSchedule.location}
-                  placeholder="Select location"
-                  placeholderTextColor="#9CA3AF"
-                  editable={false}
-                  onPress={() => setShowLocationDropdown(!showLocationDropdown)}
-                />
-                <TouchableOpacity
-                  style={styles.dropdownTrigger}
-                  onPress={() => setShowLocationDropdown(!showLocationDropdown)}
-                />
-                
-                {showLocationDropdown && (
-                  <View style={styles.dropdownMenu}>
-                    {locationOptions.map((location) => (
-                      <TouchableOpacity
-                        key={location}
-                        style={[
-                          styles.dropdownItem,
-                          newSchedule.location === location && styles.dropdownItemSelected
-                        ]}
-                        onPress={() => {
-                          setNewSchedule(prev => ({ ...prev, location }));
-                          setShowLocationDropdown(false);
-                        }}
-                      >
-                        <Text style={[
-                          styles.dropdownItemText,
-                          newSchedule.location === location && styles.dropdownItemTextSelected
-                        ]}>
-                          {location}
+                      </View>
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity
+                      style={styles.dateButton}
+                      onPress={() => setShowEndDatePicker(true)}
+                    >
+                      <Calendar size={16} color="#6B7280" />
+                      <View style={styles.dateButtonContent}>
+                        <Text style={styles.dateButtonLabel}>End Date</Text>
+                        <Text style={styles.dateButtonText}>
+                          {newSchedule.endDate.toLocaleDateString('en-GB', { 
+                            day: 'numeric', 
+                            month: 'short',
+                            year: 'numeric'
+                          })}
                         </Text>
-                        {newSchedule.location === location && (
-                          <Check size={16} color="#FFFFFF" />
-                        )}
-                      </TouchableOpacity>
-                    ))}
+                      </View>
+                    </TouchableOpacity>
                   </View>
-                )}
-              </View>
+                </View>
 
-              {/* Activities */}
-              <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>Activities</Text>
-                <TextInput
-                  style={[styles.textInput, styles.textArea]}
-                  value={newSchedule.activities}
-                  onChangeText={(text) => setNewSchedule(prev => ({ ...prev, activities: text }))}
-                  placeholder="List all planned activities"
-                  placeholderTextColor="#9CA3AF"
-                  multiline
-                  numberOfLines={3}
-                />
-              </View>
+                {/* Parent Selection */}
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.fieldLabel}>Responsible Parent</Text>
+                  <TouchableOpacity
+                    style={styles.dropdownButton}
+                    onPress={() => setShowParentDropdown(!showParentDropdown)}
+                  >
+                    <Text style={styles.dropdownButtonText}>
+                      {newSchedule.parent ? parentOptions.find(p => p.id === newSchedule.parent)?.label : 'Select parent'}
+                    </Text>
+                    <ChevronDown size={20} color="#6B7280" />
+                  </TouchableOpacity>
+                  
+                  {showParentDropdown && (
+                    <View style={styles.dropdownMenu}>
+                      {parentOptions.map((parent) => (
+                        <TouchableOpacity
+                          key={parent.id}
+                          style={[
+                            styles.dropdownItem,
+                            newSchedule.parent === parent.id && styles.dropdownItemSelected
+                          ]}
+                          onPress={() => {
+                            setNewSchedule(prev => ({ ...prev, parent: parent.id }));
+                            setShowParentDropdown(false);
+                          }}
+                        >
+                          <Text style={[
+                            styles.dropdownItemText,
+                            newSchedule.parent === parent.id && styles.dropdownItemTextSelected
+                          ]}>
+                            {parent.label}
+                          </Text>
+                          {newSchedule.parent === parent.id && (
+                            <Check size={16} color="#FFFFFF" />
+                          )}
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
+                </View>
 
-              {/* Notes */}
-              <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>Notes</Text>
-                <TextInput
-                  style={[styles.textInput, styles.textArea]}
-                  value={newSchedule.notes}
-                  onChangeText={(text) => setNewSchedule(prev => ({ ...prev, notes: text }))}
-                  placeholder="Additional notes or instructions"
-                  placeholderTextColor="#9CA3AF"
-                  multiline
-                  numberOfLines={3}
+                {/* Location */}
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.fieldLabel}>Location</Text>
+                  <TouchableOpacity
+                    style={styles.dropdownButton}
+                    onPress={() => setShowLocationDropdown(!showLocationDropdown)}
+                  >
+                    <Text style={styles.dropdownButtonText}>
+                      {newSchedule.location || 'Select location'}
+                    </Text>
+                    <ChevronDown size={20} color="#6B7280" />
+                  </TouchableOpacity>
+                  
+                  {showLocationDropdown && (
+                    <View style={styles.dropdownMenu}>
+                      {locationOptions.map((location) => (
+                        <TouchableOpacity
+                          key={location}
+                          style={[
+                            styles.dropdownItem,
+                            newSchedule.location === location && styles.dropdownItemSelected
+                          ]}
+                          onPress={() => {
+                            setNewSchedule(prev => ({ ...prev, location }));
+                            setShowLocationDropdown(false);
+                          }}
+                        >
+                          <Text style={[
+                            styles.dropdownItemText,
+                            newSchedule.location === location && styles.dropdownItemTextSelected
+                          ]}>
+                            {location}
+                          </Text>
+                          {newSchedule.location === location && (
+                            <Check size={16} color="#FFFFFF" />
+                          )}
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
+                </View>
+
+                {/* Activities */}
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.fieldLabel}>Activities</Text>
+                  <TextInput
+                    style={[styles.textInput, styles.textArea]}
+                    value={newSchedule.activities}
+                    onChangeText={(text) => setNewSchedule(prev => ({ ...prev, activities: text }))}
+                    placeholder="List all planned activities"
+                    placeholderTextColor="#9CA3AF"
+                    multiline
+                    numberOfLines={3}
+                  />
+                </View>
+
+                {/* Notes */}
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.fieldLabel}>Notes</Text>
+                  <TextInput
+                    style={[styles.textInput, styles.textArea]}
+                    value={newSchedule.notes}
+                    onChangeText={(text) => setNewSchedule(prev => ({ ...prev, notes: text }))}
+                    placeholder="Additional notes or instructions"
+                    placeholderTextColor="#9CA3AF"
+                    multiline
+                    numberOfLines={3}
+                  />
+                </View>
+              </ScrollView>
+
+              {/* Date Pickers */}
+              {showStartDatePicker && (
+                <DateTimePicker
+                  value={newSchedule.startDate}
+                  mode="date"
+                  display="default"
+                  onChange={(event, selectedDate) => {
+                    setShowStartDatePicker(false);
+                    if (selectedDate) {
+                      setNewSchedule(prev => ({ 
+                        ...prev, 
+                        startDate: selectedDate,
+                        // Auto-adjust end date if it's before start date
+                        endDate: selectedDate > prev.endDate ? new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000) : prev.endDate
+                      }));
+                    }
+                  }}
+                  minimumDate={new Date()}
                 />
-              </View>
-            </ScrollView>
-          </SafeAreaView>
+              )}
+
+              {showEndDatePicker && (
+                <DateTimePicker
+                  value={newSchedule.endDate}
+                  mode="date"
+                  display="default"
+                  onChange={(event, selectedDate) => {
+                    setShowEndDatePicker(false);
+                    if (selectedDate) {
+                      setNewSchedule(prev => ({ ...prev, endDate: selectedDate }));
+                    }
+                  }}
+                  minimumDate={newSchedule.startDate}
+                />
+              )}
+            </SafeAreaView>
+          </KeyboardAvoidingView>
         </Modal>
       </ScrollView>
     </SafeAreaView>
@@ -1435,7 +1499,13 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   // Schedule Modal Styles
-  dateRangeButton: {
+  keyboardAvoidingView: {
+    flex: 1,
+  },
+  dateRangeContainer: {
+    gap: 12,
+  },
+  dateButton: {
     backgroundColor: '#FFFFFF',
     borderWidth: 2,
     borderColor: '#E5E7EB',
@@ -1450,9 +1520,75 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 1,
   },
-  dateRangeText: {
+  dateButtonContent: {
+    marginLeft: 12,
+  },
+  dateButtonLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+    marginBottom: 2,
+  },
+  dateButtonText: {
     fontSize: 16,
     color: '#111827',
-    marginLeft: 12,
+    fontWeight: '500',
+  },
+  dropdownButton: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  dropdownButtonText: {
+    fontSize: 16,
+    color: '#111827',
+  },
+  dropdownMenu: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    marginTop: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    overflow: 'hidden',
+    maxHeight: 200,
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  dropdownItemSelected: {
+    backgroundColor: '#0e3c67',
+  },
+  dropdownItemText: {
+    fontSize: 16,
+    color: '#111827',
+    fontWeight: '500',
+  },
+  dropdownItemTextSelected: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  textArea: {
+    height: 80,
+    textAlignVertical: 'top',
   },
 });
