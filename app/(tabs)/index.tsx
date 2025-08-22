@@ -53,7 +53,8 @@ export default function Dashboard() {
       icon: Calendar,
       title: "Add Event",
       color: "#3B82F6",
-      background: "#EBF4FF"
+      background: "#EBF4FF",
+      action: () => router.push('/(tabs)/calendar')
     },
     {
       icon: User,
@@ -74,7 +75,7 @@ export default function Dashboard() {
       title: "Add Photos",
       color: "#F59E0B",
       background: "#FFFBEB",
-      action: () => router.push('/add-photo')
+      action: () => router.push('/(tabs)/photos')
     }
   ];
 
