@@ -343,7 +343,7 @@ export default function Calendar() {
           <Text style={styles.headerTitle}>Calendar</Text>
           <View style={styles.headerButtons}>
             <TouchableOpacity style={styles.iconButton}>
-              <Filter size={20} color="#6B7280" />
+              <Filter size={20} color="#ffffff" />
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.addButton}

@@ -13,6 +13,8 @@ const TabBarIcon = ({ icon: Icon, color, focused, title }: {
     justifyContent: 'center',
     paddingTop: 8,
     paddingBottom: 4,
+    width: '100%',
+    minWidth: 80,
   }}>
     <View style={{
       width: 40,
@@ -30,13 +32,19 @@ const TabBarIcon = ({ icon: Icon, color, focused, title }: {
     }}>
       <Icon size={20} color={focused ? '#FFFFFF' : color} />
     </View>
-    <Text style={{
-      fontSize: 9,
-      fontWeight: focused ? '700' : '600',
-      color: focused ? '#0e3c67' : color,
-      textAlign: 'center',
-      numberOfLines: 1,
-    }}>
+    <Text 
+      style={{
+        fontSize: 10,
+        fontWeight: focused ? '700' : '600',
+        color: focused ? '#0e3c67' : color,
+        textAlign: 'center',
+        maxWidth: '100%',
+        minWidth: 80,
+        paddingHorizontal: 4,
+      }}
+      numberOfLines={1}
+      ellipsizeMode="tail"
+    >
       {title}
     </Text>
   </View>
@@ -50,9 +58,9 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
           borderTopWidth: 0,
-          paddingBottom: 16,
+          paddingBottom: 20,
           paddingTop: 12,
-          height: 100,
+          height: 110,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: -2 },
           shadowOpacity: 0.1,
@@ -65,6 +73,12 @@ export default function TabLayout() {
         tabBarActiveTintColor: '#0e3c67',
         tabBarInactiveTintColor: '#6B7280',
         tabBarShowLabel: false,
+        tabBarHideOnKeyboard: true,
+        tabBarItemStyle: {
+          paddingHorizontal: 0,
+          minWidth: 80,
+          flex: 1,
+        },
       }}>
       <Tabs.Screen
         name="index"

@@ -360,16 +360,16 @@ export default function Photos() {
           <Text style={styles.headerTitle}>Photos</Text>
           <View style={styles.headerButtons}>
             <TouchableOpacity style={styles.iconButton}>
-              <Filter size={20} color="#6B7280" />
+              <Filter size={20} color="#ffffff" />
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.iconButton}
               onPress={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
             >
               {viewMode === 'grid' ? (
-                <List size={20} color="#6B7280" />
+                <List size={20} color="#ffffff" />
               ) : (
-                <Grid size={20} color="#6B7280" />
+                <Grid size={20} color="#ffffff" />
               )}
             </TouchableOpacity>
             <TouchableOpacity 
