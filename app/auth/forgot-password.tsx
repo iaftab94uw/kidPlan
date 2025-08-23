@@ -12,12 +12,14 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Mail, CircleCheck as CheckCircle } from 'lucide-react-native';
+import { useAuth } from '@/hooks/useAuth';
 import Banner from '@/components/Banner';
 
 
 
 export default function ForgotPassword() {
   const router = useRouter();
+  const { forgotPassword } = useAuth();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
@@ -66,20 +68,43 @@ export default function ForgotPassword() {
       return;
     }
 
-    setIsLoading(true);
-    setErrors({});
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      setIsLoading(true);
+      setErrors({});
+      
+      await forgotPassword(email);
       setEmailSent(true);
       showBanner('success', 'Password reset instructions sent to your email!');
-    }, 1500);
+      
+      // Redirect to login screen after 2 seconds
+      // setTimeout(() => {
+      //   router.replace('/auth/signin');
+      // }, 2000);
+    } catch (error: any) {
+      showBanner('error', error.message || 'Failed to send reset instructions. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleResendEmail = () => {
+  const handleResendEmail = async () => {
     setEmailSent(false);
-    handleResetPassword();
+    try {
+      setIsLoading(true);
+      
+      await forgotPassword(email);
+      setEmailSent(true);
+      showBanner('success', 'Password reset instructions sent to your email!');
+      
+      // Redirect to login screen after 2 seconds
+      // setTimeout(() => {
+      //   router.replace('/auth/signin');
+      // }, 2000);
+    } catch (error: any) {
+      showBanner('error', error.message || 'Failed to send reset instructions. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

@@ -32,6 +32,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   signup: (fullName: string, email: string, password: string) => Promise<boolean>;
+  forgotPassword: (email: string) => Promise<boolean>;
   logout: () => Promise<void>;
   checkAuthStatus: () => Promise<void>;
 }
@@ -129,6 +130,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const forgotPassword = async (email: string): Promise<boolean> => {
+    try {
+      setIsLoading(true);
+      
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.PREFIX}${API_CONFIG.ENDPOINTS.FORGOT_PASSWORD}`, {
+        method: 'POST',
+        headers: API_CONFIG.HEADERS,
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+      console.log('Forgot password response:', data);
+      
+      if (data.success) {
+        return true;
+      } else {
+        throw new Error(data.message || 'Password reset failed');
+      }
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const logout = async (): Promise<void> => {
     try {
       await AsyncStorage.removeItem('authData');
@@ -196,6 +223,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     isAuthenticated,
     login,
     signup,
+    forgotPassword,
     logout,
     checkAuthStatus,
   };
