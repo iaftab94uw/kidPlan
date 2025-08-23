@@ -5,18 +5,19 @@ import { API_CONFIG } from '@/config/api';
 
 interface User {
   _id: string;
-  firstName: string;
-  lastName: string;
-  profilePhoto: string;
+  fullName: string;
+  profilePhoto: string | null;
   email: string;
+  password: string;
   role: string;
-  birthdate: string;
-  address: string;
+  birthdate: string | null;
+  address: string | null;
   isEmailVerified: boolean;
   fcmTokens: string[];
   createdAt: string;
   updatedAt: string;
   isRequestedResetPassword: boolean;
+  __v: number;
 }
 
 interface AuthData {
@@ -30,6 +31,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<boolean>;
+  signup: (fullName: string, email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   checkAuthStatus: () => Promise<void>;
 }
@@ -83,6 +85,44 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     } catch (error) {
       console.error('Login error:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const signup = async (fullName: string, email: string, password: string): Promise<boolean> => {
+    try {
+      setIsLoading(true);
+      
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.PREFIX}${API_CONFIG.ENDPOINTS.SIGNUP}`, {
+        method: 'POST',
+        headers: API_CONFIG.HEADERS,
+        body: JSON.stringify({ fullName, email, password }),
+      });
+
+      const data = await response.json();
+      console.log('Signup response:', data);
+      
+      if (data.success && data.data) {
+        const authData: AuthData = {
+          user: data.data.user,
+          token: data.data.token,
+        };
+
+        await AsyncStorage.setItem('authData', JSON.stringify(authData));
+        
+        setUser(authData.user);
+        setToken(authData.token);
+        setHasCheckedAuth(false); // Reset auth check flag
+
+        router.replace('/(tabs)');
+        return true;
+      } else {
+        throw new Error(data.message || 'Signup failed');
+      }
+    } catch (error) {
+      console.error('Signup error:', error);
       throw error;
     } finally {
       setIsLoading(false);
@@ -155,6 +195,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     isLoading,
     isAuthenticated,
     login,
+    signup,
     logout,
     checkAuthStatus,
   };

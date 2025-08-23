@@ -12,12 +12,14 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Eye, EyeOff, ArrowLeft, CircleCheck as CheckCircle } from 'lucide-react-native';
+import { useAuth } from '@/hooks/useAuth';
 import Banner from '@/components/Banner';
 
 
 
 export default function SignUp() {
   const router = useRouter();
+  const { signup } = useAuth();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -112,19 +114,17 @@ export default function SignUp() {
       return;
     }
 
-    setIsLoading(true);
-    setErrors({});
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      setIsLoading(true);
+      setErrors({});
       
-      // Simulate successful registration
-      showBanner('success', 'Account created successfully! Redirecting...');
-      setTimeout(() => {
-        router.replace('/(tabs)');
-      }, 1500);
-    }, 1500);
+      await signup(fullName, email, password);
+      showBanner('success', 'Account created successfully! Welcome to KidPlan!');
+    } catch (error: any) {
+      showBanner('error', error.message || 'Signup failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

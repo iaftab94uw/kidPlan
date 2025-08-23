@@ -4,6 +4,7 @@ export const API_CONFIG = {
   PREFIX: '/api/v1', // Replace with your actual API prefix
   ENDPOINTS: {
     LOGIN: '/users/login',
+    SIGNUP: '/users/signUp',
     LOGOUT: '/users/logout',
     REFRESH_TOKEN: '/users/refresh-token',
     USER_PROFILE: '/users/profile',

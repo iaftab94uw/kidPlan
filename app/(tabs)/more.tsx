@@ -133,7 +133,7 @@ export default function More() {
           />
           <View style={styles.profileInfo}>
             <Text style={styles.profileName}>
-              {user ? `${user.firstName} ${user.lastName}` : 'Loading...'}
+              {user ? user.fullName : 'Loading...'}
             </Text>
             <Text style={styles.profileEmail}>
               {user?.email || 'Loading...'}
