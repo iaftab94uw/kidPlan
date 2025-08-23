@@ -240,10 +240,10 @@ export default function AddFamilyMember() {
             />
           </View>
 
-          {/* Favorite Color */}
+          {/* Favourite Colour */}
           <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Favorite Color</Text>
-            <Text style={styles.fieldDescription}>Choose a color that represents this family member</Text>
+            <Text style={styles.fieldLabel}>Favourite Colour</Text>
+            <Text style={styles.fieldDescription}>Choose a colour that represents this family member</Text>
             <View style={styles.colorGrid}>
               {colors.map((color) => (
                 <TouchableOpacity

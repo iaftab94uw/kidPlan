@@ -173,7 +173,7 @@ export default function NotificationSettings() {
         <View style={styles.infoCard}>
           <Text style={styles.infoTitle}>About Notifications</Text>
           <Text style={styles.infoText}>
-            You can customize which notifications you receive to stay informed about your family's activities. 
+            You can customise which notifications you receive to stay informed about your family's activities. 
             Turn off notifications you don't need to reduce interruptions.
           </Text>
         </View>

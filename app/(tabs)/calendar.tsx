@@ -90,7 +90,7 @@ export default function Calendar() {
       time: "6:00 PM - 7:30 PM",
       startTime: "18:00",
       endTime: "19:30",
-      location: "Community Center",
+      location: "Community Centre",
       child: "Jack",
       color: "#F97316",
       type: "activity",

@@ -77,7 +77,7 @@ export default function TodaySchedule() {
       color: "#06B6D4",
       avatar: "https://images.pexels.com/photos/8613089/pexels-photo-8613089.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2",
       status: "upcoming",
-      notes: "Math and English homework"
+      notes: "Maths and English homework"
     }
   ];
 

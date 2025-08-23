@@ -73,7 +73,7 @@ export default function Settings() {
         },
         {
           icon: Calendar,
-          title: "Calendar Sync",
+          title: "Calendar Synchronisation",
           subtitle: "Sync with device calendars",
           action: "navigate",
           color: "#0e3c67"

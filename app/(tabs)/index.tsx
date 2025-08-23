@@ -41,7 +41,7 @@ export default function Dashboard() {
       id: 2,
       title: "Football Practice",
       time: "6:00 PM",
-      location: "Community Center",
+              location: "Community Centre",
       child: "Jack",
       color: "#F97316",
       avatar: "https://images.pexels.com/photos/1765110/pexels-photo-1765110.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2"
@@ -262,7 +262,7 @@ export default function Dashboard() {
                 <MapPin size={16} color="#6B7280" />
                 <Text style={styles.scheduleDetailText}>Dad's House</Text>
               </View>
-              <Text style={styles.scheduleActivities}>Swimming, Movie night, Cooking together</Text>
+                              <Text style={styles.scheduleActivities}>Swimming, Film night, Cooking together</Text>
             </View>
           </TouchableOpacity>
 

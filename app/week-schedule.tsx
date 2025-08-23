@@ -33,7 +33,7 @@ export default function WeekSchedule() {
       endDate: new Date(2024, 7, 25),
       parent: "secondary",
       location: "Dad's House",
-      activities: "Swimming, Movie night, Cooking together",
+      activities: "Swimming, Film night, Cooking together",
       notes: "Pick up at 6 PM Friday, drop off Sunday 7 PM",
       avatar: "https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2",
       color: "#F59E0B"

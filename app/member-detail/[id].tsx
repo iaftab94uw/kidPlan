@@ -41,7 +41,7 @@ export default function MemberDetail() {
       avatar: "https://images.pexels.com/photos/1169084/pexels-photo-1169084.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2",
       color: "#22C55E",
       type: "child",
-      favoriteActivities: ["Piano", "Ballet", "Reading", "Swimming"],
+      favouriteActivities: ["Piano", "Ballet", "Reading", "Swimming"],
       allergies: "None",
       emergencyContact: "Sarah Johnson - +44 7700 900123",
       upcomingEvents: [
@@ -75,7 +75,7 @@ export default function MemberDetail() {
       avatar: "https://images.pexels.com/photos/1765110/pexels-photo-1765110.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2",
       color: "#F97316",
       type: "child",
-      favoriteActivities: ["Football", "Drawing", "Lego", "Cycling"],
+      favouriteActivities: ["Football", "Drawing", "Lego", "Cycling"],
       allergies: "Nuts",
       emergencyContact: "Sarah Johnson - +44 7700 900123",
       upcomingEvents: [
@@ -83,7 +83,7 @@ export default function MemberDetail() {
           id: 3,
           title: "Football Practice",
           time: "6:00 PM",
-          location: "Community Center",
+          location: "Community Centre",
           date: "Today"
         }
       ],
@@ -182,8 +182,8 @@ export default function MemberDetail() {
                 <Heart size={20} color="#0e3c67" />
               </View>
               <View style={styles.detailContent}>
-                <Text style={styles.detailLabel}>Favorite Activities</Text>
-                <Text style={styles.detailValue}>{member.favoriteActivities.join(', ')}</Text>
+                <Text style={styles.detailLabel}>Favourite Activities</Text>
+                <Text style={styles.detailValue}>{member.favouriteActivities.join(', ')}</Text>
               </View>
             </View>
 

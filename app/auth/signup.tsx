@@ -155,7 +155,7 @@ export default function SignUp() {
           {/* Title */}
           <View style={styles.titleSection}>
             <Text style={styles.title}>Create Account</Text>
-            <Text style={styles.subtitle}>Join KidPlan and start organizing your family life</Text>
+            <Text style={styles.subtitle}>Join KidPlan and start organising your family life</Text>
           </View>
 
           {/* Form */}

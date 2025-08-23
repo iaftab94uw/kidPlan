@@ -98,7 +98,7 @@ export default function Family() {
       endDate: new Date(2024, 7, 25),
       parent: "secondary",
       location: "Dad's House",
-      activities: "Swimming, Movie night, Cooking together",
+      activities: "Swimming, Film night, Cooking together",
       notes: "Pick up at 6 PM Friday, drop off Sunday 7 PM"
     },
     {
@@ -172,7 +172,7 @@ export default function Family() {
 
   const locationOptions = [
     "Dad's House",
-    "Mom's House",
+            "Mum's House",
     'Grandparents House',
     'School',
     'Community Center',
@@ -635,10 +635,10 @@ export default function Family() {
                 />
               </View>
 
-              {/* Favorite Color */}
-              <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>Favorite Color</Text>
-                <Text style={styles.fieldDescription}>Choose a color that represents this family member</Text>
+                      {/* Favourite Colour */}
+        <View style={styles.fieldGroup}>
+          <Text style={styles.fieldLabel}>Favourite Colour</Text>
+                                  <Text style={styles.fieldDescription}>Choose a colour that represents this family member</Text>
                 <View style={styles.colorGrid}>
                   {colors.map((color) => (
                     <TouchableOpacity
