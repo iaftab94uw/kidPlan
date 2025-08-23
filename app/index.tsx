@@ -1,28 +1,20 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function SplashScreen() {
-  const router = useRouter();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
-    // Simulate checking authentication status
-    const checkAuth = async () => {
-      // In a real app, you'd check AsyncStorage or secure storage
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // For demo purposes, always redirect to auth
-      // In production, check if user is logged in
-      if (isAuthenticated) {
-        router.replace('/(tabs)');
-      } else {
-        router.replace('/auth');
-      }
-    };
+    // The AuthProvider will handle the authentication check and routing
+    // We just need to show the splash screen while it's loading
+    console.log('Splash screen - isLoading:', isLoading, 'isAuthenticated:', isAuthenticated);
+  }, [isAuthenticated, isLoading]);
 
-    checkAuth();
-  }, []);
+  // If authentication check is complete, let the AuthProvider handle routing
+  if (!isLoading) {
+    return null;
+  }
 
   return (
     <View style={styles.container}>

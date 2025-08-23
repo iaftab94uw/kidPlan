@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
+import { API_CONFIG } from '@/config/api';
 
 interface User {
   _id: string;
@@ -47,26 +48,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
 
   const isAuthenticated = !!user && !!token;
-
-  const API_BASE_URL = 'https://your-api-domain.com';
-  const API_PREFIX = '/api/v1';
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true);
       
-      const response = await fetch(`${API_BASE_URL}${API_PREFIX}/users/login`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.PREFIX}${API_CONFIG.ENDPOINTS.LOGIN}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: API_CONFIG.HEADERS,
         body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
-
+      console.log(data)
       if (data.success && data.data) {
         const authData: AuthData = {
           user: data.data.user,
@@ -77,6 +74,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         setUser(authData.user);
         setToken(authData.token);
+        setHasCheckedAuth(false); // Reset auth check flag
 
         router.replace('/(tabs)');
         return true;
@@ -103,31 +101,47 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const checkAuthStatus = async (): Promise<void> => {
+    // Prevent multiple auth checks
+    if (hasCheckedAuth) {
+      console.log('Auth already checked, skipping...');
+      return;
+    }
+
     try {
       setIsLoading(true);
+      console.log('Checking auth status...');
       
       const authDataString = await AsyncStorage.getItem('authData');
+      console.log('Auth data from storage:', authDataString ? 'exists' : 'not found');
       
       if (authDataString) {
         const authData: AuthData = JSON.parse(authDataString);
         
         if (authData.token && authData.user) {
+          console.log('Valid auth data found, setting user and token');
           setUser(authData.user);
           setToken(authData.token);
+          console.log('Redirecting to tabs...');
           router.replace('/(tabs)');
         } else {
+          console.log('Invalid auth data, clearing storage');
           await AsyncStorage.removeItem('authData');
+          console.log('Redirecting to auth...');
           router.replace('/auth');
         }
       } else {
+        console.log('No auth data found, redirecting to auth...');
         router.replace('/auth');
       }
     } catch (error) {
       console.error('Auth check error:', error);
       await AsyncStorage.removeItem('authData');
+      console.log('Error occurred, redirecting to auth...');
       router.replace('/auth');
     } finally {
       setIsLoading(false);
+      setHasCheckedAuth(true);
+      console.log('Auth check completed, isLoading set to false');
     }
   };
 

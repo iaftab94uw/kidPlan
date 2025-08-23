@@ -9,66 +9,14 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
-  Animated
+  ScrollView
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Eye, EyeOff, ArrowLeft, CircleAlert as AlertCircle, CircleCheck as CheckCircle, X } from 'lucide-react-native';
+import { Eye, EyeOff, ArrowLeft } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
+import Banner from '@/components/Banner';
 
-interface BannerProps {
-  type: 'error' | 'success';
-  message: string;
-  visible: boolean;
-  onDismiss: () => void;
-}
 
-const Banner: React.FC<BannerProps> = ({ type, message, visible, onDismiss }) => {
-  const [fadeAnim] = useState(new Animated.Value(0));
-
-  React.useEffect(() => {
-    if (visible) {
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    } else {
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [visible]);
-
-  if (!visible) return null;
-
-  return (
-    <Animated.View 
-      style={[
-        styles.banner,
-        type === 'error' ? styles.errorBanner : styles.successBanner,
-        { opacity: fadeAnim }
-      ]}
-    >
-      {type === 'error' ? (
-        <AlertCircle size={20} color="#DC2626" />
-      ) : (
-        <CheckCircle size={20} color="#059669" />
-      )}
-      <Text style={[
-        styles.bannerText,
-        type === 'error' ? styles.errorText : styles.successText
-      ]}>
-        {message}
-      </Text>
-      <TouchableOpacity onPress={onDismiss} style={styles.bannerClose}>
-        <X size={16} color={type === 'error' ? '#DC2626' : '#059669'} />
-      </TouchableOpacity>
-    </Animated.View>
-  );
-};
 
 export default function SignIn() {
   const router = useRouter();
@@ -93,9 +41,6 @@ export default function SignIn() {
 
   const showBanner = (type: 'error' | 'success', message: string) => {
     setBanner({ visible: true, type, message });
-    setTimeout(() => {
-      setBanner(prev => ({ ...prev, visible: false }));
-    }, 5000);
   };
 
   const dismissBanner = () => {
@@ -263,36 +208,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 20,
   },
-  banner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 20,
-  },
-  errorBanner: {
-    backgroundColor: '#FEF2F2',
-    borderWidth: 1,
-    borderColor: '#FECACA',
-  },
-  successBanner: {
-    backgroundColor: '#F0FDF4',
-    borderWidth: 1,
-    borderColor: '#BBF7D0',
-  },
-  bannerText: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '500',
-    marginLeft: 12,
-  },
-  bannerClose: {
-    padding: 4,
-  },
 
-  successText: {
-    color: '#059669',
-  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

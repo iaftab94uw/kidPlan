@@ -1,6 +1,6 @@
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: 'https://your-api-domain.com', // Replace with your actual API base URL
+  BASE_URL: 'https://familymanagement-staging.up.railway.app', // Replace with your actual API base URL
   PREFIX: '/api/v1', // Replace with your actual API prefix
   ENDPOINTS: {
     LOGIN: '/users/login',
