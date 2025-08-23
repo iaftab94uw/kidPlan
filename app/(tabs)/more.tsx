@@ -6,7 +6,8 @@ import {
   ScrollView, 
   TouchableOpacity,
   SafeAreaView,
-  Image
+  Image,
+  Alert
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { 
@@ -18,9 +19,26 @@ import {
   ChevronRight,
   LogOut
 } from 'lucide-react-native';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function More() {
   const router = useRouter();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Sign Out', 
+          style: 'destructive',
+          onPress: logout
+        }
+      ]
+    );
+  };
 
   const menuSections = [
     {
@@ -108,17 +126,28 @@ export default function More() {
         {/* User Profile Card */}
         <View style={styles.profileCard}>
           <Image 
-            source={{ uri: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2" }}
+            source={{ 
+              uri: user?.profilePhoto || "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2" 
+            }}
             style={styles.profileImage}
           />
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>Sarah Johnson</Text>
-            <Text style={styles.profileEmail}>sarah.johnson@email.com</Text>
+            <Text style={styles.profileName}>
+              {user ? `${user.firstName} ${user.lastName}` : 'Loading...'}
+            </Text>
+            <Text style={styles.profileEmail}>
+              {user?.email || 'Loading...'}
+            </Text>
             <View style={styles.profileBadge}>
-              <Text style={styles.profileBadgeText}>KidPlan Pro</Text>
+              <Text style={styles.profileBadgeText}>
+                {user?.role === 'SIMPLE_USER' ? 'KidPlan User' : user?.role || 'User'}
+              </Text>
             </View>
           </View>
-          <TouchableOpacity style={styles.editProfileButton}>
+          <TouchableOpacity 
+            style={styles.editProfileButton}
+            onPress={() => router.push('/profile-settings')}
+          >
             <Text style={styles.editProfileText}>Edit</Text>
           </TouchableOpacity>
         </View>
@@ -141,7 +170,7 @@ export default function More() {
         </View>
 
         {/* Sign Out Button */}
-        <TouchableOpacity style={styles.signOutButton}>
+        <TouchableOpacity style={styles.signOutButton} onPress={handleLogout}>
           <LogOut size={20} color="#DC2626" />
           <Text style={styles.signOutText}>Sign Out</Text>
         </TouchableOpacity>

@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Eye, EyeOff, ArrowLeft, CircleAlert as AlertCircle, CircleCheck as CheckCircle, X } from 'lucide-react-native';
+import { useAuth } from '@/hooks/useAuth';
 
 interface BannerProps {
   type: 'error' | 'success';
@@ -71,6 +72,7 @@ const Banner: React.FC<BannerProps> = ({ type, message, visible, onDismiss }) =>
 
 export default function SignIn() {
   const router = useRouter();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -100,18 +102,13 @@ export default function SignIn() {
     setBanner(prev => ({ ...prev, visible: false }));
   };
 
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {};
 
     if (!email.trim()) {
       newErrors.email = 'Email is required';
-    } else if (!validateEmail(email)) {
-      newErrors.email = 'Please enter a valid email address';
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'Please enter a valid email';
     }
 
     if (!password) {
@@ -125,28 +122,17 @@ export default function SignIn() {
   };
 
   const handleSignIn = async () => {
-    if (!validateForm()) {
-      showBanner('error', 'Please fix the errors below');
-      return;
-    }
+    if (!validateForm()) return;
 
-    setIsLoading(true);
-    setErrors({});
-    
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      setIsLoading(true);
+      await login(email, password);
+      showBanner('success', 'Login successful!');
+    } catch (error: any) {
+      showBanner('error', error.message || 'Login failed. Please try again.');
+    } finally {
       setIsLoading(false);
-      
-      // Simulate authentication logic
-      if (email === 'test@example.com' && password === 'password') {
-        showBanner('success', 'Welcome back! Redirecting...');
-        setTimeout(() => {
-          router.replace('/(tabs)');
-        }, 1500);
-      } else {
-        showBanner('error', 'Invalid email or password. Please try again.');
-      }
-    }, 1500);
+    }
   };
 
   return (
@@ -303,9 +289,7 @@ const styles = StyleSheet.create({
   bannerClose: {
     padding: 4,
   },
-  errorText: {
-    color: '#DC2626',
-  },
+
   successText: {
     color: '#059669',
   },
