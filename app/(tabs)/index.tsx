@@ -10,6 +10,7 @@ import {
   Dimensions
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useAuth } from '@/hooks/useAuth';
 import { 
   Bell,
   Plus,
@@ -26,6 +27,25 @@ const { width } = Dimensions.get('window');
 
 export default function Dashboard() {
   const router = useRouter();
+  const { user } = useAuth();
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) {
+      return 'Good Morning';
+    } else if (hour < 17) {
+      return 'Good Afternoon';
+    } else {
+      return 'Good Evening';
+    }
+  };
+
+  const getUserDisplayName = () => {
+    if (user?.fullName) {
+      return user.fullName;
+    }
+    return 'User';
+  };
 
   const upcomingEvents = [
     {
@@ -106,8 +126,8 @@ export default function Dashboard() {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Text style={styles.greeting}>Good Morning!</Text>
-            <Text style={styles.userName}>Sarah Johnson</Text>
+            <Text style={styles.greeting}>{getGreeting()}!</Text>
+            <Text style={styles.userName}>{getUserDisplayName()}</Text>
           </View>
           <TouchableOpacity style={styles.notificationButton}>
             <Bell size={24} color="#FFFFFF" />

@@ -8,25 +8,57 @@ import {
   SafeAreaView,
   TextInput,
   Image,
-  Alert
+  Alert,
+  Platform,
+  Modal
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
-import { ArrowLeft, Camera, User, Mail, Phone, MapPin, Calendar, CreditCard as Edit3 } from 'lucide-react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { useAuth } from '@/hooks/useAuth';
+import { ArrowLeft, Camera, User, Mail, MapPin, Calendar, CreditCard as Edit3 } from 'lucide-react-native';
 
 export default function ProfileSettings() {
   const router = useRouter();
+  const { user, deleteAccount } = useAuth();
   
   const [profileData, setProfileData] = useState({
-    name: 'Sarah Johnson',
-    email: 'sarah.johnson@email.com',
-    phone: '+44 7700 900123',
-    address: '123 Oak Street, Manchester, M1 2AB',
-    dateOfBirth: '15/03/1989',
-    avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2'
+    name: user?.fullName || '',
+    email: user?.email || '',
+    address: user?.address || '',
+    dateOfBirth: user?.birthdate ? formatDateForDisplay(user.birthdate) : '',
+    avatar: user?.profilePhoto || 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2'
   });
 
   const [isEditing, setIsEditing] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+
+  // Format date from API format (ISO string) to display format (DD/MM/YYYY)
+  function formatDateForDisplay(dateString: string): string {
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
+
+  // Format date from display format (DD/MM/YYYY) to API format (ISO string)
+  function formatDateForAPI(dateString: string): string {
+    const [day, month, year] = dateString.split('/');
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    return date.toISOString();
+  }
+
+  // Handle date picker change
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      setSelectedDate(selectedDate);
+      const formattedDate = formatDateForDisplay(selectedDate.toISOString());
+      setProfileData(prev => ({ ...prev, dateOfBirth: formattedDate }));
+    }
+  };
 
   const handleSelectPhoto = async () => {
     try {
@@ -101,13 +133,42 @@ export default function ProfileSettings() {
     Alert.alert('Success', 'Profile updated successfully!');
   };
 
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently deleted.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteAccount();
+              Alert.alert('Success', 'Your account has been deleted successfully.');
+            } catch (error) {
+              console.error('Delete account error:', error);
+              Alert.alert('Error', 'Failed to delete account. Please try again.');
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
   const profileFields = [
     {
       icon: User,
       label: 'Full Name',
       value: profileData.name,
       key: 'name',
-      placeholder: 'Enter your full name'
+      placeholder: 'Enter your full name',
+      keyboardType: 'default' as const,
+      editable: true
     },
     {
       icon: Mail,
@@ -115,15 +176,8 @@ export default function ProfileSettings() {
       value: profileData.email,
       key: 'email',
       placeholder: 'Enter your email address',
-      keyboardType: 'email-address'
-    },
-    {
-      icon: Phone,
-      label: 'Phone Number',
-      value: profileData.phone,
-      key: 'phone',
-      placeholder: 'Enter your phone number',
-      keyboardType: 'phone-pad'
+      keyboardType: 'email-address' as const,
+      editable: false
     },
     {
       icon: MapPin,
@@ -131,14 +185,19 @@ export default function ProfileSettings() {
       value: profileData.address,
       key: 'address',
       placeholder: 'Enter your address',
-      multiline: true
+      multiline: true,
+      keyboardType: 'default' as const,
+      editable: true
     },
     {
       icon: Calendar,
       label: 'Date of Birth',
       value: profileData.dateOfBirth,
       key: 'dateOfBirth',
-      placeholder: 'DD/MM/YYYY'
+      placeholder: 'DD/MM/YYYY',
+      keyboardType: 'default' as const,
+      isDatePicker: true,
+      editable: true
     }
   ];
 
@@ -192,23 +251,69 @@ export default function ProfileSettings() {
                   <field.icon size={20} color="#0e3c67" />
                 </View>
                 {isEditing ? (
-                  <TextInput
-                    style={[styles.fieldInput, field.multiline && styles.multilineInput]}
-                    value={field.value}
-                    onChangeText={(text) => setProfileData(prev => ({ ...prev, [field.key]: text }))}
-                    placeholder={field.placeholder}
-                    placeholderTextColor="#9CA3AF"
-                    keyboardType={field.keyboardType || 'default'}
-                    multiline={field.multiline}
-                    numberOfLines={field.multiline ? 3 : 1}
-                  />
+                  field.isDatePicker ? (
+                    <TouchableOpacity
+                      style={styles.fieldInput}
+                      onPress={() => setShowDatePicker(true)}
+                    >
+                      <Text style={[styles.fieldValue, { color: field.value ? '#111827' : '#9CA3AF' }]}>
+                        {field.value || field.placeholder}
+                      </Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <TextInput
+                      style={[styles.fieldInput, field.multiline && styles.multilineInput]}
+                      value={field.value}
+                      onChangeText={(text) => setProfileData(prev => ({ ...prev, [field.key]: text }))}
+                      placeholder={field.placeholder}
+                      placeholderTextColor="#9CA3AF"
+                      keyboardType={field.keyboardType}
+                      multiline={field.multiline}
+                      numberOfLines={field.multiline ? 3 : 1}
+                      editable={field.editable}
+                    />
+                  )
                 ) : (
-                  <Text style={styles.fieldValue}>{field.value}</Text>
+                  <Text style={styles.fieldValue}>{field.value || 'Not set'}</Text>
                 )}
               </View>
             </View>
           ))}
         </View>
+
+        {/* Date Picker Modal */}
+        <Modal
+  visible={showDatePicker}
+  animationType="slide"
+  transparent={true} // important to allow custom sizing
+  onRequestClose={() => setShowDatePicker(false)}
+>
+  <View style={styles.overlay}>
+    <SafeAreaView style={styles.datePickerModal}>
+      {/* Header */}
+      <View style={styles.datePickerHeader}>
+        <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+          <Text style={styles.datePickerCancel}>Cancel</Text>
+        </TouchableOpacity>
+        <Text style={styles.datePickerTitle}>Select Date of Birth</Text>
+        <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+          <Text style={styles.datePickerDone}>Done</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Content */}
+      <View style={styles.datePickerContent}>
+        <DateTimePicker
+          value={selectedDate}
+          mode="date"
+          display="spinner"
+          onChange={handleDateChange}
+          maximumDate={new Date()}
+        />
+      </View>
+    </SafeAreaView>
+  </View>
+</Modal>
 
         {/* Account Info */}
         <View style={styles.accountInfo}>
@@ -216,23 +321,34 @@ export default function ProfileSettings() {
           <View style={styles.accountInfoItem}>
             <Text style={styles.accountInfoLabel}>Account Type</Text>
             <View style={styles.accountBadge}>
-              <Text style={styles.accountBadgeText}>KidPlan Pro</Text>
+              <Text style={styles.accountBadgeText}>{user?.role || 'User'}</Text>
             </View>
           </View>
           <View style={styles.accountInfoItem}>
             <Text style={styles.accountInfoLabel}>Member Since</Text>
-            <Text style={styles.accountInfoValue}>January 2024</Text>
+            <Text style={styles.accountInfoValue}>
+              {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-GB', { 
+                month: 'long', 
+                year: 'numeric' 
+              }) : 'Not available'}
+            </Text>
           </View>
           <View style={styles.accountInfoItem}>
             <Text style={styles.accountInfoLabel}>Account ID</Text>
-            <Text style={styles.accountInfoValue}>KP-2024-001234</Text>
+            <Text style={styles.accountInfoValue}>{user?._id || 'Not available'}</Text>
+          </View>
+          <View style={styles.accountInfoItem}>
+            <Text style={styles.accountInfoLabel}>Email Verified</Text>
+            <Text style={styles.accountInfoValue}>
+              {user?.isEmailVerified ? 'Yes' : 'No'}
+            </Text>
           </View>
         </View>
 
         {/* Delete Account */}
         <View style={styles.dangerZone}>
           <Text style={styles.dangerZoneTitle}>Danger Zone</Text>
-          <TouchableOpacity style={styles.deleteButton}>
+          <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAccount}>
             <Text style={styles.deleteButtonText}>Delete Account</Text>
           </TouchableOpacity>
           <Text style={styles.deleteWarning}>
@@ -473,4 +589,43 @@ const styles = StyleSheet.create({
   bottomSpacing: {
     height: 32,
   },
+  // Date Picker Modal Styles
+  overlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0,0,0,0.5)", // dim background
+  },
+  datePickerModal: {
+    height: 300,
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    paddingBottom: 10,
+  },
+  datePickerHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  datePickerTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  datePickerCancel: {
+    fontSize: 16,
+    color: "red",
+  },
+  datePickerDone: {
+    fontSize: 16,
+    color: "blue",
+  },
+  datePickerContent: {
+    flex: 1,
+    justifyContent: "center",
+  },
+
 });

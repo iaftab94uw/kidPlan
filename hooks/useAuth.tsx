@@ -17,6 +17,15 @@ interface User {
   createdAt: string;
   updatedAt: string;
   isRequestedResetPassword: boolean;
+  roleInFamily: string;
+  family: string;
+  familyId: string;
+  familyName: string;
+  familyProfilePhoto: string | null;
+  familyAddress: string | null;
+  familyBirthdate: string | null;
+  familyEmail: string;
+  familyPhone: string;
   __v: number;
 }
 
@@ -33,6 +42,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>;
   signup: (fullName: string, email: string, password: string) => Promise<boolean>;
   forgotPassword: (email: string) => Promise<boolean>;
+  deleteAccount: () => Promise<boolean>;
   logout: () => Promise<void>;
   checkAuthStatus: () => Promise<void>;
 }
@@ -156,6 +166,45 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const deleteAccount = async (): Promise<boolean> => {
+    try {
+      if (!token) {
+        throw new Error('No authentication token available');
+      }
+
+      setIsLoading(true);
+      
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.PREFIX}${API_CONFIG.ENDPOINTS.DELETE_ACCOUNT}`, {
+        method: 'DELETE',
+        headers: {
+          ...API_CONFIG.HEADERS,
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      console.log('Delete account response:', data);
+      
+      if (data.success) {
+        // Clear local storage and state
+        await AsyncStorage.removeItem('authData');
+        setUser(null);
+        setToken(null);
+        
+        // Redirect to auth screen
+        router.replace('/auth');
+        return true;
+      } else {
+        throw new Error(data.message || 'Account deletion failed');
+      }
+    } catch (error) {
+      console.error('Delete account error:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const logout = async (): Promise<void> => {
     try {
       await AsyncStorage.removeItem('authData');
@@ -224,6 +273,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     login,
     signup,
     forgotPassword,
+    deleteAccount,
     logout,
     checkAuthStatus,
   };
