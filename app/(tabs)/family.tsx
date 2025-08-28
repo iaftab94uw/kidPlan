@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -35,17 +35,91 @@ import {
   ChevronDown,
   Check
 } from 'lucide-react-native';
+import { useAuth } from '@/hooks/useAuth';
+import { API_CONFIG, getAuthHeaders } from '@/config/api';
 
 const { width } = Dimensions.get('window');
 
 export default function Family() {
+  const { user, token } = useAuth();
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   const [showAddScheduleModal, setShowAddScheduleModal] = useState(false);
+  const [showFamilyNameModal, setShowFamilyNameModal] = useState(false);
   const [showParentDropdown, setShowParentDropdown] = useState(false);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [scheduleFilter, setScheduleFilter] = useState('all'); // 'all', 'primary', 'secondary'
+  const [familyName, setFamilyName] = useState('');
+  const [isCreatingFamily, setIsCreatingFamily] = useState(false);
+  const [familyData, setFamilyData] = useState<any>(null);
+  
+  // Family name suggestions
+  const familyNameSuggestions = [
+    "The Smith Family",
+    "The Johnson Family", 
+    "The Williams Family",
+    "The Brown Family",
+    "The Davis Family",
+    "The Miller Family",
+    "The Wilson Family",
+    "The Moore Family",
+    "The Taylor Family",
+    "The Anderson Family"
+  ];
+
+  // Check if user has a family name on component mount
+  useEffect(() => {
+    if (user && !user.familyName) {
+      setShowFamilyNameModal(true);
+    } else if (user && user.familyName) {
+      setFamilyData({
+        familyName: user.familyName,
+        members: []
+      });
+    }
+  }, [user]);
+
+  const createFamily = async () => {
+    if (!familyName.trim()) {
+      Alert.alert('Error', 'Please enter a family name');
+      return;
+    }
+
+    if (!token) {
+      Alert.alert('Error', 'Authentication required');
+      return;
+    }
+
+    try {
+      setIsCreatingFamily(true);
+      
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.PREFIX}/family/create`, {
+        method: 'POST',
+        headers: getAuthHeaders(token),
+        body: JSON.stringify({
+          familyName: familyName.trim()
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setFamilyData(data.data);
+        setShowFamilyNameModal(false);
+        Alert.alert('Success', 'Family created successfully!');
+        // You might want to refresh user data here to get updated family info
+      } else {
+        throw new Error(data.message || 'Failed to create family');
+      }
+    } catch (error) {
+      console.error('Create family error:', error);
+      Alert.alert('Error', 'Failed to create family. Please try again.');
+    } finally {
+      setIsCreatingFamily(false);
+    }
+  };
+
   const [coParents, setCoParents] = useState([
     {
       id: 1,
@@ -381,65 +455,132 @@ export default function Family() {
         </View>
 
         {/* Family Overview */}
-        <View style={styles.overviewCard}>
-          <View style={styles.overviewHeader}>
-            <Text style={styles.overviewTitle}>The Johnson Family</Text>
-            <TouchableOpacity>
-              <Settings size={20} color="#6B7280" />
-            </TouchableOpacity>
+        {familyData ? (
+          <View style={styles.overviewCard}>
+            <View style={styles.overviewHeader}>
+              <Text style={styles.overviewTitle}>
+                The {familyData.familyName}
+              </Text>
+              <TouchableOpacity>
+                <Settings size={20} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.familyStats}>
+              <View style={styles.statItem}>
+                <View style={[styles.statIcon, { backgroundColor: '#E6F3FF' }]}>
+                  <Users size={20} color="#0e3c67" />
+                </View>
+                <Text style={styles.statLabel}>Parents</Text>
+                <Text style={styles.statNumber}>
+                  {coParents.length + familyMembers.filter(member => member.type === 'parent').length}
+                </Text>
+              </View>
+              <View style={styles.statItem}>
+                <View style={[styles.statIcon, { backgroundColor: '#E6F3FF' }]}>
+                  <Baby size={20} color="#0e3c67" />
+                </View>
+                <Text style={styles.statLabel}>Children</Text>
+                <Text style={styles.statNumber}>
+                  {familyMembers.filter(member => member.type === 'child').length}
+                </Text>
+              </View>
+              <View style={styles.statItem}>
+                <View style={[styles.statIcon, { backgroundColor: '#E6F3FF' }]}>
+                  <Heart size={20} color="#0e3c67" />
+                </View>
+                <Text style={styles.statLabel}>Active</Text>
+                <Text style={styles.statNumber}>
+                  {coParents.length + familyMembers.length}
+                </Text>
+              </View>
+            </View>
           </View>
-          <View style={styles.familyStats}>
-            <View style={styles.statItem}>
-              <View style={[styles.statIcon, { backgroundColor: '#E6F3FF' }]}>
-                <Users size={20} color="#0e3c67" />
+        ) : (
+          <View style={styles.overviewCard}>
+            <View style={styles.emptyFamilySection}>
+              <View style={styles.emptyFamilyIcon}>
+                <Users size={48} color="#9CA3AF" />
               </View>
-              <Text style={styles.statLabel}>Parents</Text>
-              <Text style={styles.statNumber}>2</Text>
-            </View>
-            <View style={styles.statItem}>
-              <View style={[styles.statIcon, { backgroundColor: '#E6F3FF' }]}>
-                <Baby size={20} color="#0e3c67" />
-              </View>
-              <Text style={styles.statLabel}>Children</Text>
-              <Text style={styles.statNumber}>2</Text>
-            </View>
-            <View style={styles.statItem}>
-              <View style={[styles.statIcon, { backgroundColor: '#E6F3FF' }]}>
-                <Heart size={20} color="#0e3c67" />
-              </View>
-              <Text style={styles.statLabel}>Active</Text>
-              <Text style={styles.statNumber}>4</Text>
+              <Text style={styles.emptyFamilyTitle}>No Family Created Yet</Text>
+              <Text style={styles.emptyFamilyDescription}>
+                Create your family to start organizing family activities and managing members
+              </Text>
+              <TouchableOpacity 
+                style={styles.emptyFamilyButton}
+                onPress={() => setShowFamilyNameModal(true)}
+              >
+                <Plus size={16} color="#FFFFFF" />
+                <Text style={styles.emptyFamilyButtonText}>Create Family</Text>
+              </TouchableOpacity>
             </View>
           </View>
-        </View>
+        )}
 
         {/* Children */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Children</Text>
-          {familyMembers.filter(member => member.type === 'child').map((member) => (
-            <TouchableOpacity key={member.id} style={styles.memberCard}>
-              <Image source={{ uri: member.avatar }} style={styles.avatar} />
-              <View style={styles.memberInfo}>
-                <Text style={styles.memberName}>{member.name}</Text>
-                <Text style={styles.memberDetails}>{member.age}</Text>
+          {familyMembers.filter(member => member.type === 'child').length > 0 ? (
+            familyMembers.filter(member => member.type === 'child').map((member) => (
+              <TouchableOpacity key={member.id} style={styles.memberCard}>
+                <Image source={{ uri: member.avatar }} style={styles.avatar} />
+                <View style={styles.memberInfo}>
+                  <Text style={styles.memberName}>{member.name}</Text>
+                  <Text style={styles.memberDetails}>{member.age}</Text>
+                </View>
+                <View style={[styles.memberColorBar, { backgroundColor: member.color }]} />
+              </TouchableOpacity>
+            ))
+          ) : (
+            <View style={styles.emptyState}>
+              <View style={styles.emptyStateIcon}>
+                <Baby size={32} color="#9CA3AF" />
               </View>
-              <View style={[styles.memberColorBar, { backgroundColor: member.color }]} />
-            </TouchableOpacity>
-          ))}
+              <Text style={styles.emptyStateTitle}>No family members yet</Text>
+              <Text style={styles.emptyStateSubtitle}>
+                Add your first family member to get started
+              </Text>
+              <TouchableOpacity 
+                style={styles.emptyStateButton}
+                onPress={() => setShowAddMemberModal(true)}
+              >
+                <Plus size={16} color="#FFFFFF" />
+                <Text style={styles.emptyStateButtonText}>Add Family Member</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
         {/* Co-Parents */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Co-Parents</Text>
-          {[...coParents, ...familyMembers.filter(member => member.type === 'parent')].map((parent) => (
-            <TouchableOpacity key={parent.id} style={styles.parentCard}>
-              <Image source={{ uri: parent.avatar }} style={styles.avatar} />
-              <View style={styles.parentInfo}>
-                <Text style={styles.parentName}>{parent.name}</Text>
-                <Text style={styles.parentRole}>{parent.role}</Text>
+          {[...coParents, ...familyMembers.filter(member => member.type === 'parent')].length > 0 ? (
+            [...coParents, ...familyMembers.filter(member => member.type === 'parent')].map((parent) => (
+              <TouchableOpacity key={parent.id} style={styles.parentCard}>
+                <Image source={{ uri: parent.avatar }} style={styles.avatar} />
+                <View style={styles.parentInfo}>
+                  <Text style={styles.parentName}>{parent.name}</Text>
+                  <Text style={styles.parentRole}>{parent.role}</Text>
+                </View>
+              </TouchableOpacity>
+            ))
+          ) : (
+            <View style={styles.emptyState}>
+              <View style={styles.emptyStateIcon}>
+                <Users size={32} color="#9CA3AF" />
               </View>
-            </TouchableOpacity>
-          ))}
+              <Text style={styles.emptyStateTitle}>No co-parents yet</Text>
+              <Text style={styles.emptyStateSubtitle}>
+                Add co-parents to share family responsibilities
+              </Text>
+              <TouchableOpacity 
+                style={styles.emptyStateButton}
+                onPress={() => setShowAddMemberModal(true)}
+              >
+                <Plus size={16} color="#FFFFFF" />
+                <Text style={styles.emptyStateButtonText}>Add Co-Parent</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
         {/* Co-Parenting Schedule */}
@@ -494,33 +635,52 @@ export default function Family() {
             </TouchableOpacity>
           </View>
 
-          {getFilteredSchedules().map((schedule) => (
-            <View key={schedule.id} style={styles.scheduleCard}>
-              <View style={styles.scheduleHeader}>
-                <View>
-                  <Text style={styles.scheduleName}>{schedule.name}</Text>
-                  <Text style={styles.scheduleDate}>{formatDateRange(schedule.startDate, schedule.endDate)}</Text>
-                </View>
-                <View style={styles.scheduleParentBadge}>
-                  <Text style={styles.scheduleParent}>{getParentLabel(schedule.parent)}</Text>
-                </View>
-              </View>
-              <View style={styles.scheduleDetails}>
-                <View style={styles.scheduleDetailItem}>
-                  <MapPin size={16} color="#6B7280" />
-                  <Text style={styles.scheduleDetailText}>{schedule.location}</Text>
-                </View>
-                <View style={styles.scheduleDetailItem}>
-                  <Text style={styles.scheduleActivities}>{schedule.activities}</Text>
-                </View>
-                {schedule.notes && (
-                  <View style={styles.scheduleNotes}>
-                    <Text style={styles.scheduleNotesText}>{schedule.notes}</Text>
+          {getFilteredSchedules().length > 0 ? (
+            getFilteredSchedules().map((schedule) => (
+              <View key={schedule.id} style={styles.scheduleCard}>
+                <View style={styles.scheduleHeader}>
+                  <View>
+                    <Text style={styles.scheduleName}>{schedule.name}</Text>
+                    <Text style={styles.scheduleDate}>{formatDateRange(schedule.startDate, schedule.endDate)}</Text>
                   </View>
-                )}
+                  <View style={styles.scheduleParentBadge}>
+                    <Text style={styles.scheduleParent}>{getParentLabel(schedule.parent)}</Text>
+                  </View>
+                </View>
+                <View style={styles.scheduleDetails}>
+                  <View style={styles.scheduleDetailItem}>
+                    <MapPin size={16} color="#6B7280" />
+                    <Text style={styles.scheduleDetailText}>{schedule.location}</Text>
+                  </View>
+                  <View style={styles.scheduleDetailItem}>
+                    <Text style={styles.scheduleActivities}>{schedule.activities}</Text>
+                  </View>
+                  {schedule.notes && (
+                    <View style={styles.scheduleNotes}>
+                      <Text style={styles.scheduleNotesText}>{schedule.notes}</Text>
+                    </View>
+                  )}
+                </View>
               </View>
+            ))
+          ) : (
+            <View style={styles.emptyState}>
+              <View style={styles.emptyStateIcon}>
+                <Calendar size={32} color="#9CA3AF" />
+              </View>
+              <Text style={styles.emptyStateTitle}>No schedules yet</Text>
+              <Text style={styles.emptyStateSubtitle}>
+                Create your first co-parenting schedule to organize family time
+              </Text>
+              <TouchableOpacity 
+                style={styles.emptyStateButton}
+                onPress={() => setShowAddScheduleModal(true)}
+              >
+                <Plus size={16} color="#FFFFFF" />
+                <Text style={styles.emptyStateButtonText}>Add Schedule</Text>
+              </TouchableOpacity>
             </View>
-          ))}
+          )}
         </View>
 
         {/* Add Family Member Modal */}
@@ -706,8 +866,8 @@ export default function Family() {
 
               <ScrollView style={styles.modalContent}>
                 {/* Schedule Name */}
-                <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>Name of Schedule</Text>
+                <View style={styles.coParentingFieldGroup}>
+                  <Text style={styles.coParentingfieldLabel}>Name of Schedule</Text>
                   <TextInput
                     style={styles.textInput}
                     value={newSchedule.name}
@@ -718,8 +878,8 @@ export default function Family() {
                 </View>
 
                 {/* Date Range */}
-                <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>Date Range</Text>
+                <View style={styles.coParentingFieldGroup}>
+                  <Text style={styles.coParentingfieldLabel}>Date Range</Text>
                   <View style={styles.dateRangeContainer}>
                     <TouchableOpacity
                       style={styles.dateButton}
@@ -758,8 +918,8 @@ export default function Family() {
                 </View>
 
                 {/* Parent Selection */}
-                <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>Responsible Parent</Text>
+                <View style={styles.coParentingFieldGroup}>
+                  <Text style={styles.coParentingfieldLabel}>Responsible Parent</Text>
                   <TouchableOpacity
                     style={styles.dropdownButton}
                     onPress={() => setShowParentDropdown(!showParentDropdown)}
@@ -800,8 +960,8 @@ export default function Family() {
                 </View>
 
                 {/* Location */}
-                <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>Location</Text>
+                <View style={styles.coParentingFieldGroup}>
+                  <Text style={styles.coParentingfieldLabel}>Location</Text>
                   <TouchableOpacity
                     style={styles.dropdownButton}
                     onPress={() => setShowLocationDropdown(!showLocationDropdown)}
@@ -842,8 +1002,8 @@ export default function Family() {
                 </View>
 
                 {/* Activities */}
-                <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>Activities</Text>
+                <View style={styles.coParentingFieldGroup}>
+                  <Text style={styles.coParentingfieldLabel}>Activities</Text>
                   <TextInput
                     style={[styles.textInput, styles.textArea]}
                     value={newSchedule.activities}
@@ -856,8 +1016,8 @@ export default function Family() {
                 </View>
 
                 {/* Notes */}
-                <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>Notes</Text>
+                <View style={styles.coParentingFieldGroup}>
+                  <Text style={styles.coParentingfieldLabel}>Notes</Text>
                   <TextInput
                     style={[styles.textInput, styles.textArea]}
                     value={newSchedule.notes}
@@ -907,6 +1067,74 @@ export default function Family() {
               )}
             </SafeAreaView>
           </KeyboardAvoidingView>
+        </Modal>
+
+        {/* Family Name Modal */}
+        <Modal
+          visible={showFamilyNameModal}
+          animationType="slide"
+          presentationStyle="formSheet"
+        >
+          <SafeAreaView style={styles.modalContainer}>
+            {/* Modal Header */}
+            <View style={styles.modalHeader}>
+              <View style={styles.modalHeaderContent}>
+                <TouchableOpacity 
+                  onPress={() => setShowFamilyNameModal(false)}
+                  style={styles.closeButton}
+                >
+                  <X size={20} color="#6B7280" />
+                </TouchableOpacity>
+                <View style={styles.modalTitleContainer}>
+                  <Text style={styles.modalTitle}>Welcome to Your Family</Text>
+                  <Text style={styles.modalSubtitle}>Let's set up your family name</Text>
+                </View>
+                <View style={styles.placeholderView} />
+              </View>
+              <View style={styles.modalHeaderDivider} />
+            </View>
+
+            <ScrollView style={styles.modalContent}>
+              <View style={styles.familyNameSection}>
+                <View style={styles.familyNameIcon}>
+                  <Users size={48} color="#0e3c67" />
+                </View>
+                <Text style={styles.familyNameTitle}>Create Your Family</Text>
+                <Text style={styles.familyNameDescription}>
+                  Give your family a name to get started. This will help organize your family activities and members.
+                </Text>
+                
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.fieldLabel}>Family Name</Text>
+                  <TextInput
+                    style={[styles.textInput, styles.familyNameInput]}
+                    value={familyName}
+                    onChangeText={setFamilyName}
+                    placeholder="e.g., The Smith Family"
+                    placeholderTextColor="#9CA3AF"
+                    autoFocus
+                  />
+                </View>
+
+
+                <TouchableOpacity 
+                  style={[
+                    styles.createFamilyButton,
+                    (!familyName.trim() || isCreatingFamily) && styles.createFamilyButtonDisabled
+                  ]}
+                  onPress={createFamily}
+                  disabled={!familyName.trim() || isCreatingFamily}
+                >
+                  <Text style={[
+                    styles.createFamilyButtonText,
+                    (!familyName.trim() || isCreatingFamily) && styles.createFamilyButtonTextDisabled
+                  ]}>
+                    {isCreatingFamily ? 'Creating...' : 'Create Family'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </SafeAreaView>
         </Modal>
       </ScrollView>
     </SafeAreaView>
@@ -1386,8 +1614,19 @@ const styles = StyleSheet.create({
   },
   fieldGroup: {
     marginBottom: 28,
+    width: '60%'
   },
   fieldLabel: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+    textAlign:'center'
+  },
+  coParentingFieldGroup: {
+    marginBottom: 28,
+  },
+  coParentingfieldLabel: {
     fontSize: 17,
     fontWeight: '600',
     color: '#374151',
@@ -1564,7 +1803,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
     overflow: 'hidden',
-    maxHeight: 200,
+    maxHeight: 220,
   },
   dropdownItem: {
     flexDirection: 'row',
@@ -1590,5 +1829,212 @@ const styles = StyleSheet.create({
   textArea: {
     height: 80,
     textAlignVertical: 'top',
+  },
+  // Empty State Styles
+  emptyState: {
+    backgroundColor: '#FFFFFF',
+    padding: 32,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  emptyStateIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  emptyStateTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptyStateSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  emptyStateButton: {
+    backgroundColor: '#0e3c67',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 20,
+    shadowColor: '#0e3c67',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  emptyStateButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 14,
+    marginLeft: 8,
+  },
+  // Family Name Modal Styles
+  familyNameSection: {
+    alignItems: 'center',
+    paddingTop: 20,
+  },
+  familyNameIcon: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: '#F0F7FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+    shadowColor: '#0e3c67',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  familyNameTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  familyNameDescription: {
+    fontSize: 16,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 32,
+    lineHeight: 24,
+    paddingHorizontal: 20,
+  },
+  createFamilyButton: {
+    backgroundColor: '#0e3c67',
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 24,
+    shadowColor: '#0e3c67',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
+    minWidth: 200,
+  },
+  createFamilyButtonDisabled: {
+    backgroundColor: '#E5E7EB',
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  createFamilyButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 18,
+    textAlign: 'center',
+  },
+  createFamilyButtonTextDisabled: {
+    color: '#9CA3AF',
+  },
+  // Additional Family Name Modal Styles
+  placeholderView: {
+    width: 36,
+    height: 36,
+  },
+  familyNameInput: {
+    height: 56,
+    fontSize: 16,
+  },
+  suggestionsSection: {
+    marginBottom: 32,
+  },
+  suggestionsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 16,
+  },
+  suggestionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  suggestionChip: {
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginBottom: 8,
+  },
+  suggestionChipSelected: {
+    backgroundColor: '#0e3c67',
+    borderColor: '#0e3c67',
+  },
+  suggestionText: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  suggestionTextSelected: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  // Empty Family Styles
+  emptyFamilySection: {
+    alignItems: 'center',
+    paddingVertical: 32,
+  },
+  emptyFamilyIcon: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+  },
+  emptyFamilyTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  emptyFamilyDescription: {
+    fontSize: 16,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 32,
+    lineHeight: 24,
+    paddingHorizontal: 20,
+  },
+  emptyFamilyButton: {
+    backgroundColor: '#0e3c67',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 24,
+    shadowColor: '#0e3c67',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  emptyFamilyButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 16,
+    marginLeft: 8,
   },
 });
