@@ -9,7 +9,12 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Camera access is required to take photos for your or family profile",
+        "NSPhotoLibraryUsageDescription": "This access is required to take photos for your or family profile.",
+      }
     },
     "web": {
       "bundler": "metro",

@@ -10,7 +10,8 @@ import {
   Image,
   Alert,
   Platform,
-  Modal
+  Modal,
+  ActivityIndicator
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
@@ -21,7 +22,7 @@ import { uploadImage } from '@/config/supabase';
 
 export default function ProfileSettings() {
   const router = useRouter();
-  const { user, deleteAccount } = useAuth();
+  const { user, deleteAccount, updateProfile } = useAuth();
   
   const [profileData, setProfileData] = useState({
     name: user?.fullName || '',
@@ -45,7 +46,7 @@ export default function ProfileSettings() {
     return `${day}/${month}/${year}`;
   }
 
-  // Format date from display format (DD/MM/YYYY) to API format (ISO string)
+  // Format date from display format (DD/MM/YYYY) to API format (YYYY-MM-DD)
   function formatDateForAPI(dateString: string): string {
     const [day, month, year] = dateString.split('/');
     const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
@@ -91,7 +92,8 @@ export default function ProfileSettings() {
                 });
 
                 if (!result.canceled && result.assets[0]) {
-                  await handleImageUpload(result.assets[0].uri, 'camera_photo.jpg');
+                  // Just update local state, don't upload yet
+                  setProfileData(prev => ({ ...prev, avatar: result.assets[0].uri }));
                 }
               } catch (error) {
                 console.error('Camera error:', error);
@@ -116,11 +118,10 @@ export default function ProfileSettings() {
                   quality: 0.8,
                 });
 
-                if (!result.canceled && result.assets[0]) {
-                  // Extract filename from URI or use default
-                  const fileName = result.assets[0].fileName || 'gallery_photo.jpg';
-                  await handleImageUpload(result.assets[0].uri, fileName);
-                }
+                                  if (!result.canceled && result.assets[0]) {
+                    // Just update local state, don't upload yet
+                    setProfileData(prev => ({ ...prev, avatar: result.assets[0].uri }));
+                  }
               } catch (error) {
                 console.error('Gallery error:', error);
                 Alert.alert('Error', 'Failed to open photo library. Please try again.');
@@ -137,40 +138,62 @@ export default function ProfileSettings() {
     }
   };
 
-  const handleImageUpload = async (imageUri: string, fileName: string) => {
-    try {
-      setIsUploadingImage(true);
-      
-      // Upload image to Supabase
-      const uploadResult = await uploadImage(imageUri, fileName);
-      
-      if (uploadResult.success) {
-        // Update profile data with Supabase URL
-        setProfileData(prev => ({ ...prev, avatar: uploadResult.url }));
-        
-        // Print the URL to console as requested
-        console.log('Image uploaded successfully!');
-        console.log('Supabase URL:', uploadResult.url);
-        
-        Alert.alert(
-          'Upload Successful', 
-          `Image uploaded to Supabase!\n\nURL: ${uploadResult.url}`,
-          [{ text: 'OK' }]
-        );
-      } else {
-        throw new Error(uploadResult.error || 'Upload failed');
-      }
-    } catch (error) {
-      console.error('Image upload error:', error);
-      Alert.alert('Upload Failed', 'Failed to upload image to Supabase. Please try again.');
-    } finally {
-      setIsUploadingImage(false);
-    }
-  };
 
-  const handleSave = () => {
-    setIsEditing(false);
-    Alert.alert('Success', 'Profile updated successfully!');
+
+  const handleSave = async () => {
+    try {
+      // Validate required fields
+      if (!profileData.name.trim()) {
+        Alert.alert('Error', 'Full name is required.');
+        return;
+      }
+
+      // Check if we have a new image that needs to be uploaded
+      let finalImageUrl = profileData.avatar;
+      
+      // If the avatar is a local file URI (not a Supabase URL), upload it first
+      if (profileData.avatar && !profileData.avatar.startsWith('http')) {
+        try {
+          setIsUploadingImage(true);
+          
+          // Upload the local image to Supabase
+          const uploadResult = await uploadImage(profileData.avatar, 'profile_photo.jpg');
+          
+          if (uploadResult.success && uploadResult.url) {
+            finalImageUrl = uploadResult.url;
+            console.log('Image uploaded to Supabase:', finalImageUrl);
+          } else {
+            throw new Error(uploadResult.error || 'Failed to upload image');
+          }
+        } catch (error) {
+          console.error('Image upload error:', error);
+          Alert.alert('Error', 'Failed to upload profile image. Please try again.');
+          return;
+        } finally {
+          setIsUploadingImage(false);
+        }
+      }
+
+      // Format the data for the API
+      const updateData = {
+        fullName: profileData.name.trim(),
+        profilePhoto: finalImageUrl || user?.profilePhoto || '',
+        birthdate: profileData.dateOfBirth ? formatDateForAPI(profileData.dateOfBirth) : '',
+        address: profileData.address || '',
+      };
+
+      // Call the update profile API
+      const success = await updateProfile(updateData);
+      
+      if (success) {
+        setIsEditing(false);
+        Alert.alert('Success', 'Profile updated successfully!');
+      }
+      // If success is false, it means unauthorized error was handled by the auth hook
+    } catch (error) {
+      console.error('Profile update error:', error);
+      Alert.alert('Error', 'Failed to update profile. Please try again.');
+    }
   };
 
   const handleDeleteAccount = () => {
@@ -256,9 +279,10 @@ export default function ProfileSettings() {
           <TouchableOpacity 
             style={styles.editButton}
             onPress={() => isEditing ? handleSave() : setIsEditing(true)}
+            disabled={isUploadingImage}
           >
             <Text style={styles.editButtonText}>
-              {isEditing ? 'Save' : 'Edit'}
+              {isEditing ? (isUploadingImage ? 'Saving...' : 'Save') : 'Edit'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -283,7 +307,7 @@ export default function ProfileSettings() {
             )}
           </TouchableOpacity>
           <Text style={styles.photoLabel}>
-            {isUploadingImage ? 'Uploading to Supabase...' : isEditing ? 'Tap to change photo' : 'Profile Photo'}
+            {isUploadingImage ? 'Uploading to Supabase...' : isEditing ? 'Tap to change photo (will upload when saved)' : 'Profile Photo'}
           </Text>
         </View>
 

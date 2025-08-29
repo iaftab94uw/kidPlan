@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { API_CONFIG } from '@/config/api';
+import { handleUnauthorizedError, makeAuthenticatedApiCall } from '@/utils/apiUtils';
 
 interface User {
   _id: string;
@@ -42,6 +43,12 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>;
   signup: (fullName: string, email: string, password: string) => Promise<boolean>;
   forgotPassword: (email: string) => Promise<boolean>;
+  updateProfile: (profileData: {
+    fullName: string;
+    profilePhoto: string;
+    birthdate: string;
+    address: string;
+  }) => Promise<boolean>;
   deleteAccount: () => Promise<boolean>;
   logout: () => Promise<void>;
   checkAuthStatus: () => Promise<void>;
@@ -62,6 +69,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
+
+
 
   const isAuthenticated = !!user && !!token;
 
@@ -166,6 +175,64 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const updateProfile = async (profileData: {
+    fullName: string;
+    profilePhoto: string;
+    birthdate: string;
+    address: string;
+  }): Promise<boolean> => {
+    try {
+      if (!token) {
+        throw new Error('No authentication token available');
+      }
+
+      setIsLoading(true);
+      
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.PREFIX}${API_CONFIG.ENDPOINTS.UPDATE_PROFILE}`, {
+        method: 'PUT',
+        headers: {
+          ...API_CONFIG.HEADERS,
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(profileData),
+      });
+
+      const data = await response.json();
+      console.log('Update profile response:', data);
+      
+      if (data.success) {
+        // Update local user data - handle different possible response structures
+        const updatedUserData = data.data?.user || data.user || data.data;
+        if (updatedUserData && user) {
+          const updatedUser = { ...user, ...updatedUserData };
+          setUser(updatedUser);
+          
+          // Update stored auth data
+          const authDataString = await AsyncStorage.getItem('authData');
+          if (authDataString) {
+            const authData: AuthData = JSON.parse(authDataString);
+            authData.user = updatedUser;
+            await AsyncStorage.setItem('authData', JSON.stringify(authData));
+          }
+        }
+        
+        return true;
+      } else {
+        // Check for unauthorized token error
+        const isUnauthorized = await handleUnauthorizedError(data, setUser, setToken);
+        if (isUnauthorized) {
+          return false;
+        }
+        throw new Error(data.message || data.error || 'Profile update failed');
+      }
+    } catch (error) {
+      console.error('Update profile error:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const deleteAccount = async (): Promise<boolean> => {
     try {
       if (!token) {
@@ -195,7 +262,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         router.replace('/auth');
         return true;
       } else {
-        throw new Error(data.message || 'Account deletion failed');
+        // Check for unauthorized token error
+        const isUnauthorized = await handleUnauthorizedError(data, setUser, setToken);
+        if (isUnauthorized) {
+          return false;
+        }
+        throw new Error(data.message || data.error || 'Account deletion failed');
       }
     } catch (error) {
       console.error('Delete account error:', error);
@@ -273,6 +345,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     login,
     signup,
     forgotPassword,
+    updateProfile,
     deleteAccount,
     logout,
     checkAuthStatus,

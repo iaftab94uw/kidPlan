@@ -10,6 +10,7 @@ export const API_CONFIG = {
     LOGOUT: '/users/logout',
     REFRESH_TOKEN: '/users/refresh-token',
     USER_PROFILE: '/users/profile',
+    UPDATE_PROFILE: '/users/updateUserProfile',
   },
   HEADERS: {
     'Content-Type': 'application/json',
