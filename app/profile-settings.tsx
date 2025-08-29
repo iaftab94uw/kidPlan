@@ -17,6 +17,7 @@ import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useAuth } from '@/hooks/useAuth';
 import { ArrowLeft, Camera, User, Mail, MapPin, Calendar, CreditCard as Edit3 } from 'lucide-react-native';
+import { uploadImage } from '@/config/supabase';
 
 export default function ProfileSettings() {
   const router = useRouter();
@@ -33,6 +34,7 @@ export default function ProfileSettings() {
   const [isEditing, setIsEditing] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   // Format date from API format (ISO string) to display format (DD/MM/YYYY)
   function formatDateForDisplay(dateString: string): string {
@@ -62,6 +64,11 @@ export default function ProfileSettings() {
 
   const handleSelectPhoto = async () => {
     try {
+      if (isUploadingImage) {
+        Alert.alert('Please wait', 'Image upload is in progress...');
+        return;
+      }
+
       Alert.alert(
         'Change Profile Photo',
         'Choose photo source',
@@ -84,7 +91,7 @@ export default function ProfileSettings() {
                 });
 
                 if (!result.canceled && result.assets[0]) {
-                  setProfileData(prev => ({ ...prev, avatar: result.assets[0].uri }));
+                  await handleImageUpload(result.assets[0].uri, 'camera_photo.jpg');
                 }
               } catch (error) {
                 console.error('Camera error:', error);
@@ -110,7 +117,9 @@ export default function ProfileSettings() {
                 });
 
                 if (!result.canceled && result.assets[0]) {
-                  setProfileData(prev => ({ ...prev, avatar: result.assets[0].uri }));
+                  // Extract filename from URI or use default
+                  const fileName = result.assets[0].fileName || 'gallery_photo.jpg';
+                  await handleImageUpload(result.assets[0].uri, fileName);
                 }
               } catch (error) {
                 console.error('Gallery error:', error);
@@ -125,6 +134,37 @@ export default function ProfileSettings() {
     } catch (error) {
       console.error('Image picker error:', error);
       Alert.alert('Error', 'Failed to open image picker. Please try again.');
+    }
+  };
+
+  const handleImageUpload = async (imageUri: string, fileName: string) => {
+    try {
+      setIsUploadingImage(true);
+      
+      // Upload image to Supabase
+      const uploadResult = await uploadImage(imageUri, fileName);
+      
+      if (uploadResult.success) {
+        // Update profile data with Supabase URL
+        setProfileData(prev => ({ ...prev, avatar: uploadResult.url }));
+        
+        // Print the URL to console as requested
+        console.log('Image uploaded successfully!');
+        console.log('Supabase URL:', uploadResult.url);
+        
+        Alert.alert(
+          'Upload Successful', 
+          `Image uploaded to Supabase!\n\nURL: ${uploadResult.url}`,
+          [{ text: 'OK' }]
+        );
+      } else {
+        throw new Error(uploadResult.error || 'Upload failed');
+      }
+    } catch (error) {
+      console.error('Image upload error:', error);
+      Alert.alert('Upload Failed', 'Failed to upload image to Supabase. Please try again.');
+    } finally {
+      setIsUploadingImage(false);
     }
   };
 
@@ -228,16 +268,22 @@ export default function ProfileSettings() {
           <TouchableOpacity 
             style={styles.photoContainer}
             onPress={isEditing ? handleSelectPhoto : undefined}
+            disabled={isUploadingImage}
           >
             <Image source={{ uri: profileData.avatar }} style={styles.profilePhoto} />
-            {isEditing && (
+            {isEditing && !isUploadingImage && (
               <View style={styles.photoOverlay}>
                 <Camera size={20} color="#FFFFFF" />
               </View>
             )}
+            {isUploadingImage && (
+              <View style={styles.uploadingOverlay}>
+                <Text style={styles.uploadingText}>Uploading...</Text>
+              </View>
+            )}
           </TouchableOpacity>
           <Text style={styles.photoLabel}>
-            {isEditing ? 'Tap to change photo' : 'Profile Photo'}
+            {isUploadingImage ? 'Uploading to Supabase...' : isEditing ? 'Tap to change photo' : 'Profile Photo'}
           </Text>
         </View>
 
@@ -627,5 +673,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
   },
-
-});
+  uploadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    alignItems: 'center',
+    
