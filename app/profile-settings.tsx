@@ -681,4 +681,12 @@ const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     alignItems: 'center',
-    
+    justifyContent: 'center',
+    borderRadius: 60,
+  },
+  uploadingText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+});
