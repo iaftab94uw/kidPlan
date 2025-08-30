@@ -1785,6 +1785,9 @@ export default function Family() {
                           value={newSchedule.startDate}
                           mode="date"
                           display="spinner"
+                          textColor="#000000"
+                          accentColor="#0e3c67"
+                          minimumDate={new Date()}       
                           onChange={(event, selectedDate) => {
                             if (selectedDate) {
                               setNewSchedule(prev => ({ 
@@ -1795,7 +1798,6 @@ export default function Family() {
                               }));
                             }
                           }}
-                          minimumDate={new Date()}
                         />
                       </View>
                     </SafeAreaView>
@@ -1825,13 +1827,15 @@ export default function Family() {
                         <DateTimePicker
                           value={newSchedule.endDate}
                           mode="date"
+                          textColor="#000000"
+                          accentColor="#0e3c67"               
                           display="spinner"
+                          minimumDate={new Date()}       
                           onChange={(event, selectedDate) => {
                             if (selectedDate) {
                               setNewSchedule(prev => ({ ...prev, endDate: selectedDate }));
                             }
                           }}
-                          minimumDate={newSchedule.startDate}
                         />
                       </View>
                     </SafeAreaView>
@@ -3119,7 +3123,9 @@ const styles = StyleSheet.create({
   },
   datePickerContent: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
   },
   textArea: {
     height: 80,
