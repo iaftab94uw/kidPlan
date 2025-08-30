@@ -33,10 +33,12 @@ import {
   Image as ImageIcon,
   Filter,
   ChevronDown,
-  Check
+  Check,
+  ChevronRight
 } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { API_CONFIG, getAuthHeaders } from '@/config/api';
+import { uploadImage } from '@/config/supabase';
 
 const { width } = Dimensions.get('window');
 
@@ -53,32 +55,213 @@ export default function Family() {
   const [familyName, setFamilyName] = useState('');
   const [isCreatingFamily, setIsCreatingFamily] = useState(false);
   const [familyData, setFamilyData] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [missingData, setMissingData] = useState<string[]>([]);
+  const [isSavingMember, setIsSavingMember] = useState(false);
+  const [isEditingMember, setIsEditingMember] = useState(false);
+  const [editingMember, setEditingMember] = useState<any>(null);
+  const [showEditMemberModal, setShowEditMemberModal] = useState(false);
+  const [schedules, setSchedules] = useState<any[]>([]);
+  const [schedulesLoading, setSchedulesLoading] = useState(false);
+  const [schedulesPagination, setSchedulesPagination] = useState({
+    total: 0,
+    page: 1,
+    limit: 25,
+    totalPages: 0
+  });
+  const [currentScheduleFilter, setCurrentScheduleFilter] = useState('all');
+  const [isCreatingSchedule, setIsCreatingSchedule] = useState(false);
+  const [isEditingSchedule, setIsEditingSchedule] = useState(false);
+  const [editingSchedule, setEditingSchedule] = useState<any>(null);
+  const [showEditScheduleModal, setShowEditScheduleModal] = useState(false);
   
-  // Family name suggestions
-  const familyNameSuggestions = [
-    "The Smith Family",
-    "The Johnson Family", 
-    "The Williams Family",
-    "The Brown Family",
-    "The Davis Family",
-    "The Miller Family",
-    "The Wilson Family",
-    "The Moore Family",
-    "The Taylor Family",
-    "The Anderson Family"
-  ];
+  // Helper function to convert color name to hex
+  const getColorFromName = (colorName: string) => {
+    const colorMap: { [key: string]: string } = {
+      'Red': '#FF6B6B',
+      'Blue': '#4ECDC4',
+      'Green': '#45B7D1',
+      'Yellow': '#96CEB4',
+      'Purple': '#FFEAA7',
+      'Pink': '#DDA0DD',
+      'Orange': '#98D8C8',
+      'Brown': '#F7DC6F',
+      'Black': '#BB8FCE',
+      'White': '#85C1E9',
+      'Gray': '#F8C471',
+      'Cyan': '#82E0AA',
+      'Magenta': '#F1948A',
+      'Lime': '#F39C12',
+      'Navy': '#D7BDE2',
+      'Teal': '#A3E4D7',
+      'Maroon': '#FAD7A0',
+      'Olive': '#D5A6BD',
+      'Silver': '#AED6F1',
+      'Gold': '#A9DFBF',
+      'Violet': '#F9E79F',
+      'Indigo': '#D2B4DE',
+      'Coral': '#7FB3D3',
+      'Turquoise': '#76D7C4'
+    };
+    return colorMap[colorName] || '#FF6B6B'; // Default to red if color not found
+  };
+
+  // Helper function to convert hex color to color name
+  const getColorNameFromHex = (hexColor: string) => {
+    const colorMap: { [key: string]: string } = {
+      '#FF6B6B': 'Red',
+      '#4ECDC4': 'Blue',
+      '#45B7D1': 'Green',
+      '#96CEB4': 'Yellow',
+      '#FFEAA7': 'Purple',
+      '#DDA0DD': 'Pink',
+      '#98D8C8': 'Orange',
+      '#F7DC6F': 'Brown',
+      '#BB8FCE': 'Black',
+      '#85C1E9': 'White',
+      '#F8C471': 'Gray',
+      '#82E0AA': 'Cyan',
+      '#F1948A': 'Magenta',
+      '#F39C12': 'Lime',
+      '#D7BDE2': 'Navy',
+      '#A3E4D7': 'Teal',
+      '#FAD7A0': 'Maroon',
+      '#D5A6BD': 'Olive',
+      '#AED6F1': 'Silver',
+      '#A9DFBF': 'Gold',
+      '#F9E79F': 'Violet',
+      '#D2B4DE': 'Indigo',
+      '#7FB3D3': 'Coral',
+      '#76D7C4': 'Turquoise'
+    };
+    return colorMap[hexColor] || 'Red'; // Default to Red if color not found
+  };
+  
+  // Fetch family details from API
+  const fetchFamilyDetails = async () => {
+    if (!token) {
+      console.log('No token available');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      const url = `${API_CONFIG.BASE_URL}${API_CONFIG.PREFIX}${API_CONFIG.ENDPOINTS.FAMILY_DETAILS}`;
+      const headers = getAuthHeaders(token);
+      
+      console.log('=== FETCH FAMILY DETAILS API ===');
+      console.log('URL:', url);
+      console.log('Method: GET');
+      console.log('Headers:', headers);
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: headers,
+      });
+
+      const data = await response.json();
+      
+      console.log('Response:', data);
+      console.log('=== END FETCH FAMILY DETAILS API ===');
+      
+      if (data.success) {
+        setFamilyData(data.data);
+        
+        // Check for missing or empty data
+        const missing = [];
+        if (!data.data.familyName || data.data.familyName.trim() === '') {
+          missing.push('familyName');
+        }
+        if ((!data.data.children || data.data.children.length === 0) && 
+            (!data.data.parents || data.data.parents.length === 0) && 
+            (!data.data.coParents || data.data.coParents.length === 0)) {
+          missing.push('members');
+        }
+        
+        setMissingData(missing);
+      } else {
+        console.error('Failed to fetch family details:', data.message);
+        // If no family exists, show family name modal
+        if (data.message?.includes('not found') || data.message?.includes('no family')) {
+          setShowFamilyNameModal(true);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching family details:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch family schedules
+  const fetchFamilySchedules = async (page = 1, filter = 'all') => {
+    if (!token || !familyData?._id) {
+      return;
+    }
+
+    try {
+      setSchedulesLoading(true);
+      
+      let url = `${API_CONFIG.BASE_URL}${API_CONFIG.PREFIX}${API_CONFIG.ENDPOINTS.GET_FAMILY_SCHEDULES}?page=${page}&limit=25`;
+      
+      // Add responsible parent filter if not 'all'
+      if (filter !== 'all') {
+        const parentFilter = filter === 'primary' ? 'Primary' : 'Secondary';
+        url += `&responsibleParent=${parentFilter}`;
+      }
+      
+      const headers = getAuthHeaders(token);
+      
+      console.log('=== FETCH FAMILY SCHEDULES API ===');
+      console.log('URL:', url);
+      console.log('Method: GET');
+      console.log('Headers:', headers);
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: headers,
+      });
+
+      const data = await response.json();
+      
+      console.log('Response:', data);
+      console.log('=== END FETCH FAMILY SCHEDULES API ===');
+      
+      if (data.success) {
+        if (page === 1) {
+          // First page - replace schedules
+          setSchedules(data.data.schedules);
+        } else {
+          // Subsequent pages - append schedules
+          setSchedules(prev => [...prev, ...data.data.schedules]);
+        }
+        
+        setSchedulesPagination(data.data.pagination);
+        setCurrentScheduleFilter(filter);
+      } else {
+        console.error('Failed to fetch schedules:', data.message);
+      }
+    } catch (error) {
+      console.error('Error fetching family schedules:', error);
+    } finally {
+      setSchedulesLoading(false);
+    }
+  };
 
   // Check if user has a family name on component mount
   useEffect(() => {
-    if (user && !user.familyName) {
-      setShowFamilyNameModal(true);
-    } else if (user && user.familyName) {
-      setFamilyData({
-        familyName: user.familyName,
-        members: []
-      });
+    if (user) {
+      fetchFamilyDetails();
     }
-  }, [user]);
+  }, [user, token]);
+
+  // Fetch schedules when family data is available
+  useEffect(() => {
+    if (familyData?._id) {
+      fetchFamilySchedules(1, 'all');
+    }
+  }, [familyData?._id]);
 
   const createFamily = async () => {
     if (!familyName.trim()) {
@@ -94,21 +277,35 @@ export default function Family() {
     try {
       setIsCreatingFamily(true);
       
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.PREFIX}/family/create`, {
+      const url = `${API_CONFIG.BASE_URL}${API_CONFIG.PREFIX}/family/create`;
+      const headers = getAuthHeaders(token);
+      const body = {
+        familyName: familyName.trim()
+      };
+      
+      console.log('=== CREATE FAMILY API ===');
+      console.log('URL:', url);
+      console.log('Method: POST');
+      console.log('Headers:', headers);
+      console.log('Body:', body);
+      
+      const response = await fetch(url, {
         method: 'POST',
-        headers: getAuthHeaders(token),
-        body: JSON.stringify({
-          familyName: familyName.trim()
-        }),
+        headers: headers,
+        body: JSON.stringify(body),
       });
 
       const data = await response.json();
+      
+      console.log('Response:', data);
+      console.log('=== END CREATE FAMILY API ===');
       
       if (data.success) {
         setFamilyData(data.data);
         setShowFamilyNameModal(false);
         Alert.alert('Success', 'Family created successfully!');
-        // You might want to refresh user data here to get updated family info
+        // Refresh family details to update missing data
+        fetchFamilyDetails();
       } else {
         throw new Error(data.message || 'Failed to create family');
       }
@@ -337,7 +534,7 @@ export default function Family() {
     }
   };
 
-  const handleSaveMember = () => {
+  const handleSaveMember = async () => {
     if (!newMember.name.trim()) {
       Alert.alert('Error', 'Please enter a name');
       return;
@@ -351,55 +548,408 @@ export default function Family() {
       return;
     }
 
-    const selectedRole = roles.find(r => r.id === newMember.role);
-    const isChild = newMember.role === 'son' || newMember.role === 'daughter';
-    const isParent = newMember.role === 'father' || newMember.role === 'mother';
-    
-    // Create new member object
-    const newMemberObject = {
-      id: isChild ? familyMembers.length + 1 : coParents.length + 1,
-      name: newMember.name,
-      role: selectedRole?.label || newMember.role,
-      age: newMember.age + (newMember.age.includes('year') ? '' : ' years old'),
-      avatar: newMember.avatar || `https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2`,
-      color: newMember.color,
-      type: isChild ? 'child' : 'parent'
-    };
-
-    if (isChild) {
-      // Add to children list
-      const childMember = {
-        ...newMemberObject,
-        school: 'School TBD',
-        nextEvent: 'No upcoming events'
-      };
-      setFamilyMembers(prevMembers => [...prevMembers, childMember]);
-    } else if (isParent) {
-      // Add to co-parents list
-      const parentMember = {
-        ...newMemberObject,
-        status: 'offline',
-        phone: '+44 7700 900000',
-        email: `${newMember.name.toLowerCase().replace(' ', '.')}@email.com`
-      };
-      setCoParents(prevParents => [...prevParents, parentMember]);
-    } else {
-      // For 'other' role, add to children list by default
-      const otherMember = {
-        ...newMemberObject,
-        school: '',
-        nextEvent: 'No upcoming events',
-        type: 'child'
-      };
-      setFamilyMembers(prevMembers => [...prevMembers, otherMember]);
+    if (!familyData?._id) {
+      Alert.alert('Error', 'Family not found. Please try again.');
+      return;
     }
-    
-    Alert.alert('Success', 'Family member added successfully!');
-    setNewMember({ name: '', role: '', age: '', color: '#FF6B6B', avatar: null });
-    setShowAddMemberModal(false);
+
+    try {
+      setIsSavingMember(true);
+      let finalImageUrl = newMember.avatar;
+      
+      // Upload image to Supabase if it's a local URI
+      const avatarUri = newMember.avatar;
+      if (avatarUri && typeof avatarUri === 'string' && !avatarUri.startsWith('http')) {
+        try {
+          const uploadResult = await uploadImage(avatarUri!, 'family_member_photo.jpg');
+          
+          if (uploadResult.success && uploadResult.url) {
+            finalImageUrl = uploadResult.url;
+            console.log('Image uploaded to Supabase:', finalImageUrl);
+          } else {
+            throw new Error(uploadResult.error || 'Failed to upload image');
+          }
+        } catch (error) {
+          console.error('Image upload error:', error);
+          Alert.alert('Error', 'Failed to upload profile image. Please try again.');
+          return;
+        }
+      }
+
+      const selectedRole = roles.find(r => r.id === newMember.role);
+      const roleLabel = selectedRole?.label || newMember.role;
+
+      // Prepare member data for API
+      const memberData = {
+        familyId: familyData._id,
+        name: newMember.name.trim(),
+        role: roleLabel,
+        age: parseInt(newMember.age),
+        favoriteColor: newMember.color, // Send hex color directly
+        profilePhoto: finalImageUrl || 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2'
+      };
+
+      // Call API to add family member
+      const url = `${API_CONFIG.BASE_URL}${API_CONFIG.PREFIX}${API_CONFIG.ENDPOINTS.ADD_FAMILY_MEMBER}`;
+      const headers = getAuthHeaders(token);
+      
+      console.log('=== ADD FAMILY MEMBER API ===');
+      console.log('URL:', url);
+      console.log('Method: POST');
+      console.log('Headers:', headers);
+      console.log('Body:', memberData);
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(memberData),
+      });
+
+      const data = await response.json();
+      
+      console.log('Response:', data);
+      console.log('=== END ADD FAMILY MEMBER API ===');
+      
+      if (data.success) {
+        // Update local family data with the new member
+        setFamilyData(data.data);
+        
+        // Clear form and close modal
+        setNewMember({ name: '', role: '', age: '', color: '#FF6B6B', avatar: null });
+        setShowAddMemberModal(false);
+        
+        Alert.alert('Success', 'Family member added successfully!');
+        
+        // Refresh family details to get updated data
+        fetchFamilyDetails();
+      } else {
+        throw new Error(data.message || 'Failed to add family member');
+      }
+    } catch (error) {
+      console.error('Add family member error:', error);
+      Alert.alert('Error', 'Failed to add family member. Please try again.');
+    } finally {
+      setIsSavingMember(false);
+    }
   };
 
-  const handleSaveSchedule = () => {
+  // Handle edit member
+  const handleEditMember = (member: any) => {
+    // Find the role ID based on the role label
+    const roleId = roles.find(r => r.label === member.role)?.id || 'other';
+    
+    setEditingMember({
+      ...member,
+      role: roleId, // Set the role ID for pre-selection
+      color: member.favoriteColor // Use hex color directly
+    });
+    setShowEditMemberModal(true);
+  };
+
+  // Handle update member
+  const handleUpdateMember = async () => {
+    if (!editingMember.name.trim()) {
+      Alert.alert('Error', 'Please enter a name');
+      return;
+    }
+    if (!editingMember.role) {
+      Alert.alert('Error', 'Please select a role');
+      return;
+    }
+    if (!editingMember.age || editingMember.age.toString().trim() === '') {
+      Alert.alert('Error', 'Please enter an age');
+      return;
+    }
+
+    if (!familyData?._id || !editingMember._id) {
+      Alert.alert('Error', 'Family or member not found. Please try again.');
+      return;
+    }
+
+    try {
+      setIsEditingMember(true);
+      let finalImageUrl = editingMember.profilePhoto;
+      
+      // Upload image to Supabase if it's a local URI
+      const avatarUri = editingMember.profilePhoto;
+      if (avatarUri && typeof avatarUri === 'string' && !avatarUri.startsWith('http')) {
+        try {
+          const uploadResult = await uploadImage(avatarUri!, 'family_member_photo.jpg');
+          
+          if (uploadResult.success && uploadResult.url) {
+            finalImageUrl = uploadResult.url;
+            console.log('Image uploaded to Supabase:', finalImageUrl);
+          } else {
+            throw new Error(uploadResult.error || 'Failed to upload image');
+          }
+        } catch (error) {
+          console.error('Image upload error:', error);
+          Alert.alert('Error', 'Failed to upload profile image. Please try again.');
+          return;
+        }
+      }
+
+      const selectedRole = roles.find(r => r.id === editingMember.role);
+      const roleLabel = selectedRole?.label || editingMember.role;
+
+      // Prepare member data for API
+      const memberData = {
+        memberId: editingMember._id,
+        familyId: familyData._id,
+        name: editingMember.name.trim(),
+        role: roleLabel,
+        age: parseInt(editingMember.age),
+        favoriteColor: editingMember.color, // Send hex color directly
+        profilePhoto: finalImageUrl || 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2'
+      };
+
+      // Call API to update family member
+      const url = `${API_CONFIG.BASE_URL}${API_CONFIG.PREFIX}${API_CONFIG.ENDPOINTS.UPDATE_FAMILY_MEMBER}`;
+      const headers = getAuthHeaders(token);
+      
+      console.log('=== UPDATE FAMILY MEMBER API ===');
+      console.log('URL:', url);
+      console.log('Method: POST');
+      console.log('Headers:', headers);
+      console.log('Body:', memberData);
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(memberData),
+      });
+
+      const data = await response.json();
+      
+      console.log('Response:', data);
+      console.log('=== END UPDATE FAMILY MEMBER API ===');
+      
+      if (data.success) {
+        // Update local family data with the updated member
+        setFamilyData(data.data);
+        
+        // Clear form and close modal
+        setEditingMember(null);
+        setShowEditMemberModal(false);
+        
+        Alert.alert('Success', 'Family member updated successfully!');
+        
+        // Refresh family details to get updated data
+        fetchFamilyDetails();
+      } else {
+        throw new Error(data.message || 'Failed to update family member');
+      }
+    } catch (error) {
+      console.error('Update family member error:', error);
+      Alert.alert('Error', 'Failed to update family member. Please try again.');
+    } finally {
+      setIsEditingMember(false);
+    }
+  };
+
+  // Handle delete member
+  const handleDeleteMember = async (member: any) => {
+    Alert.alert(
+      'Delete Family Member',
+      `Are you sure you want to delete ${member.name}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            if (!familyData?._id || !member._id) {
+              Alert.alert('Error', 'Family or member not found. Please try again.');
+              return;
+            }
+
+            try {
+              const memberData = {
+                familyId: familyData._id,
+                memberId: member._id
+              };
+
+              const url = `${API_CONFIG.BASE_URL}${API_CONFIG.PREFIX}${API_CONFIG.ENDPOINTS.DELETE_FAMILY_MEMBER}`;
+              const headers = getAuthHeaders(token);
+              
+              console.log('=== DELETE FAMILY MEMBER API ===');
+              console.log('URL:', url);
+              console.log('Method: DELETE');
+              console.log('Headers:', headers);
+              console.log('Body:', memberData);
+              
+              const response = await fetch(url, {
+                method: 'DELETE',
+                headers: headers,
+                body: JSON.stringify(memberData),
+              });
+
+              const data = await response.json();
+              
+              console.log('Response:', data);
+              console.log('=== END DELETE FAMILY MEMBER API ===');
+              
+              if (data.success) {
+                // Update local family data
+                setFamilyData(data.data);
+                
+                Alert.alert('Success', 'Family member deleted successfully!');
+                
+                // Refresh family details to get updated data
+                fetchFamilyDetails();
+              } else {
+                throw new Error(data.message || 'Failed to delete family member');
+              }
+            } catch (error) {
+              console.error('Delete family member error:', error);
+              Alert.alert('Error', 'Failed to delete family member. Please try again.');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  // Handle edit schedule
+  const handleEditSchedule = (schedule: any) => {
+    setEditingSchedule({
+      ...schedule,
+      startDate: new Date(schedule.startDate),
+      endDate: new Date(schedule.endDate),
+      parent: schedule.responsibleParent === 'Primary' ? 'primary' : 'secondary'
+    });
+    setShowEditScheduleModal(true);
+  };
+
+  // Handle update schedule
+  const handleUpdateSchedule = async () => {
+    if (!editingSchedule.name.trim()) {
+      Alert.alert('Error', 'Please enter a schedule name');
+      return;
+    }
+    if (!editingSchedule.parent) {
+      Alert.alert('Error', 'Please select a parent');
+      return;
+    }
+    if (!editingSchedule.location.trim()) {
+      Alert.alert('Error', 'Please enter a location');
+      return;
+    }
+
+    try {
+      setIsEditingSchedule(true);
+
+      // Convert parent selection to API format
+      const responsibleParent = editingSchedule.parent === 'primary' ? 'Primary' : 'Secondary';
+
+      // Prepare schedule data for API
+      const scheduleData = {
+        scheduleId: editingSchedule._id,
+        name: editingSchedule.name.trim(),
+        startDate: editingSchedule.startDate.toISOString(),
+        endDate: editingSchedule.endDate.toISOString(),
+        responsibleParent: responsibleParent,
+        location: editingSchedule.location.trim(),
+        activities: editingSchedule.activities || 'No activities specified',
+        notes: editingSchedule.notes || 'No additional notes'
+      };
+
+      // Call API to update schedule
+      const url = `${API_CONFIG.BASE_URL}${API_CONFIG.PREFIX}${API_CONFIG.ENDPOINTS.UPDATE_SCHEDULE}`;
+      const headers = getAuthHeaders(token);
+      
+      console.log('=== UPDATE SCHEDULE API ===');
+      console.log('URL:', url);
+      console.log('Method: POST');
+      console.log('Headers:', headers);
+      console.log('Body:', scheduleData);
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(scheduleData),
+      });
+
+      const data = await response.json();
+      
+      console.log('Response:', data);
+      console.log('=== END UPDATE SCHEDULE API ===');
+      
+      if (data.success) {
+        // Clear form and close modal
+        setEditingSchedule(null);
+        setShowEditScheduleModal(false);
+        
+        Alert.alert('Success', 'Schedule updated successfully!');
+        
+        // Refresh schedules to get updated data
+        fetchFamilySchedules(1, currentScheduleFilter);
+      } else {
+        throw new Error(data.message || 'Failed to update schedule');
+      }
+    } catch (error) {
+      console.error('Update schedule error:', error);
+      Alert.alert('Error', 'Failed to update schedule. Please try again.');
+    } finally {
+      setIsEditingSchedule(false);
+    }
+  };
+
+  // Handle delete schedule
+  const handleDeleteSchedule = async (schedule: any) => {
+    Alert.alert(
+      'Delete Schedule',
+      `Are you sure you want to delete "${schedule.name}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const scheduleData = {
+                scheduleId: schedule._id
+              };
+
+              const url = `${API_CONFIG.BASE_URL}${API_CONFIG.PREFIX}${API_CONFIG.ENDPOINTS.DELETE_SCHEDULE}`;
+              const headers = getAuthHeaders(token);
+              
+              console.log('=== DELETE SCHEDULE API ===');
+              console.log('URL:', url);
+              console.log('Method: DELETE');
+              console.log('Headers:', headers);
+              console.log('Body:', scheduleData);
+              
+              const response = await fetch(url, {
+                method: 'DELETE',
+                headers: headers,
+                body: JSON.stringify(scheduleData),
+              });
+
+              const data = await response.json();
+              
+              console.log('Response:', data);
+              console.log('=== END DELETE SCHEDULE API ===');
+              
+              if (data.success) {
+                Alert.alert('Success', 'Schedule deleted successfully!');
+                
+                // Refresh schedules to get updated data
+                fetchFamilySchedules(1, currentScheduleFilter);
+              } else {
+                throw new Error(data.message || 'Failed to delete schedule');
+              }
+            } catch (error) {
+              console.error('Delete schedule error:', error);
+              Alert.alert('Error', 'Failed to delete schedule. Please try again.');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const handleSaveSchedule = async () => {
     if (!newSchedule.name.trim()) {
       Alert.alert('Error', 'Please enter a schedule name');
       return;
@@ -413,42 +963,106 @@ export default function Family() {
       return;
     }
 
-    const scheduleToAdd = {
-      id: coParentingSchedules.length + 1,
-      name: newSchedule.name,
-      startDate: newSchedule.startDate,
-      endDate: newSchedule.endDate,
-      parent: newSchedule.parent,
-      location: newSchedule.location,
-      activities: newSchedule.activities || 'No activities specified',
-      notes: newSchedule.notes || 'No additional notes'
-    };
+    if (!familyData?._id) {
+      Alert.alert('Error', 'Family not found. Please try again.');
+      return;
+    }
 
-    setCoParentingSchedules(prevSchedules => [...prevSchedules, scheduleToAdd]);
-    Alert.alert('Success', 'Schedule added successfully!');
-    
-    // Reset form
-    setNewSchedule({
-      name: '',
-      startDate: new Date(),
-      endDate: new Date(),
-      parent: '',
-      location: '',
-      activities: '',
-      notes: ''
-    });
-    setShowAddScheduleModal(false);
+    try {
+      setIsCreatingSchedule(true);
+
+      // Convert parent selection to API format
+      const responsibleParent = newSchedule.parent === 'primary' ? 'Primary' : 'Secondary';
+
+      // Prepare schedule data for API
+      const scheduleData = {
+        familyId: familyData._id,
+        name: newSchedule.name.trim(),
+        startDate: newSchedule.startDate.toISOString(),
+        endDate: newSchedule.endDate.toISOString(),
+        responsibleParent: responsibleParent,
+        location: newSchedule.location.trim(),
+        activities: newSchedule.activities || 'No activities specified',
+        notes: newSchedule.notes || 'No additional notes'
+      };
+
+      // Call API to create schedule
+      const url = `${API_CONFIG.BASE_URL}${API_CONFIG.PREFIX}${API_CONFIG.ENDPOINTS.CREATE_SCHEDULE}`;
+      const headers = getAuthHeaders(token);
+      
+      console.log('=== CREATE SCHEDULE API ===');
+      console.log('URL:', url);
+      console.log('Method: POST');
+      console.log('Headers:', headers);
+      console.log('Body:', scheduleData);
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(scheduleData),
+      });
+
+      const data = await response.json();
+      
+      console.log('Response:', data);
+      console.log('=== END CREATE SCHEDULE API ===');
+      
+      if (data.success) {
+        // Reset form and close modal
+        setNewSchedule({
+          name: '',
+          startDate: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
+          endDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // Day after tomorrow
+          parent: '',
+          location: '',
+          activities: '',
+          notes: ''
+        });
+        setShowAddScheduleModal(false);
+        
+        Alert.alert('Success', 'Schedule created successfully!');
+        
+        // Refresh schedules to show the new schedule
+        fetchFamilySchedules(1, currentScheduleFilter);
+      } else {
+        throw new Error(data.message || 'Failed to create schedule');
+      }
+    } catch (error) {
+      console.error('Create schedule error:', error);
+      Alert.alert('Error', 'Failed to create schedule. Please try again.');
+    } finally {
+      setIsCreatingSchedule(false);
+    }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading family details...</Text>
+        </View>
+      ) : (
+        <ScrollView>
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Family</Text>
           <TouchableOpacity 
             style={styles.addButton}
-            onPress={() => setShowAddMemberModal(true)}
+            onPress={() => {
+              // Check if family name exists
+              if (!familyData?.familyName || familyData.familyName.trim() === '') {
+                Alert.alert(
+                  'Family Name Required',
+                  'Please set up your family name first before adding members.',
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    { text: 'Set Family Name', onPress: () => setShowFamilyNameModal(true) }
+                  ]
+                );
+              } else {
+                setShowAddMemberModal(true);
+              }
+            }}
           >
             <Plus size={20} color="#FFFFFF" />
           </TouchableOpacity>
@@ -459,7 +1073,7 @@ export default function Family() {
           <View style={styles.overviewCard}>
             <View style={styles.overviewHeader}>
               <Text style={styles.overviewTitle}>
-                The {familyData.familyName}
+                {familyData.familyName}
               </Text>
               <TouchableOpacity>
                 <Settings size={20} color="#6B7280" />
@@ -472,7 +1086,7 @@ export default function Family() {
                 </View>
                 <Text style={styles.statLabel}>Parents</Text>
                 <Text style={styles.statNumber}>
-                  {coParents.length + familyMembers.filter(member => member.type === 'parent').length}
+                  {(familyData.parents?.length || 0)}
                 </Text>
               </View>
               <View style={styles.statItem}>
@@ -481,7 +1095,7 @@ export default function Family() {
                 </View>
                 <Text style={styles.statLabel}>Children</Text>
                 <Text style={styles.statNumber}>
-                  {familyMembers.filter(member => member.type === 'child').length}
+                  {familyData.children?.length || 0}
                 </Text>
               </View>
               <View style={styles.statItem}>
@@ -490,7 +1104,7 @@ export default function Family() {
                 </View>
                 <Text style={styles.statLabel}>Active</Text>
                 <Text style={styles.statNumber}>
-                  {coParents.length + familyMembers.length}
+                  {familyData.totalActive || 0}
                 </Text>
               </View>
             </View>
@@ -516,35 +1130,55 @@ export default function Family() {
           </View>
         )}
 
+
+
         {/* Children */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Children</Text>
-          {familyMembers.filter(member => member.type === 'child').length > 0 ? (
-            familyMembers.filter(member => member.type === 'child').map((member) => (
-              <TouchableOpacity key={member.id} style={styles.memberCard}>
-                <Image source={{ uri: member.avatar }} style={styles.avatar} />
+          {familyData?.children && familyData.children.length > 0 ? (
+            familyData.children.map((child: any) => (
+              <View key={child._id} style={styles.memberCard}>
+                <Image 
+                  source={{ uri: child.profilePhoto || 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2' }} 
+                  style={styles.avatar} 
+                />
                 <View style={styles.memberInfo}>
-                  <Text style={styles.memberName}>{member.name}</Text>
-                  <Text style={styles.memberDetails}>{member.age}</Text>
+                  <Text style={styles.memberName}>{child.name}</Text>
+                  <Text style={styles.memberDetails}>{child.age} years old</Text>
+                  <Text style={styles.memberRole}>{child.role}</Text>
                 </View>
-                <View style={[styles.memberColorBar, { backgroundColor: member.color }]} />
-              </TouchableOpacity>
+                <View style={styles.memberActions}>
+                  <TouchableOpacity 
+                    style={styles.actionButton}
+                    onPress={() => handleEditMember(child)}
+                  >
+                    <Settings size={16} color="#6B7280" />
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.actionButton, styles.deleteButton]}
+                    onPress={() => handleDeleteMember(child)}
+                  >
+                    <X size={16} color="#EF4444" />
+                  </TouchableOpacity>
+                </View>
+                <View style={[styles.memberColorBar, { backgroundColor: child.favoriteColor }]} />
+              </View>
             ))
           ) : (
             <View style={styles.emptyState}>
               <View style={styles.emptyStateIcon}>
                 <Baby size={32} color="#9CA3AF" />
               </View>
-              <Text style={styles.emptyStateTitle}>No family members yet</Text>
+              <Text style={styles.emptyStateTitle}>No children yet</Text>
               <Text style={styles.emptyStateSubtitle}>
-                Add your first family member to get started
+                Add your children to get started
               </Text>
               <TouchableOpacity 
                 style={styles.emptyStateButton}
                 onPress={() => setShowAddMemberModal(true)}
               >
                 <Plus size={16} color="#FFFFFF" />
-                <Text style={styles.emptyStateButtonText}>Add Family Member</Text>
+                <Text style={styles.emptyStateButtonText}>Add Child</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -553,15 +1187,34 @@ export default function Family() {
         {/* Co-Parents */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Co-Parents</Text>
-          {[...coParents, ...familyMembers.filter(member => member.type === 'parent')].length > 0 ? (
-            [...coParents, ...familyMembers.filter(member => member.type === 'parent')].map((parent) => (
-              <TouchableOpacity key={parent.id} style={styles.parentCard}>
-                <Image source={{ uri: parent.avatar }} style={styles.avatar} />
+          {familyData?.coParents && familyData.coParents.length > 0 ? (
+            familyData.coParents.map((coParent: any) => (
+              <View key={coParent._id} style={styles.parentCard}>
+                <Image 
+                  source={{ uri: coParent.profilePhoto || 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2' }} 
+                  style={styles.avatar} 
+                />
                 <View style={styles.parentInfo}>
-                  <Text style={styles.parentName}>{parent.name}</Text>
-                  <Text style={styles.parentRole}>{parent.role}</Text>
+                  <Text style={styles.parentName}>{coParent.name}</Text>
+                  <Text style={styles.parentRole}>{coParent.role}</Text>
+                  <Text style={styles.parentAge}>{coParent.age} years old</Text>
                 </View>
-              </TouchableOpacity>
+                <View style={styles.memberActions}>
+                  <TouchableOpacity 
+                    style={styles.actionButton}
+                    onPress={() => handleEditMember(coParent)}
+                  >
+                    <Settings size={16} color="#6B7280" />
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.actionButton, styles.deleteButton]}
+                    onPress={() => handleDeleteMember(coParent)}
+                  >
+                    <X size={16} color="#EF4444" />
+                  </TouchableOpacity>
+                </View>
+                <View style={[styles.memberColorBar, { backgroundColor: coParent.favoriteColor }]} />
+              </View>
             ))
           ) : (
             <View style={styles.emptyState}>
@@ -583,6 +1236,41 @@ export default function Family() {
           )}
         </View>
 
+        {/* Others */}
+        {familyData?.others && familyData.others.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Others</Text>
+            {familyData.others.map((other: any) => (
+              <View key={other._id} style={styles.memberCard}>
+                <Image 
+                  source={{ uri: other.profilePhoto || 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2' }} 
+                  style={styles.avatar} 
+                />
+                <View style={styles.memberInfo}>
+                  <Text style={styles.memberName}>{other.name}</Text>
+                  <Text style={styles.memberDetails}>{other.age} years old</Text>
+                  <Text style={styles.memberRole}>{other.role}</Text>
+                </View>
+                <View style={styles.memberActions}>
+                  <TouchableOpacity 
+                    style={styles.actionButton}
+                    onPress={() => handleEditMember(other)}
+                  >
+                    <Settings size={16} color="#6B7280" />
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.actionButton, styles.deleteButton]}
+                    onPress={() => handleDeleteMember(other)}
+                  >
+                    <X size={16} color="#EF4444" />
+                  </TouchableOpacity>
+                </View>
+                <View style={[styles.memberColorBar, { backgroundColor: other.favoriteColor }]} />
+              </View>
+            ))}
+          </View>
+        )}
+
         {/* Co-Parenting Schedule */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -600,69 +1288,108 @@ export default function Family() {
             <TouchableOpacity
               style={[
                 styles.filterButton,
-                scheduleFilter === 'all' && styles.filterButtonActive
+                currentScheduleFilter === 'all' && styles.filterButtonActive
               ]}
-              onPress={() => setScheduleFilter('all')}
+              onPress={() => fetchFamilySchedules(1, 'all')}
             >
               <Text style={[
                 styles.filterButtonText,
-                scheduleFilter === 'all' && styles.filterButtonTextActive
+                currentScheduleFilter === 'all' && styles.filterButtonTextActive
               ]}>All</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[
                 styles.filterButton,
-                scheduleFilter === 'primary' && styles.filterButtonActive
+                currentScheduleFilter === 'primary' && styles.filterButtonActive
               ]}
-              onPress={() => setScheduleFilter('primary')}
+              onPress={() => fetchFamilySchedules(1, 'primary')}
             >
               <Text style={[
                 styles.filterButtonText,
-                scheduleFilter === 'primary' && styles.filterButtonTextActive
+                currentScheduleFilter === 'primary' && styles.filterButtonTextActive
               ]}>Primary Parent</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[
                 styles.filterButton,
-                scheduleFilter === 'secondary' && styles.filterButtonActive
+                currentScheduleFilter === 'secondary' && styles.filterButtonActive
               ]}
-              onPress={() => setScheduleFilter('secondary')}
+              onPress={() => fetchFamilySchedules(1, 'secondary')}
             >
               <Text style={[
                 styles.filterButtonText,
-                scheduleFilter === 'secondary' && styles.filterButtonTextActive
+                currentScheduleFilter === 'secondary' && styles.filterButtonTextActive
               ]}>Secondary Parent</Text>
             </TouchableOpacity>
           </View>
 
-          {getFilteredSchedules().length > 0 ? (
-            getFilteredSchedules().map((schedule) => (
-              <View key={schedule.id} style={styles.scheduleCard}>
-                <View style={styles.scheduleHeader}>
-                  <View>
-                    <Text style={styles.scheduleName}>{schedule.name}</Text>
-                    <Text style={styles.scheduleDate}>{formatDateRange(schedule.startDate, schedule.endDate)}</Text>
-                  </View>
-                  <View style={styles.scheduleParentBadge}>
-                    <Text style={styles.scheduleParent}>{getParentLabel(schedule.parent)}</Text>
-                  </View>
-                </View>
-                <View style={styles.scheduleDetails}>
-                  <View style={styles.scheduleDetailItem}>
-                    <MapPin size={16} color="#6B7280" />
-                    <Text style={styles.scheduleDetailText}>{schedule.location}</Text>
-                  </View>
-                  <View style={styles.scheduleDetailItem}>
-                    <Text style={styles.scheduleActivities}>{schedule.activities}</Text>
-                  </View>
-                  {schedule.notes && (
-                    <View style={styles.scheduleNotes}>
-                      <Text style={styles.scheduleNotesText}>{schedule.notes}</Text>
+          {schedulesLoading && schedules.length === 0 ? (
+            <View style={styles.loadingState}>
+              <Text style={styles.loadingText}>Loading schedules...</Text>
+            </View>
+          ) : schedules.length > 0 ? (
+            <>
+                              {schedules.map((schedule) => (
+                  <View key={schedule._id} style={styles.scheduleCard}>
+                    <View style={styles.scheduleHeader}>
+                      <View>
+                        <Text style={styles.scheduleName}>{schedule.name}</Text>
+                        <Text style={styles.scheduleDate}>
+                          {formatDateRange(new Date(schedule.startDate), new Date(schedule.endDate))}
+                        </Text>
+                      </View>
+                      <View style={styles.scheduleHeaderRight}>
+                        <View style={styles.scheduleParentBadge}>
+                          <Text style={styles.scheduleParent}>
+                            {schedule.responsibleParent === 'Primary' ? 'You' : 'Co-Parent'}
+                          </Text>
+                        </View>
+                        <View style={styles.scheduleActions}>
+                          <TouchableOpacity 
+                            style={styles.actionButton}
+                            onPress={() => handleEditSchedule(schedule)}
+                          >
+                            <Settings size={16} color="#6B7280" />
+                          </TouchableOpacity>
+                          <TouchableOpacity 
+                            style={[styles.actionButton, styles.deleteButton]}
+                            onPress={() => handleDeleteSchedule(schedule)}
+                          >
+                            <X size={16} color="#EF4444" />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
                     </View>
-                  )}
-                </View>
-              </View>
-            ))
+                    <View style={styles.scheduleDetails}>
+                      <View style={styles.scheduleDetailItem}>
+                        <MapPin size={16} color="#6B7280" />
+                        <Text style={styles.scheduleDetailText}>{schedule.location}</Text>
+                      </View>
+                      <View style={styles.scheduleDetailItem}>
+                        <Text style={styles.scheduleActivities}>{schedule.activities}</Text>
+                      </View>
+                      {schedule.notes && (
+                        <View style={styles.scheduleNotes}>
+                          <Text style={styles.scheduleNotesText}>{schedule.notes}</Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                ))}
+              
+              {/* Load More Button */}
+              {schedulesPagination.page < schedulesPagination.totalPages && (
+                <TouchableOpacity 
+                  style={styles.loadMoreButton}
+                  onPress={() => fetchFamilySchedules(schedulesPagination.page + 1, currentScheduleFilter)}
+                  disabled={schedulesLoading}
+                >
+                  <Text style={styles.loadMoreButtonText}>
+                    {schedulesLoading ? 'Loading...' : 'Load More'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </>
           ) : (
             <View style={styles.emptyState}>
               <View style={styles.emptyStateIcon}>
@@ -706,15 +1433,17 @@ export default function Family() {
                 <TouchableOpacity 
                   style={[
                     styles.saveButton,
-                    (!newMember.name.trim() || !newMember.role || !newMember.age.trim()) && styles.saveButtonDisabled
+                    (!newMember.name.trim() || !newMember.role || !newMember.age.trim() || isSavingMember) && styles.saveButtonDisabled
                   ]}
                   onPress={handleSaveMember}
-                  disabled={!newMember.name.trim() || !newMember.role || !newMember.age.trim()}
+                  disabled={!newMember.name.trim() || !newMember.role || !newMember.age.trim() || isSavingMember}
                 >
                   <Text style={[
                     styles.saveButtonText,
-                    (!newMember.name.trim() || !newMember.role || !newMember.age.trim()) && styles.saveButtonTextDisabled
-                  ]}>Save</Text>
+                    (!newMember.name.trim() || !newMember.role || !newMember.age.trim() || isSavingMember) && styles.saveButtonTextDisabled
+                  ]}>
+                    {isSavingMember ? 'Saving...' : 'Save'}
+                  </Text>
                 </TouchableOpacity>
               </View>
               <View style={styles.modalHeaderDivider} />
@@ -850,15 +1579,17 @@ export default function Family() {
                   <TouchableOpacity 
                     style={[
                       styles.saveButton,
-                      (!newSchedule.name.trim() || !newSchedule.parent || !newSchedule.location.trim()) && styles.saveButtonDisabled
+                      (!newSchedule.name.trim() || !newSchedule.parent || !newSchedule.location.trim() || isCreatingSchedule) && styles.saveButtonDisabled
                     ]}
                     onPress={handleSaveSchedule}
-                    disabled={!newSchedule.name.trim() || !newSchedule.parent || !newSchedule.location.trim()}
+                    disabled={!newSchedule.name.trim() || !newSchedule.parent || !newSchedule.location.trim() || isCreatingSchedule}
                   >
                     <Text style={[
                       styles.saveButtonText,
-                      (!newSchedule.name.trim() || !newSchedule.parent || !newSchedule.location.trim()) && styles.saveButtonTextDisabled
-                    ]}>Save</Text>
+                      (!newSchedule.name.trim() || !newSchedule.parent || !newSchedule.location.trim() || isCreatingSchedule) && styles.saveButtonTextDisabled
+                    ]}>
+                      {isCreatingSchedule ? 'Creating...' : 'Save'}
+                    </Text>
                   </TouchableOpacity>
                 </View>
                 <View style={styles.modalHeaderDivider} />
@@ -1136,7 +1867,459 @@ export default function Family() {
             </ScrollView>
           </SafeAreaView>
         </Modal>
-      </ScrollView>
+
+        {/* Edit Family Member Modal */}
+        <Modal
+          visible={showEditMemberModal}
+          animationType="slide"
+          presentationStyle="formSheet"
+        >
+          <SafeAreaView style={styles.modalContainer}>
+            {/* Enhanced Modal Header */}
+            <View style={styles.modalHeader}>
+              <View style={styles.modalHeaderContent}>
+                <TouchableOpacity 
+                  onPress={() => setShowEditMemberModal(false)}
+                  style={styles.closeButton}
+                >
+                  <X size={20} color="#6B7280" />
+                </TouchableOpacity>
+                <View style={styles.modalTitleContainer}>
+                  <Text style={styles.modalTitle}>Edit Family Member</Text>
+                  <Text style={styles.modalSubtitle}>Update family member details</Text>
+                </View>
+                <TouchableOpacity 
+                  style={[
+                    styles.saveButton,
+                    (!editingMember?.name?.trim() || !editingMember?.role || !editingMember?.age || editingMember?.age?.toString().trim() === '' || isEditingMember) && styles.saveButtonDisabled
+                  ]}
+                  onPress={handleUpdateMember}
+                  disabled={!editingMember?.name?.trim() || !editingMember?.role || !editingMember?.age || editingMember?.age?.toString().trim() === '' || isEditingMember}
+                >
+                  <Text style={[
+                    styles.saveButtonText,
+                    (!editingMember?.name?.trim() || !editingMember?.role || !editingMember?.age || editingMember?.age?.toString().trim() === '' || isEditingMember) && styles.saveButtonTextDisabled
+                  ]}>
+                    {isEditingMember ? 'Updating...' : 'Update'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.modalHeaderDivider} />
+            </View>
+
+            <ScrollView style={styles.modalContent}>
+              {/* Profile Photo */}
+              <View style={styles.photoSection}>
+                <Text style={styles.photoSectionTitle}>Profile Photo</Text>
+                <TouchableOpacity 
+                  style={styles.photoContainer}
+                  onPress={() => {
+                    Alert.alert(
+                      'Select Photo',
+                      'Choose photo source',
+                      [
+                        {
+                          text: 'Camera',
+                          onPress: async () => {
+                            try {
+                              const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
+                              if (cameraPermission.status !== 'granted') {
+                                Alert.alert('Permission needed', 'Please grant camera permissions to take photos.');
+                                return;
+                              }
+                              
+                              const result = await ImagePicker.launchCameraAsync({
+                                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                                allowsEditing: true,
+                                aspect: [1, 1],
+                                quality: 0.6,
+                              });
+
+                              if (!result.canceled && result.assets[0]) {
+                                setEditingMember(prev => ({ ...prev, profilePhoto: result.assets[0].uri }));
+                              }
+                            } catch (error) {
+                              console.error('Camera error:', error);
+                              Alert.alert('Error', 'Failed to open camera. Please try again.');
+                            }
+                          }
+                        },
+                        {
+                          text: 'Gallery',
+                          onPress: async () => {
+                            try {
+                              const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                              if (status !== 'granted') {
+                                Alert.alert('Permission needed', 'Please grant photo library permissions to select photos.');
+                                return;
+                              }
+
+                              const result = await ImagePicker.launchImageLibraryAsync({
+                                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                                allowsEditing: true,
+                                aspect: [1, 1],
+                                quality: 0.6,
+                              });
+
+                              if (!result.canceled && result.assets[0]) {
+                                setEditingMember(prev => ({ ...prev, profilePhoto: result.assets[0].uri }));
+                              }
+                            } catch (error) {
+                              console.error('Gallery error:', error);
+                              Alert.alert('Error', 'Failed to open photo library. Please try again.');
+                            }
+                          }
+                        },
+                        { text: 'Cancel', style: 'cancel' }
+                      ],
+                      { cancelable: true }
+                    );
+                  }}
+                >
+                  {editingMember?.profilePhoto ? (
+                    <Image source={{ uri: editingMember.profilePhoto }} style={styles.profilePhoto} />
+                  ) : (
+                    <View style={styles.photoPlaceholder}>
+                      <View style={styles.photoPlaceholderIcon}>
+                        <ImageIcon size={28} color="#0e3c67" />
+                      </View>
+                      <Text style={styles.photoPlaceholderText}>Add Photo</Text>
+                    </View>
+                  )}
+                  <View style={styles.photoOverlay}>
+                    <Camera size={20} color="#FFFFFF" />
+                  </View>
+                </TouchableOpacity>
+                <Text style={styles.photoLabel}>Tap to add or change photo</Text>
+              </View>
+
+              {/* Name Field */}
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>Name</Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={editingMember?.name || ''}
+                  onChangeText={(text) => setEditingMember(prev => ({ ...prev, name: text }))}
+                  placeholder="Enter full name"
+                  placeholderTextColor="#9CA3AF"
+                />
+              </View>
+
+              {/* Role Selection */}
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>Role</Text>
+                <View style={styles.roleGrid}>
+                  {roles.map((role) => (
+                    <TouchableOpacity
+                      key={role.id}
+                      style={[
+                        styles.roleOption,
+                        editingMember?.role === role.id && styles.roleOptionSelected
+                      ]}
+                      onPress={() => setEditingMember(prev => ({ ...prev, role: role.id }))}
+                    >
+                      <Text style={styles.roleEmoji}>{role.icon}</Text>
+                      <Text style={[
+                        styles.roleLabel,
+                        editingMember?.role === role.id && styles.roleLabelSelected
+                      ]}>
+                        {role.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* Age Field */}
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>Age</Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={editingMember?.age?.toString() || ''}
+                  onChangeText={(text) => setEditingMember(prev => ({ ...prev, age: text }))}
+                  placeholder="Enter age"
+                  placeholderTextColor="#9CA3AF"
+                  keyboardType="numeric"
+                />
+              </View>
+
+              {/* Favourite Colour */}
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>Favourite Colour</Text>
+                <Text style={styles.fieldDescription}>Choose a colour that represents this family member</Text>
+                <View style={styles.colorGrid}>
+                  {colors.map((color) => (
+                    <TouchableOpacity
+                      key={color}
+                      style={[
+                        styles.colorOption,
+                        { backgroundColor: color },
+                        editingMember?.color === color && styles.colorOptionSelected
+                      ]}
+                      onPress={() => setEditingMember(prev => ({ ...prev, color }))}
+                    >
+                      {editingMember?.color === color && (
+                        <View style={styles.colorSelected}>
+                          <View style={styles.colorCheckmark} />
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            </ScrollView>
+          </SafeAreaView>
+        </Modal>
+
+        {/* Edit Schedule Modal */}
+        <Modal
+          visible={showEditScheduleModal}
+          animationType="slide"
+          presentationStyle="formSheet"
+        >
+          <KeyboardAvoidingView 
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.keyboardAvoidingView}
+          >
+            <SafeAreaView style={styles.modalContainer}>
+              {/* Modal Header */}
+              <View style={styles.modalHeader}>
+                <View style={styles.modalHeaderContent}>
+                  <TouchableOpacity 
+                    onPress={() => setShowEditScheduleModal(false)}
+                    style={styles.closeButton}
+                  >
+                    <X size={20} color="#6B7280" />
+                  </TouchableOpacity>
+                  <View style={styles.modalTitleContainer}>
+                    <Text style={styles.modalTitle}>Edit Schedule</Text>
+                    <Text style={styles.modalSubtitle}>Update schedule details</Text>
+                  </View>
+                  <TouchableOpacity 
+                    style={[
+                      styles.saveButton,
+                      (!editingSchedule?.name?.trim() || !editingSchedule?.parent || !editingSchedule?.location?.trim() || isEditingSchedule) && styles.saveButtonDisabled
+                    ]}
+                    onPress={handleUpdateSchedule}
+                    disabled={!editingSchedule?.name?.trim() || !editingSchedule?.parent || !editingSchedule?.location?.trim() || isEditingSchedule}
+                  >
+                    <Text style={[
+                      styles.saveButtonText,
+                      (!editingSchedule?.name?.trim() || !editingSchedule?.parent || !editingSchedule?.location?.trim() || isEditingSchedule) && styles.saveButtonTextDisabled
+                    ]}>
+                      {isEditingSchedule ? 'Updating...' : 'Update'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.modalHeaderDivider} />
+              </View>
+
+              <ScrollView style={styles.modalContent}>
+                {/* Schedule Name */}
+                <View style={styles.coParentingFieldGroup}>
+                  <Text style={styles.coParentingfieldLabel}>Name of Schedule</Text>
+                  <TextInput
+                    style={styles.textInput}
+                    value={editingSchedule?.name || ''}
+                    onChangeText={(text) => setEditingSchedule(prev => ({ ...prev, name: text }))}
+                    placeholder="Weekend with dad"
+                    placeholderTextColor="#9CA3AF"
+                  />
+                </View>
+
+                {/* Date Range */}
+                <View style={styles.coParentingFieldGroup}>
+                  <Text style={styles.coParentingfieldLabel}>Date Range</Text>
+                  <View style={styles.dateRangeContainer}>
+                    <TouchableOpacity
+                      style={styles.dateButton}
+                      onPress={() => setShowStartDatePicker(true)}
+                    >
+                      <Calendar size={16} color="#6B7280" />
+                      <View style={styles.dateButtonContent}>
+                        <Text style={styles.dateButtonLabel}>Start Date</Text>
+                        <Text style={styles.dateButtonText}>
+                          {editingSchedule?.startDate?.toLocaleDateString('en-GB', { 
+                            day: 'numeric', 
+                            month: 'short',
+                            year: 'numeric'
+                          })}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity
+                      style={styles.dateButton}
+                      onPress={() => setShowEndDatePicker(true)}
+                    >
+                      <Calendar size={16} color="#6B7280" />
+                      <View style={styles.dateButtonContent}>
+                        <Text style={styles.dateButtonLabel}>End Date</Text>
+                        <Text style={styles.dateButtonText}>
+                          {editingSchedule?.endDate?.toLocaleDateString('en-GB', { 
+                            day: 'numeric', 
+                            month: 'short',
+                            year: 'numeric'
+                          })}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* Parent Selection */}
+                <View style={styles.coParentingFieldGroup}>
+                  <Text style={styles.coParentingfieldLabel}>Responsible Parent</Text>
+                  <TouchableOpacity
+                    style={styles.dropdownButton}
+                    onPress={() => setShowParentDropdown(!showParentDropdown)}
+                  >
+                    <Text style={styles.dropdownButtonText}>
+                      {editingSchedule?.parent ? parentOptions.find(p => p.id === editingSchedule.parent)?.label : 'Select parent'}
+                    </Text>
+                    <ChevronDown size={20} color="#6B7280" />
+                  </TouchableOpacity>
+                  
+                  {showParentDropdown && (
+                    <View style={styles.dropdownMenu}>
+                      {parentOptions.map((parent) => (
+                        <TouchableOpacity
+                          key={parent.id}
+                          style={[
+                            styles.dropdownItem,
+                            editingSchedule?.parent === parent.id && styles.dropdownItemSelected
+                          ]}
+                          onPress={() => {
+                            setEditingSchedule(prev => ({ ...prev, parent: parent.id }));
+                            setShowParentDropdown(false);
+                          }}
+                        >
+                          <Text style={[
+                            styles.dropdownItemText,
+                            editingSchedule?.parent === parent.id && styles.dropdownItemTextSelected
+                          ]}>
+                            {parent.label}
+                          </Text>
+                          {editingSchedule?.parent === parent.id && (
+                            <Check size={16} color="#FFFFFF" />
+                          )}
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
+                </View>
+
+                {/* Location */}
+                <View style={styles.coParentingFieldGroup}>
+                  <Text style={styles.coParentingfieldLabel}>Location</Text>
+                  <TouchableOpacity
+                    style={styles.dropdownButton}
+                    onPress={() => setShowLocationDropdown(!showLocationDropdown)}
+                  >
+                    <Text style={styles.dropdownButtonText}>
+                      {editingSchedule?.location || 'Select location'}
+                    </Text>
+                    <ChevronDown size={20} color="#6B7280" />
+                  </TouchableOpacity>
+                  
+                  {showLocationDropdown && (
+                    <View style={styles.dropdownMenu}>
+                      {locationOptions.map((location) => (
+                        <TouchableOpacity
+                          key={location}
+                          style={[
+                            styles.dropdownItem,
+                            editingSchedule?.location === location && styles.dropdownItemSelected
+                          ]}
+                          onPress={() => {
+                            setEditingSchedule(prev => ({ ...prev, location }));
+                            setShowLocationDropdown(false);
+                          }}
+                        >
+                          <Text style={[
+                            styles.dropdownItemText,
+                            editingSchedule?.location === location && styles.dropdownItemTextSelected
+                          ]}>
+                            {location}
+                          </Text>
+                          {editingSchedule?.location === location && (
+                            <Check size={16} color="#FFFFFF" />
+                          )}
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
+                </View>
+
+                {/* Activities */}
+                <View style={styles.coParentingFieldGroup}>
+                  <Text style={styles.coParentingfieldLabel}>Activities</Text>
+                  <TextInput
+                    style={[styles.textInput, styles.textArea]}
+                    value={editingSchedule?.activities || ''}
+                    onChangeText={(text) => setEditingSchedule(prev => ({ ...prev, activities: text }))}
+                    placeholder="List all planned activities"
+                    placeholderTextColor="#9CA3AF"
+                    multiline
+                    numberOfLines={3}
+                  />
+                </View>
+
+                {/* Notes */}
+                <View style={styles.coParentingFieldGroup}>
+                  <Text style={styles.coParentingfieldLabel}>Notes</Text>
+                  <TextInput
+                    style={[styles.textInput, styles.textArea]}
+                    value={editingSchedule?.notes || ''}
+                    onChangeText={(text) => setEditingSchedule(prev => ({ ...prev, notes: text }))}
+                    placeholder="Additional notes or instructions"
+                    placeholderTextColor="#9CA3AF"
+                    multiline
+                    numberOfLines={3}
+                  />
+                </View>
+              </ScrollView>
+
+              {/* Date Pickers */}
+              {showStartDatePicker && (
+                <DateTimePicker
+                  value={editingSchedule?.startDate || new Date()}
+                  mode="date"
+                  display="default"
+                  onChange={(event, selectedDate) => {
+                    setShowStartDatePicker(false);
+                    if (selectedDate) {
+                      setEditingSchedule(prev => ({ 
+                        ...prev, 
+                        startDate: selectedDate,
+                        // Auto-adjust end date if it's before start date
+                        endDate: selectedDate > (prev?.endDate || new Date()) ? new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000) : (prev?.endDate || new Date())
+                      }));
+                    }
+                  }}
+                  minimumDate={new Date()}
+                />
+              )}
+
+              {showEndDatePicker && (
+                <DateTimePicker
+                  value={editingSchedule?.endDate || new Date()}
+                  mode="date"
+                  display="default"
+                  onChange={(event, selectedDate) => {
+                    setShowEndDatePicker(false);
+                    if (selectedDate) {
+                      setEditingSchedule(prev => ({ ...prev, endDate: selectedDate }));
+                    }
+                  }}
+                  minimumDate={editingSchedule?.startDate || new Date()}
+                />
+              )}
+            </SafeAreaView>
+          </KeyboardAvoidingView>
+        </Modal>
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
@@ -1230,6 +2413,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#111827',
+    paddingBottom:5,
   },
   addScheduleButton: {
     width: 32,
@@ -1297,6 +2481,11 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     marginBottom: 6,
   },
+  memberRole: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    fontWeight: '500',
+  },
   nextEvent: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1310,6 +2499,22 @@ const styles = StyleSheet.create({
     width: 4,
     height: 40,
     borderRadius: 2,
+  },
+  memberActions: {
+    flexDirection: 'row',
+    gap: 8,
+    marginRight: 8,
+  },
+  actionButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deleteButton: {
+    backgroundColor: '#FEF2F2',
   },
   parentCard: {
     backgroundColor: '#FFFFFF',
@@ -1348,6 +2553,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6B7280',
     marginBottom: 8,
+  },
+  parentAge: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    fontWeight: '500',
   },
   contactInfo: {
     gap: 4,
@@ -1557,13 +2767,14 @@ const styles = StyleSheet.create({
   photoPlaceholder: {
     width: '100%',
     height: '100%',
+    borderRadius: '50%',
     backgroundColor: '#F0F7FF',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: '#0e3c67',
     borderStyle: 'dashed',
-    position: 'relative',
+
   },
   photoPlaceholderIcon: {
     width: 56,
@@ -1580,6 +2791,7 @@ const styles = StyleSheet.create({
     elevation: 2,
     borderWidth: 2,
     borderColor: '#E6F3FF',
+    
   },
   photoPlaceholderText: {
     fontSize: 16,
@@ -1614,7 +2826,7 @@ const styles = StyleSheet.create({
   },
   fieldGroup: {
     marginBottom: 28,
-    width: '60%'
+    width: '100%'
   },
   fieldLabel: {
     fontSize: 17,
@@ -2036,5 +3248,108 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 16,
     marginLeft: 8,
+  },
+  // Missing Data Styles
+  missingDataSection: {
+    backgroundColor: '#FFFFFF',
+    margin: 20,
+    padding: 20,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  missingDataTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 8,
+  },
+  missingDataSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  missingDataItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    marginBottom: 8,
+  },
+  missingDataIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#E6F3FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  missingDataContent: {
+    flex: 1,
+  },
+  missingDataLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 2,
+  },
+  missingDataDescription: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  // Loading Styles
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#6B7280',
+    marginTop: 16,
+  },
+  // Schedule Loading and Load More Styles
+  loadingState: {
+    backgroundColor: '#FFFFFF',
+    padding: 32,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  loadMoreButton: {
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 20,
+    alignItems: 'center',
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  loadMoreButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#374151',
+  },
+  // Schedule Actions Style
+  scheduleActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  scheduleHeaderRight: {
+    alignItems: 'flex-end',
+    gap: 8,
   },
 });

@@ -353,13 +353,14 @@ const styles = StyleSheet.create({
   photoPlaceholder: {
     width: '100%',
     height: '100%',
+    borderRadius: '50%',
     backgroundColor: '#F0F7FF',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: '#0e3c67',
     borderStyle: 'dashed',
-    position: 'relative',
+
   },
   photoPlaceholderIcon: {
     width: 56,
@@ -376,6 +377,7 @@ const styles = StyleSheet.create({
     elevation: 2,
     borderWidth: 2,
     borderColor: '#E6F3FF',
+    
   },
   photoPlaceholderText: {
     fontSize: 16,

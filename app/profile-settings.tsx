@@ -88,7 +88,7 @@ export default function ProfileSettings() {
                   mediaTypes: ImagePicker.MediaTypeOptions.Images,
                   allowsEditing: true,
                   aspect: [1, 1],
-                  quality: 0.8,
+                  quality: 0.6,
                 });
 
                 if (!result.canceled && result.assets[0]) {
@@ -156,7 +156,7 @@ export default function ProfileSettings() {
         try {
           setIsUploadingImage(true);
           
-          // Upload the local image to Supabase
+          // Upload the image to Supabase using the correct method
           const uploadResult = await uploadImage(profileData.avatar, 'profile_photo.jpg');
           
           if (uploadResult.success && uploadResult.url) {
@@ -373,13 +373,16 @@ export default function ProfileSettings() {
 
       {/* Content */}
       <View style={styles.datePickerContent}>
-        <DateTimePicker
-          value={selectedDate}
-          mode="date"
-          display="spinner"
-          onChange={handleDateChange}
-          maximumDate={new Date()}
-        />
+                 <DateTimePicker
+           value={selectedDate}
+           mode="date"
+           display="spinner"
+           onChange={handleDateChange}
+           maximumDate={new Date()}
+           minimumDate={new Date(1900, 0, 1)}
+           textColor="#000000"
+           accentColor="#0e3c67"
+         />
       </View>
     </SafeAreaView>
   </View>
@@ -696,6 +699,8 @@ const styles = StyleSheet.create({
   datePickerContent: {
     flex: 1,
     justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
   },
   uploadingOverlay: {
     position: 'absolute',
