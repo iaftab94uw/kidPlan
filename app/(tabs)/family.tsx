@@ -1763,38 +1763,80 @@ export default function Family() {
 
               {/* Date Pickers */}
               {showStartDatePicker && (
-                <DateTimePicker
-                  value={newSchedule.startDate}
-                  mode="date"
-                  display="default"
-                  onChange={(event, selectedDate) => {
-                    setShowStartDatePicker(false);
-                    if (selectedDate) {
-                      setNewSchedule(prev => ({ 
-                        ...prev, 
-                        startDate: selectedDate,
-                        // Auto-adjust end date if it's before start date
-                        endDate: selectedDate > prev.endDate ? new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000) : prev.endDate
-                      }));
-                    }
-                  }}
-                  minimumDate={new Date()}
-                />
+                <Modal
+                  visible={showStartDatePicker}
+                  animationType="slide"
+                  transparent={true}
+                  onRequestClose={() => setShowStartDatePicker(false)}
+                >
+                  <View style={styles.datePickerOverlay}>
+                    <SafeAreaView style={styles.datePickerModal}>
+                      <View style={styles.datePickerHeader}>
+                        <TouchableOpacity onPress={() => setShowStartDatePicker(false)}>
+                          <Text style={styles.datePickerCancel}>Cancel</Text>
+                        </TouchableOpacity>
+                        <Text style={styles.datePickerTitle}>Select Start Date</Text>
+                        <TouchableOpacity onPress={() => setShowStartDatePicker(false)}>
+                          <Text style={styles.datePickerDone}>Done</Text>
+                        </TouchableOpacity>
+                      </View>
+                      <View style={styles.datePickerContent}>
+                        <DateTimePicker
+                          value={newSchedule.startDate}
+                          mode="date"
+                          display="spinner"
+                          onChange={(event, selectedDate) => {
+                            if (selectedDate) {
+                              setNewSchedule(prev => ({ 
+                                ...prev, 
+                                startDate: selectedDate,
+                                // Auto-adjust end date if it's before start date
+                                endDate: selectedDate > prev.endDate ? new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000) : prev.endDate
+                              }));
+                            }
+                          }}
+                          minimumDate={new Date()}
+                        />
+                      </View>
+                    </SafeAreaView>
+                  </View>
+                </Modal>
               )}
 
               {showEndDatePicker && (
-                <DateTimePicker
-                  value={newSchedule.endDate}
-                  mode="date"
-                  display="default"
-                  onChange={(event, selectedDate) => {
-                    setShowEndDatePicker(false);
-                    if (selectedDate) {
-                      setNewSchedule(prev => ({ ...prev, endDate: selectedDate }));
-                    }
-                  }}
-                  minimumDate={newSchedule.startDate}
-                />
+                <Modal
+                  visible={showEndDatePicker}
+                  animationType="slide"
+                  transparent={true}
+                  onRequestClose={() => setShowEndDatePicker(false)}
+                >
+                  <View style={styles.datePickerOverlay}>
+                    <SafeAreaView style={styles.datePickerModal}>
+                      <View style={styles.datePickerHeader}>
+                        <TouchableOpacity onPress={() => setShowEndDatePicker(false)}>
+                          <Text style={styles.datePickerCancel}>Cancel</Text>
+                        </TouchableOpacity>
+                        <Text style={styles.datePickerTitle}>Select End Date</Text>
+                        <TouchableOpacity onPress={() => setShowEndDatePicker(false)}>
+                          <Text style={styles.datePickerDone}>Done</Text>
+                        </TouchableOpacity>
+                      </View>
+                      <View style={styles.datePickerContent}>
+                        <DateTimePicker
+                          value={newSchedule.endDate}
+                          mode="date"
+                          display="spinner"
+                          onChange={(event, selectedDate) => {
+                            if (selectedDate) {
+                              setNewSchedule(prev => ({ ...prev, endDate: selectedDate }));
+                            }
+                          }}
+                          minimumDate={newSchedule.startDate}
+                        />
+                      </View>
+                    </SafeAreaView>
+                  </View>
+                </Modal>
               )}
             </SafeAreaView>
           </KeyboardAvoidingView>
@@ -3037,6 +3079,47 @@ const styles = StyleSheet.create({
   dropdownItemTextSelected: {
     color: '#FFFFFF',
     fontWeight: '600',
+  },
+  // Date Picker Modal Styles
+  datePickerOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  datePickerModal: {
+    height: 300,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    paddingBottom: 10,
+  },
+  datePickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  datePickerTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  datePickerCancel: {
+    fontSize: 16,
+    color: '#DC2626',
+    fontWeight: '500',
+  },
+  datePickerDone: {
+    fontSize: 16,
+    color: '#0e3c67',
+    fontWeight: '600',
+  },
+  datePickerContent: {
+    flex: 1,
+    justifyContent: 'center',
   },
   textArea: {
     height: 80,
