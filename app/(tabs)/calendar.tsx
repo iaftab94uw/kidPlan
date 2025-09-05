@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -13,6 +13,7 @@ import {
   Platform,
   FlatList
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { 
   ChevronLeft,
   ChevronRight,
@@ -23,80 +24,128 @@ import {
   User,
   X,
   ChevronDown,
-  Check
+  Check,
+  Edit,
+  Trash2,
+  Calendar as CalendarIcon,
+  Settings
 } from 'lucide-react-native';
+import { useAuth } from '@/hooks/useAuth';
+import { useCalendarEvents } from '@/hooks/useCalendarEvents';
+import { useFamilyDetails } from '@/hooks/useFamilyDetails';
+import { API_CONFIG, getApiUrl, getAuthHeaders } from '@/config/api';
+import { CalendarEvent, EventType } from '@/types/calendar';
 
 const { width } = Dimensions.get('window');
 
 export default function Calendar() {
+  const { user, token } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showAddEventModal, setShowAddEventModal] = useState(false);
   const [showEventTypeDropdown, setShowEventTypeDropdown] = useState(false);
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
+  const [eventTypeFilter, setEventTypeFilter] = useState<EventType | 'all'>('all');
+  const [showEventTypeFilter, setShowEventTypeFilter] = useState(false);
+  const [isCreatingEvent, setIsCreatingEvent] = useState(false);
+  const [showEditEventModal, setShowEditEventModal] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
+  const [isUpdatingEvent, setIsUpdatingEvent] = useState(false);
+  const [isDeletingEvent, setIsDeletingEvent] = useState(false);
+  
+  // Schedule editing state
+  const [showEditScheduleModal, setShowEditScheduleModal] = useState(false);
+  const [editingSchedule, setEditingSchedule] = useState<any>(null);
+  const [isUpdatingSchedule, setIsUpdatingSchedule] = useState(false);
+  const [showParentDropdown, setShowParentDropdown] = useState(false);
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
 
-  // UK Bank Holidays for 2024-2025
-  const ukBankHolidays = [
-    // 2024 holidays
-    { date: new Date(2024, 0, 1), name: "New Year's Day" },
-    { date: new Date(2024, 2, 29), name: "Good Friday" },
-    { date: new Date(2024, 3, 1), name: "Easter Monday" },
-    { date: new Date(2024, 4, 6), name: "Early May Bank Holiday" },
-    { date: new Date(2024, 4, 27), name: "Spring Bank Holiday" },
-    { date: new Date(2024, 7, 26), name: "Summer Bank Holiday" },
-    { date: new Date(2024, 11, 25), name: "Christmas Day" },
-    { date: new Date(2024, 11, 26), name: "Boxing Day" },
-    
-    // 2025 holidays
-    { date: new Date(2025, 0, 1), name: "New Year's Day" },
-    { date: new Date(2025, 3, 18), name: "Good Friday" },
-    { date: new Date(2025, 3, 21), name: "Easter Monday" },
-    { date: new Date(2025, 4, 5), name: "Early May Bank Holiday" },
-    { date: new Date(2025, 4, 26), name: "Spring Bank Holiday" },
-    { date: new Date(2025, 7, 25), name: "Summer Bank Holiday" },
-    { date: new Date(2025, 11, 25), name: "Christmas Day" },
-    { date: new Date(2025, 11, 26), name: "Boxing Day" },
-  ];
+  // Calendar Events hook
+  const { 
+    events: calendarEvents, 
+    loading: eventsLoading, 
+    error: eventsError, 
+    refetch: refetchEvents 
+  } = useCalendarEvents(token || '');
 
-  const [events, setEvents] = useState([
-    {
-      id: 1,
-      title: "Emma's Piano Lesson",
-      time: "4:00 PM - 5:00 PM",
-      startTime: "16:00",
-      endTime: "17:00",
-      location: "Music Academy",
-      child: "Emma",
-      color: "#22C55E",
-      type: "activity",
-      date: new Date().toDateString()
-    },
-    {
-      id: 2,
-      title: "School Assembly",
-      time: "9:00 AM - 10:00 AM",
-      startTime: "09:00",
-      endTime: "10:00",
-      location: "Oakwood Primary",
-      child: "Both",
-      color: "#3B82F6",
-      type: "school",
-      date: new Date().toDateString()
-    },
-    {
-      id: 3,
-      title: "Football Practice",
-      time: "6:00 PM - 7:30 PM",
-      startTime: "18:00",
-      endTime: "19:30",
-      location: "Community Centre",
-      child: "Jack",
-      color: "#F97316",
-      type: "activity",
-      date: new Date().toDateString()
+  // Family Details hook
+  const { 
+    familyData, 
+    loading: familyLoading, 
+    error: familyError, 
+    getAllFamilyMembers 
+  } = useFamilyDetails(token || '');
+
+  // Get holidays from API data
+  const getHolidaysFromAPI = () => {
+    return calendarEvents.filter(event => event.eventType === 'Holiday');
+  };
+
+  // Helper functions for calendar events
+  const getEventTypeIcon = (eventType: EventType) => {
+    switch (eventType) {
+      case 'Personal':
+        return '👤';
+      case 'School':
+        return '🎓';
+      case 'Activity':
+        return '⚽';
+      case 'Holiday':
+        return '🎉';
+      case 'Medical':
+        return '🏥';
+      case 'Schedule':
+        return '📅';
+      default:
+        return '📅';
     }
-  ]);
+  };
+
+  const formatEventDate = (event: CalendarEvent) => {
+    if (event.eventDate) {
+      return new Date(event.eventDate);
+    }
+    if (event.startDate) {
+      return new Date(event.startDate);
+    }
+    return new Date();
+  };
+
+  const formatEventDateRange = (event: CalendarEvent) => {
+    if (event.eventDate) {
+      return new Date(event.eventDate).toLocaleDateString('en-GB', { 
+        day: 'numeric', 
+        month: 'short', 
+        year: 'numeric' 
+      });
+    }
+    if (event.startDate && event.endDate) {
+      const start = new Date(event.startDate);
+      const end = new Date(event.endDate);
+      if (start.toDateString() === end.toDateString()) {
+        return start.toLocaleDateString('en-GB', { 
+          day: 'numeric', 
+          month: 'short', 
+          year: 'numeric' 
+        });
+      }
+      return `${start.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} - ${end.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+    }
+    return 'No date';
+  };
+
+  const formatEventTime = (event: CalendarEvent) => {
+    if (event.startTime && event.endTime) {
+      return `${event.startTime} - ${event.endTime}`;
+    }
+    if (event.startTime) {
+      return event.startTime;
+    }
+    return 'All Day';
+  };
   const [newEvent, setNewEvent] = useState({
     title: '',
     type: 'Personal',
@@ -104,7 +153,7 @@ export default function Calendar() {
     endTime: '10:00',
     location: '',
     description: '',
-    familyMember: 'Both'
+    familyMember: 'all'
   });
 
   const monthNames = [
@@ -122,11 +171,39 @@ export default function Calendar() {
     { id: 'Medical', label: 'Medical', color: '#8B5CF6' }
   ];
 
-  const familyMembers = [
-    { id: 'Both', label: 'Both Children' },
-    { id: 'Emma', label: 'Emma' },
-    { id: 'Jack', label: 'Jack' }
+  // Schedule-specific options
+  const parentOptions = [
+    { id: 'primary', label: 'Primary Parent' },
+    { id: 'secondary', label: 'Secondary Parent' }
   ];
+
+  const locationOptions = [
+    'Home',
+    'School',
+    'Grandparents House',
+    'Park',
+    'Mall',
+    'Library',
+    'Sports Center',
+    'Other'
+  ];
+
+  // Get dynamic family members
+  const getFamilyMembers = () => {
+    const allMembers = getAllFamilyMembers();
+    const familyMembers = [
+      { id: 'all', label: 'All Family Members' }
+    ];
+    
+    allMembers.forEach(member => {
+      familyMembers.push({
+        id: member._id,
+        label: member.name
+      });
+    });
+    
+    return familyMembers;
+  };
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('en-US', { 
@@ -166,50 +243,127 @@ export default function Calendar() {
 
   const hasEventsOnDate = (day: number) => {
     const dateToCheck = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    return events.some(event => {
-      const eventDate = new Date(event.date);
-      return eventDate.toDateString() === dateToCheck.toDateString();
+    // Set time to start of day for accurate comparison
+    dateToCheck.setHours(0, 0, 0, 0);
+    
+    let hasEvents = calendarEvents.some(event => {
+      const typeMatches = eventTypeFilter === 'all' || event.eventType === eventTypeFilter;
+      if (!typeMatches) return false;
+
+      // Check if the date falls within the event's date range
+      if (event.startDate && event.endDate) {
+        const startDate = new Date(event.startDate);
+        const endDate = new Date(event.endDate);
+        
+        // Set times to start of day for accurate comparison
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(0, 0, 0, 0);
+        
+        return dateToCheck >= startDate && dateToCheck <= endDate;
+      } else if (event.eventDate) {
+        // Single day event
+        const eventDate = new Date(event.eventDate);
+        eventDate.setHours(0, 0, 0, 0);
+        return eventDate.getTime() === dateToCheck.getTime();
+      }
+      return false;
+    });
+
+    return hasEvents;
+  };
+
+  const hasMultiDayEventsOnDate = (day: number) => {
+    const dateToCheck = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+    // Set time to start of day for accurate comparison
+    dateToCheck.setHours(0, 0, 0, 0);
+    
+    return calendarEvents.some(event => {
+      const typeMatches = eventTypeFilter === 'all' || event.eventType === eventTypeFilter;
+      if (!typeMatches) return false;
+
+      // Check if this is a multi-day event that spans this date
+      if (event.startDate && event.endDate) {
+        const startDate = new Date(event.startDate);
+        const endDate = new Date(event.endDate);
+        
+        // Set times to start of day for accurate comparison
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(0, 0, 0, 0);
+        
+        return dateToCheck >= startDate && dateToCheck <= endDate && startDate.getTime() !== endDate.getTime();
+      }
+      return false;
     });
   };
 
   const isBankHoliday = (day: number) => {
     const dateToCheck = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    return ukBankHolidays.some(holiday => 
-      holiday.date.toDateString() === dateToCheck.toDateString()
-    );
+    // Set time to start of day for accurate comparison
+    dateToCheck.setHours(0, 0, 0, 0);
+    
+    const holidays = getHolidaysFromAPI();
+    return holidays.some(holiday => {
+      const holidayDate = formatEventDate(holiday);
+      holidayDate.setHours(0, 0, 0, 0);
+      return holidayDate.getTime() === dateToCheck.getTime();
+    });
   };
 
   const getBankHolidayName = (day: number) => {
     const dateToCheck = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    const holiday = ukBankHolidays.find(holiday => 
-      holiday.date.toDateString() === dateToCheck.toDateString()
-    );
-    return holiday ? holiday.name : null;
+    // Set time to start of day for accurate comparison
+    dateToCheck.setHours(0, 0, 0, 0);
+    
+    const holidays = getHolidaysFromAPI();
+    const holiday = holidays.find(holiday => {
+      const holidayDate = formatEventDate(holiday);
+      holidayDate.setHours(0, 0, 0, 0);
+      return holidayDate.getTime() === dateToCheck.getTime();
+    });
+    return holiday ? holiday.title : null;
+  };
+
+  const getBankHolidayColor = (day: number) => {
+    const dateToCheck = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+    // Set time to start of day for accurate comparison
+    dateToCheck.setHours(0, 0, 0, 0);
+    
+    const holidays = getHolidaysFromAPI();
+    const holiday = holidays.find(holiday => {
+      const holidayDate = formatEventDate(holiday);
+      holidayDate.setHours(0, 0, 0, 0);
+      return holidayDate.getTime() === dateToCheck.getTime();
+    });
+    return holiday ? holiday.color : '#DC2626'; // Default to red if no color found
   };
 
   const getEventsForSelectedDate = () => {
-    const filteredEvents = events.filter(event => {
-      const eventDate = new Date(event.date);
-      return eventDate.toDateString() === selectedDate.toDateString();
-    });
+    // Set selected date to start of day for accurate comparison
+    const selectedDateStart = new Date(selectedDate);
+    selectedDateStart.setHours(0, 0, 0, 0);
     
-    // Add bank holiday if it exists for selected date
-    const holidayName = getBankHolidayName(selectedDate.getDate());
-    if (holidayName && selectedDate.getMonth() === currentDate.getMonth() && selectedDate.getFullYear() === currentDate.getFullYear()) {
-      const bankHolidayEvent = {
-        id: 'bank-holiday',
-        title: holidayName,
-        time: 'All Day',
-        startTime: '00:00',
-        endTime: '23:59',
-        location: 'UK',
-        child: 'All',
-        color: '#DC2626',
-        type: 'holiday',
-        date: selectedDate.toDateString()
-      };
-      filteredEvents.unshift(bankHolidayEvent);
-    }
+    let filteredEvents = calendarEvents.filter(event => {
+      const typeMatches = eventTypeFilter === 'all' || event.eventType === eventTypeFilter;
+      if (!typeMatches) return false;
+
+      // Check if the selected date falls within the event's date range
+      if (event.startDate && event.endDate) {
+        const startDate = new Date(event.startDate);
+        const endDate = new Date(event.endDate);
+        
+        // Set times to start of day for accurate comparison
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(0, 0, 0, 0);
+        
+        return selectedDateStart >= startDate && selectedDateStart <= endDate;
+      } else if (event.eventDate) {
+        // Single day event
+        const eventDate = new Date(event.eventDate);
+        eventDate.setHours(0, 0, 0, 0);
+        return eventDate.getTime() === selectedDateStart.getTime();
+      }
+      return false;
+    });
     
     // Sort events by start time
     return filteredEvents.sort((a, b) => {
@@ -219,43 +373,382 @@ export default function Calendar() {
     });
   };
 
-  const handleSaveEvent = () => {
+  const handleSaveEvent = async () => {
     if (!newEvent.title.trim()) {
       Alert.alert('Error', 'Please enter an event title');
       return;
     }
 
-    const eventTypeColor = getEventTypeColor(newEvent.type);
-    const startTime = formatTimeDisplay(newEvent.startTime);
-    const endTime = formatTimeDisplay(newEvent.endTime);
-    
-    const eventToAdd = {
-      id: events.length + 1,
-      title: newEvent.title,
-      time: `${startTime} - ${endTime}`,
-      startTime: newEvent.startTime,
-      endTime: newEvent.endTime,
-      location: newEvent.location || 'No location',
-      child: newEvent.familyMember,
-      color: eventTypeColor,
-      type: newEvent.type.toLowerCase(),
-      date: selectedDate.toDateString()
-    };
+    if (!token) {
+      Alert.alert('Error', 'No authentication token available');
+      return;
+    }
 
-    setEvents(prevEvents => [...prevEvents, eventToAdd]);
-    Alert.alert('Success', 'Event added successfully!');
-    
-    // Reset form
-    setNewEvent({
-      title: '',
-      type: 'Personal',
-      startTime: '09:00',
-      endTime: '10:00',
-      location: '',
-      description: '',
-      familyMember: 'Both'
+    if (!familyData?._id) {
+      Alert.alert('Error', 'Family data not available');
+      return;
+    }
+
+    setIsCreatingEvent(true);
+
+    try {
+      // Prepare family members array
+      let familyMembers: string[] = [];
+      if (newEvent.familyMember === 'all') {
+        // Get all family member IDs
+        const allMembers = getAllFamilyMembers();
+        familyMembers = allMembers.map(member => member._id);
+      } else {
+        // Single family member
+        familyMembers = [newEvent.familyMember];
+      }
+
+      // Format the selected date
+      const eventDate = selectedDate.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+
+      const eventData = {
+        familyId: familyData._id,
+        title: newEvent.title,
+        eventType: newEvent.type,
+        eventDate: eventDate,
+        startTime: formatTimeDisplay(newEvent.startTime),
+        endTime: formatTimeDisplay(newEvent.endTime),
+        location: newEvent.location || '',
+        familyMembers: familyMembers,
+        description: newEvent.description || ''
+      };
+
+      const url = getApiUrl(API_CONFIG.ENDPOINTS.CREATE_EVENT);
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: getAuthHeaders(token),
+        body: JSON.stringify(eventData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to create event: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        Alert.alert('Success', 'Event created successfully!');
+        
+        // Reset form
+        setNewEvent({
+          title: '',
+          type: 'Personal',
+          startTime: '09:00',
+          endTime: '10:00',
+          location: '',
+          description: '',
+          familyMember: 'all'
+        });
+        
+        // Close modal
+        setShowAddEventModal(false);
+        
+        // Refresh calendar events
+        refetchEvents();
+      } else {
+        throw new Error(data.message || 'Failed to create event');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      Alert.alert('Error', `Failed to create event: ${errorMessage}`);
+      console.error('Create event error:', error);
+    } finally {
+      setIsCreatingEvent(false);
+    }
+  };
+
+  const handleEditEvent = (event: CalendarEvent) => {
+    // Check if it's a schedule event
+    if (event.eventType === 'Schedule') {
+      handleEditSchedule(event);
+    } else {
+      // Regular event editing
+      setEditingEvent(event);
+      setNewEvent({
+        title: event.title,
+        type: event.eventType,
+        startTime: event.startTime ? event.startTime.replace(' AM', '').replace(' PM', '') : '09:00',
+        endTime: event.endTime ? event.endTime.replace(' AM', '').replace(' PM', '') : '10:00',
+        location: event.location || '',
+        description: event.description || '',
+        familyMember: event.familyMembers && event.familyMembers.length > 1 ? 'all' : (event.familyMembers?.[0] || 'all')
+      });
+      setShowEditEventModal(true);
+    }
+  };
+
+  const handleEditSchedule = (schedule: CalendarEvent) => {
+    setEditingSchedule({
+      ...schedule,
+      name: schedule.title,
+      startDate: schedule.startDate ? new Date(schedule.startDate) : new Date(),
+      endDate: schedule.endDate ? new Date(schedule.endDate) : new Date(),
+      parent: schedule.responsibleParent === 'Primary' ? 'primary' : 'secondary',
+      location: schedule.location || '',
+      activities: schedule.activities || '',
+      notes: schedule.notes || ''
     });
-    setShowAddEventModal(false);
+    setShowEditScheduleModal(true);
+  };
+
+  const handleUpdateEvent = async () => {
+    if (!newEvent.title.trim()) {
+      Alert.alert('Error', 'Please enter an event title');
+      return;
+    }
+
+    if (!token) {
+      Alert.alert('Error', 'No authentication token available');
+      return;
+    }
+
+    if (!editingEvent) {
+      Alert.alert('Error', 'No event selected for editing');
+      return;
+    }
+
+    setIsUpdatingEvent(true);
+
+    try {
+      // Prepare family members array
+      let familyMembers: string[] = [];
+      if (newEvent.familyMember === 'all') {
+        // Get all family member IDs
+        const allMembers = getAllFamilyMembers();
+        familyMembers = allMembers.map(member => member._id);
+      } else {
+        // Single family member
+        familyMembers = [newEvent.familyMember];
+      }
+
+      // Format the event date
+      const eventDate = editingEvent.eventDate ? 
+        new Date(editingEvent.eventDate).toISOString().split('T')[0] :
+        (editingEvent.startDate ? new Date(editingEvent.startDate).toISOString().split('T')[0] : selectedDate.toISOString().split('T')[0]);
+
+      const eventData = {
+        eventId: editingEvent._id,
+        title: newEvent.title,
+        eventType: newEvent.type,
+        eventDate: eventDate,
+        startTime: formatTimeDisplay(newEvent.startTime),
+        endTime: formatTimeDisplay(newEvent.endTime),
+        location: newEvent.location || '',
+        familyMembers: familyMembers,
+        description: newEvent.description || ''
+      };
+
+      const url = getApiUrl(API_CONFIG.ENDPOINTS.UPDATE_EVENT);
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: getAuthHeaders(token),
+        body: JSON.stringify(eventData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update event: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        Alert.alert('Success', 'Event updated successfully!');
+        
+        // Reset form and close modal
+        setEditingEvent(null);
+        setShowEditEventModal(false);
+        setNewEvent({
+          title: '',
+          type: 'Personal',
+          startTime: '09:00',
+          endTime: '10:00',
+          location: '',
+          description: '',
+          familyMember: 'all'
+        });
+        
+        // Refresh calendar events
+        refetchEvents();
+      } else {
+        throw new Error(data.message || 'Failed to update event');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      Alert.alert('Error', `Failed to update event: ${errorMessage}`);
+      console.error('Update event error:', error);
+    } finally {
+      setIsUpdatingEvent(false);
+    }
+  };
+
+  const handleDeleteEvent = async (event: CalendarEvent) => {
+    // Check if it's a schedule event
+    if (event.eventType === 'Schedule') {
+      handleDeleteSchedule(event);
+    } else {
+      // Regular event deletion
+      Alert.alert(
+        'Delete Event',
+        `Are you sure you want to delete "${event.title}"?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: async () => {
+              if (!token) {
+                Alert.alert('Error', 'No authentication token available');
+                return;
+              }
+
+              setIsDeletingEvent(true);
+
+              try {
+                const url = `${getApiUrl(API_CONFIG.ENDPOINTS.DELETE_EVENT)}/${event._id}`;
+                const response = await fetch(url, {
+                  method: 'DELETE',
+                  headers: getAuthHeaders(token),
+                });
+
+                if (!response.ok) {
+                  throw new Error(`Failed to delete event: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.success) {
+                  Alert.alert('Success', 'Event deleted successfully!');
+                  
+                  // Refresh calendar events
+                  refetchEvents();
+                } else {
+                  throw new Error(data.message || 'Failed to delete event');
+                }
+              } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+                Alert.alert('Error', `Failed to delete event: ${errorMessage}`);
+                console.error('Delete event error:', error);
+              } finally {
+                setIsDeletingEvent(false);
+              }
+            }
+          }
+        ]
+      );
+    }
+  };
+
+  const handleUpdateSchedule = async () => {
+    if (!editingSchedule?.name?.trim()) {
+      Alert.alert('Error', 'Please enter a schedule name');
+      return;
+    }
+    if (!editingSchedule?.parent) {
+      Alert.alert('Error', 'Please select a parent');
+      return;
+    }
+    if (!editingSchedule?.location?.trim()) {
+      Alert.alert('Error', 'Please enter a location');
+      return;
+    }
+
+    try {
+      setIsUpdatingSchedule(true);
+
+      // Convert parent selection to API format
+      const responsibleParent = editingSchedule.parent === 'primary' ? 'Primary' : 'Secondary';
+
+      // Prepare schedule data for API
+      const scheduleData = {
+        scheduleId: editingSchedule._id,
+        name: editingSchedule.name.trim(),
+        startDate: editingSchedule.startDate.toISOString(),
+        endDate: editingSchedule.endDate.toISOString(),
+        responsibleParent: responsibleParent,
+        location: editingSchedule.location.trim(),
+        activities: editingSchedule.activities || 'No activities specified',
+        notes: editingSchedule.notes || 'No additional notes'
+      };
+
+      // Call API to update schedule
+      const url = getApiUrl(API_CONFIG.ENDPOINTS.UPDATE_SCHEDULE);
+      const headers = getAuthHeaders(token!);
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(scheduleData),
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        // Clear form and close modal
+        setEditingSchedule(null);
+        setShowEditScheduleModal(false);
+        
+        Alert.alert('Success', 'Schedule updated successfully!');
+        
+        // Refresh calendar events
+        refetchEvents();
+      } else {
+        throw new Error(data.message || 'Failed to update schedule');
+      }
+    } catch (error) {
+      console.error('Update schedule error:', error);
+      Alert.alert('Error', 'Failed to update schedule. Please try again.');
+    } finally {
+      setIsUpdatingSchedule(false);
+    }
+  };
+
+  const handleDeleteSchedule = async (schedule: CalendarEvent) => {
+    Alert.alert(
+      'Delete Schedule',
+      `Are you sure you want to delete "${schedule.title}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const scheduleData = {
+                scheduleId: schedule._id
+              };
+
+              const url = getApiUrl(API_CONFIG.ENDPOINTS.DELETE_SCHEDULE);
+              const headers = getAuthHeaders(token!);
+              
+              const response = await fetch(url, {
+                method: 'DELETE',
+                headers: headers,
+                body: JSON.stringify(scheduleData),
+              });
+
+              const data = await response.json();
+              
+              if (data.success) {
+                Alert.alert('Success', 'Schedule deleted successfully!');
+                
+                // Refresh calendar events
+                refetchEvents();
+              } else {
+                throw new Error(data.message || 'Failed to delete schedule');
+              }
+            } catch (error) {
+              console.error('Delete schedule error:', error);
+              Alert.alert('Error', 'Failed to delete schedule. Please try again.');
+            }
+          }
+        }
+      ]
+    );
   };
 
   const getDaysInMonth = (date: Date) => {
@@ -285,6 +778,7 @@ export default function Calendar() {
                      new Date().getMonth() === currentDate.getMonth() &&
                      new Date().getFullYear() === currentDate.getFullYear();
       const hasEvents = hasEventsOnDate(day);
+      const hasMultiDayEvents = hasMultiDayEventsOnDate(day);
       const isBankHol = isBankHoliday(day);
 
       days.push(
@@ -310,11 +804,18 @@ export default function Calendar() {
           ]}>
             {day}
           </Text>
-          {hasEvents && (
-            <View style={[styles.eventDot, { backgroundColor: '#0e3c67' }]} />
-          )}
-          {isBankHol && (
-            <View style={[styles.holidayDot, { backgroundColor: '#DC2626' }]} />
+          {(hasEvents || isBankHol) && (
+            <View style={styles.dotsContainer}>
+              {hasEvents && (
+                <View style={[
+                  styles.eventDot, 
+                  { backgroundColor: hasMultiDayEvents ? '#F59E0B' : '#0e3c67' }
+                ]} />
+              )}
+              {isBankHol && (
+                <View style={[styles.holidayDot, { backgroundColor: getBankHolidayColor(day) }]} />
+              )}
+            </View>
           )}
         </TouchableOpacity>
       );
@@ -342,7 +843,10 @@ export default function Calendar() {
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Calendar</Text>
           <View style={styles.headerButtons}>
-            <TouchableOpacity style={styles.iconButton}>
+            <TouchableOpacity 
+              style={styles.iconButton}
+              onPress={() => setShowEventTypeFilter(!showEventTypeFilter)}
+            >
               <Filter size={20} color="#ffffff" />
             </TouchableOpacity>
             <TouchableOpacity 
@@ -353,6 +857,39 @@ export default function Calendar() {
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* Event Type Filter */}
+        {showEventTypeFilter && (
+          <View style={styles.filterContainer}>
+            <TouchableOpacity
+              style={[
+                styles.filterButton,
+                eventTypeFilter === 'all' && styles.filterButtonActive
+              ]}
+              onPress={() => setEventTypeFilter('all')}
+            >
+              <Text style={[
+                styles.filterButtonText,
+                eventTypeFilter === 'all' && styles.filterButtonTextActive
+              ]}>All</Text>
+            </TouchableOpacity>
+            {(['Personal', 'School', 'Activity', 'Holiday', 'Medical'] as EventType[]).map((type) => (
+              <TouchableOpacity
+                key={type}
+                style={[
+                  styles.filterButton,
+                  eventTypeFilter === type && styles.filterButtonActive
+                ]}
+                onPress={() => setEventTypeFilter(type)}
+              >
+                <Text style={[
+                  styles.filterButtonText,
+                  eventTypeFilter === type && styles.filterButtonTextActive
+                ]}>{type}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
 
         {/* Calendar Navigation */}
         <View style={styles.calendarHeader}>
@@ -394,29 +931,73 @@ export default function Calendar() {
             })}
           </Text>
 
-          {selectedDateEvents.length > 0 ? (
+          {eventsLoading ? (
+            <View style={styles.loadingState}>
+              <Text style={styles.loadingText}>Loading events...</Text>
+            </View>
+          ) : eventsError ? (
+            <View style={styles.errorState}>
+              <Text style={styles.errorTitle}>Error loading events</Text>
+              <Text style={styles.errorSubtitle}>{eventsError}</Text>
+              <TouchableOpacity 
+                style={styles.retryButton}
+                onPress={refetchEvents}
+              >
+                <Text style={styles.retryButtonText}>Retry</Text>
+              </TouchableOpacity>
+            </View>
+          ) : selectedDateEvents.length > 0 ? (
             selectedDateEvents.map((event) => (
-              <TouchableOpacity key={event.id} style={styles.eventCard}>
+              <TouchableOpacity key={event._id} style={styles.eventCard}>
                 <View style={[styles.eventColorBar, { backgroundColor: event.color }]} />
                 <View style={styles.eventContent}>
                   <View style={styles.eventHeader}>
-                    <Text style={styles.eventTitle}>{event.title}</Text>
-                    <Text style={styles.eventType}>{event.type}</Text>
+                    <View style={styles.eventTitleContainer}>
+                      <Text style={styles.eventTypeIcon}>{getEventTypeIcon(event.eventType)}</Text>
+                      <View style={styles.eventTitleContent}>
+                        <Text style={styles.eventTitle}>{event.title}</Text>
+                        <Text style={styles.eventDateRange}>{formatEventDateRange(event)}</Text>
+                      </View>
+                    </View>
+                    <View style={styles.eventHeaderRight}>
+                      <Text style={styles.eventType}>{event.eventType}</Text>
+                      <View style={styles.eventActions}>
+                        <TouchableOpacity
+                          style={styles.eventActionButton}
+                          onPress={() => handleEditEvent(event)}
+                        >
+                          <Edit size={16} color="#6B7280" />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.eventActionButton}
+                          onPress={() => handleDeleteEvent(event)}
+                        >
+                          <Trash2 size={16} color="#DC2626" />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
                   </View>
                   <View style={styles.eventMeta}>
                     <View style={styles.eventMetaItem}>
                       <Clock size={16} color="#6B7280" />
-                      <Text style={styles.eventMetaText}>{event.time}</Text>
+                      <Text style={styles.eventMetaText}>{formatEventTime(event)}</Text>
                     </View>
-                    <View style={styles.eventMetaItem}>
-                      <MapPin size={16} color="#6B7280" />
-                      <Text style={styles.eventMetaText}>{event.location}</Text>
-                    </View>
-                    <View style={styles.eventMetaItem}>
-                      <User size={16} color="#6B7280" />
-                      <Text style={styles.eventMetaText}>{event.child}</Text>
-                    </View>
+                    {event.location && (
+                      <View style={styles.eventMetaItem}>
+                        <MapPin size={16} color="#6B7280" />
+                        <Text style={styles.eventMetaText}>{event.location}</Text>
+                      </View>
+                    )}
+                    {event.responsibleParent && (
+                      <View style={styles.eventMetaItem}>
+                        <User size={16} color="#6B7280" />
+                        <Text style={styles.eventMetaText}>{event.responsibleParent}</Text>
+                      </View>
+                    )}
                   </View>
+                  {event.description && (
+                    <Text style={styles.eventDescription}>{event.description}</Text>
+                  )}
                 </View>
               </TouchableOpacity>
             ))
@@ -461,15 +1042,17 @@ export default function Calendar() {
                 <TouchableOpacity 
                   style={[
                     styles.saveButton,
-                    !newEvent.title.trim() && styles.saveButtonDisabled
+                    (!newEvent.title.trim() || isCreatingEvent) && styles.saveButtonDisabled
                   ]}
                   onPress={handleSaveEvent}
-                  disabled={!newEvent.title.trim()}
+                  disabled={!newEvent.title.trim() || isCreatingEvent}
                 >
                   <Text style={[
                     styles.saveButtonText,
-                    !newEvent.title.trim() && styles.saveButtonTextDisabled
-                  ]}>Save</Text>
+                    (!newEvent.title.trim() || isCreatingEvent) && styles.saveButtonTextDisabled
+                  ]}>
+                    {isCreatingEvent ? 'Creating...' : 'Save'}
+                  </Text>
                 </TouchableOpacity>
               </View>
               <View style={styles.modalHeaderDivider} />
@@ -566,25 +1149,31 @@ export default function Calendar() {
               {/* Family Member */}
               <View style={styles.fieldGroup}>
                 <Text style={styles.fieldLabel}>Family Member</Text>
-                <View style={styles.memberGrid}>
-                  {familyMembers.map((member) => (
-                    <TouchableOpacity
-                      key={member.id}
-                      style={[
-                        styles.memberOption,
-                        newEvent.familyMember === member.id && styles.memberOptionSelected
-                      ]}
-                      onPress={() => setNewEvent(prev => ({ ...prev, familyMember: member.id }))}
-                    >
-                      <Text style={[
-                        styles.memberLabel,
-                        newEvent.familyMember === member.id && styles.memberLabelSelected
-                      ]}>
-                        {member.label}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                {familyLoading ? (
+                  <Text style={styles.loadingText}>Loading family members...</Text>
+                ) : familyError ? (
+                  <Text style={styles.errorText}>Error loading family members: {familyError}</Text>
+                ) : (
+                  <View style={styles.memberGrid}>
+                    {getFamilyMembers().map((member) => (
+                      <TouchableOpacity
+                        key={member.id}
+                        style={[
+                          styles.memberOption,
+                          newEvent.familyMember === member.id && styles.memberOptionSelected
+                        ]}
+                        onPress={() => setNewEvent(prev => ({ ...prev, familyMember: member.id }))}
+                      >
+                        <Text style={[
+                          styles.memberLabel,
+                          newEvent.familyMember === member.id && styles.memberLabelSelected
+                        ]}>
+                          {member.label}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
               </View>
 
               {/* Description */}
@@ -700,6 +1289,562 @@ export default function Calendar() {
             </Modal>
           )}
         </Modal>
+
+        {/* Edit Event Modal */}
+        <Modal
+          visible={showEditEventModal}
+          animationType="slide"
+          presentationStyle="formSheet"
+        >
+          <SafeAreaView style={styles.modalContainer}>
+            {/* Modal Header */}
+            <View style={styles.modalHeader}>
+              <View style={styles.modalHeaderContent}>
+                <TouchableOpacity 
+                  onPress={() => setShowEditEventModal(false)}
+                  style={styles.closeButton}
+                >
+                  <X size={20} color="#6B7280" />
+                </TouchableOpacity>
+                <View style={styles.modalTitleContainer}>
+                  <Text style={styles.modalTitle}>
+                    Edit Event
+                  </Text>
+                </View>
+                <TouchableOpacity 
+                  style={[
+                    styles.saveButton,
+                    (!newEvent.title.trim() || isUpdatingEvent) && styles.saveButtonDisabled
+                  ]}
+                  onPress={handleUpdateEvent}
+                  disabled={!newEvent.title.trim() || isUpdatingEvent}
+                >
+                  <Text style={[
+                    styles.saveButtonText,
+                    (!newEvent.title.trim() || isUpdatingEvent) && styles.saveButtonTextDisabled
+                  ]}>
+                    {isUpdatingEvent ? 'Updating...' : 'Update'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.modalHeaderDivider} />
+            </View>
+
+            <ScrollView style={styles.modalContent}>
+              {/* Event Title */}
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>Event Title</Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={newEvent.title}
+                  onChangeText={(text) => setNewEvent(prev => ({ ...prev, title: text }))}
+                  placeholder="Enter event title"
+                  placeholderTextColor="#9CA3AF"
+                />
+              </View>
+
+              {/* Event Type */}
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>Event Type</Text>
+                <TouchableOpacity
+                  style={styles.dropdownButton}
+                  onPress={() => setShowEventTypeDropdown(!showEventTypeDropdown)}
+                >
+                  <Text style={styles.dropdownButtonText}>{newEvent.type}</Text>
+                  <ChevronDown size={20} color="#6B7280" />
+                </TouchableOpacity>
+                
+                {showEventTypeDropdown && (
+                  <View style={styles.dropdownMenu}>
+                    {eventTypes.map((type) => (
+                      <TouchableOpacity
+                        key={type.id}
+                        style={[
+                          styles.dropdownItem,
+                          newEvent.type === type.id && styles.dropdownItemSelected
+                        ]}
+                        onPress={() => {
+                          setNewEvent(prev => ({ ...prev, type: type.id }));
+                          setShowEventTypeDropdown(false);
+                        }}
+                      >
+                        <View style={[styles.typeColorDot, { backgroundColor: type.color }]} />
+                        <Text style={[
+                          styles.dropdownItemText,
+                          newEvent.type === type.id && styles.dropdownItemTextSelected
+                        ]}>
+                          {type.label}
+                        </Text>
+                        {newEvent.type === type.id && (
+                          <Check size={16} color="#FFFFFF" />
+                        )}
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+              </View>
+
+              {/* Time Fields */}
+              <View style={styles.timeRow}>
+                <View style={styles.timeField}>
+                  <Text style={styles.fieldLabel}>Start Time</Text>
+                  <TouchableOpacity
+                    style={styles.textInput}
+                    onPress={() => setShowStartTimePicker(true)}
+                  >
+                    <Text style={styles.timeText}>{formatTimeDisplay(newEvent.startTime)}</Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.timeField}>
+                  <Text style={styles.fieldLabel}>End Time</Text>
+                  <TouchableOpacity
+                    style={styles.textInput}
+                    onPress={() => setShowEndTimePicker(true)}
+                  >
+                    <Text style={styles.timeText}>{formatTimeDisplay(newEvent.endTime)}</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Location */}
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>Location</Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={newEvent.location}
+                  onChangeText={(text) => setNewEvent(prev => ({ ...prev, location: text }))}
+                  placeholder="Enter location"
+                  placeholderTextColor="#9CA3AF"
+                />
+              </View>
+
+              {/* Family Member */}
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>Family Member</Text>
+                {familyLoading ? (
+                  <Text style={styles.loadingText}>Loading family members...</Text>
+                ) : familyError ? (
+                  <Text style={styles.errorText}>Error loading family members: {familyError}</Text>
+                ) : (
+                  <View style={styles.memberGrid}>
+                    {getFamilyMembers().map((member) => (
+                      <TouchableOpacity
+                        key={member.id}
+                        style={[
+                          styles.memberOption,
+                          newEvent.familyMember === member.id && styles.memberOptionSelected
+                        ]}
+                        onPress={() => setNewEvent(prev => ({ ...prev, familyMember: member.id }))}
+                      >
+                        <Text style={[
+                          styles.memberLabel,
+                          newEvent.familyMember === member.id && styles.memberLabelSelected
+                        ]}>
+                          {member.label}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+              </View>
+
+              {/* Description */}
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>Description (Optional)</Text>
+                <TextInput
+                  style={[styles.textInput, styles.textArea]}
+                  value={newEvent.description}
+                  onChangeText={(text) => setNewEvent(prev => ({ ...prev, description: text }))}
+                  placeholder="Add notes or description"
+                  placeholderTextColor="#9CA3AF"
+                  multiline
+                  numberOfLines={3}
+                />
+              </View>
+            </ScrollView>
+          </SafeAreaView>
+
+          {/* Custom Time Pickers */}
+          {showStartTimePicker && (
+            <Modal
+              visible={showStartTimePicker}
+              animationType="slide"
+              presentationStyle="formSheet"
+              onRequestClose={() => setShowStartTimePicker(false)}
+            >
+              <SafeAreaView style={styles.timePickerModal}>
+                <View style={styles.timePickerHeader}>
+                  <TouchableOpacity onPress={() => setShowStartTimePicker(false)}>
+                    <Text style={styles.timePickerCancel}>Cancel</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.timePickerTitle}>Select Start Time</Text>
+                  <TouchableOpacity onPress={() => setShowStartTimePicker(false)}>
+                    <Text style={styles.timePickerDone}>Done</Text>
+                  </TouchableOpacity>
+                </View>
+                <FlatList
+                  data={timeSlots}
+                  keyExtractor={(item) => item.value}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      style={[
+                        styles.timeSlotItem,
+                        newEvent.startTime === item.value && styles.timeSlotSelected
+                      ]}
+                      onPress={() => {
+                        setNewEvent(prev => ({ ...prev, startTime: item.value }));
+                        setShowStartTimePicker(false);
+                      }}
+                    >
+                      <Text style={[
+                        styles.timeSlotText,
+                        newEvent.startTime === item.value && styles.timeSlotTextSelected
+                      ]}>
+                        {item.label}
+                      </Text>
+                      {newEvent.startTime === item.value && (
+                        <Check size={20} color="#FFFFFF" />
+                      )}
+                    </TouchableOpacity>
+                  )}
+                  showsVerticalScrollIndicator={false}
+                />
+              </SafeAreaView>
+            </Modal>
+          )}
+
+          {showEndTimePicker && (
+            <Modal
+              visible={showEndTimePicker}
+              animationType="slide"
+              presentationStyle="formSheet"
+              onRequestClose={() => setShowEndTimePicker(false)}
+            >
+              <SafeAreaView style={styles.timePickerModal}>
+                <View style={styles.timePickerHeader}>
+                  <TouchableOpacity onPress={() => setShowEndTimePicker(false)}>
+                    <Text style={styles.timePickerCancel}>Cancel</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.timePickerTitle}>Select End Time</Text>
+                  <TouchableOpacity onPress={() => setShowEndTimePicker(false)}>
+                    <Text style={styles.timePickerDone}>Done</Text>
+                  </TouchableOpacity>
+                </View>
+                <FlatList
+                  data={timeSlots}
+                  keyExtractor={(item) => item.value}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      style={[
+                        styles.timeSlotItem,
+                        newEvent.endTime === item.value && styles.timeSlotSelected
+                      ]}
+                      onPress={() => {
+                        setNewEvent(prev => ({ ...prev, endTime: item.value }));
+                        setShowEndTimePicker(false);
+                      }}
+                    >
+                      <Text style={[
+                        styles.timeSlotText,
+                        newEvent.endTime === item.value && styles.timeSlotTextSelected
+                      ]}>
+                        {item.label}
+                      </Text>
+                      {newEvent.endTime === item.value && (
+                        <Check size={20} color="#FFFFFF" />
+                      )}
+                    </TouchableOpacity>
+                  )}
+                  showsVerticalScrollIndicator={false}
+                />
+              </SafeAreaView>
+            </Modal>
+          )}
+        </Modal>
+
+        {/* Edit Schedule Modal */}
+        <Modal
+          visible={showEditScheduleModal}
+          animationType="slide"
+          presentationStyle="formSheet"
+        >
+          <SafeAreaView style={styles.modalContainer}>
+            {/* Modal Header */}
+            <View style={styles.modalHeader}>
+              <View style={styles.modalHeaderContent}>
+                <TouchableOpacity 
+                  onPress={() => setShowEditScheduleModal(false)}
+                  style={styles.closeButton}
+                >
+                  <X size={20} color="#6B7280" />
+                </TouchableOpacity>
+                <View style={styles.modalTitleContainer}>
+                  <Text style={styles.modalTitle}>Edit Schedule</Text>
+                  <Text style={styles.modalSubtitle}>Update schedule details</Text>
+                </View>
+                <TouchableOpacity 
+                  style={[
+                    styles.saveButton,
+                    (!editingSchedule?.name?.trim() || !editingSchedule?.parent || !editingSchedule?.location?.trim() || isUpdatingSchedule) && styles.saveButtonDisabled
+                  ]}
+                  onPress={handleUpdateSchedule}
+                  disabled={!editingSchedule?.name?.trim() || !editingSchedule?.parent || !editingSchedule?.location?.trim() || isUpdatingSchedule}
+                >
+                  <Text style={[
+                    styles.saveButtonText,
+                    (!editingSchedule?.name?.trim() || !editingSchedule?.parent || !editingSchedule?.location?.trim() || isUpdatingSchedule) && styles.saveButtonTextDisabled
+                  ]}>
+                    {isUpdatingSchedule ? 'Updating...' : 'Update'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.modalHeaderDivider} />
+            </View>
+
+            <ScrollView style={styles.modalContent}>
+              {/* Schedule Name */}
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>Name of Schedule</Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={editingSchedule?.name || ''}
+                  onChangeText={(text) => setEditingSchedule((prev: any) => ({ ...prev, name: text }))}
+                  placeholder="Weekend with dad"
+                  placeholderTextColor="#9CA3AF"
+                />
+              </View>
+
+              {/* Date Range */}
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>Date Range</Text>
+                <View style={styles.dateRangeContainer}>
+                  <TouchableOpacity
+                    style={styles.dateButton}
+                    onPress={() => setShowStartDatePicker(true)}
+                  >
+                    <CalendarIcon size={16} color="#6B7280" />
+                    <View style={styles.dateButtonContent}>
+                      <Text style={styles.dateButtonLabel}>Start Date</Text>
+                      <Text style={styles.dateButtonText}>
+                        {editingSchedule?.startDate?.toLocaleDateString('en-GB', { 
+                          day: 'numeric', 
+                          month: 'short',
+                          year: 'numeric'
+                        })}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity
+                    style={styles.dateButton}
+                    onPress={() => setShowEndDatePicker(true)}
+                  >
+                    <CalendarIcon size={16} color="#6B7280" />
+                    <View style={styles.dateButtonContent}>
+                      <Text style={styles.dateButtonLabel}>End Date</Text>
+                      <Text style={styles.dateButtonText}>
+                        {editingSchedule?.endDate?.toLocaleDateString('en-GB', { 
+                          day: 'numeric', 
+                          month: 'short',
+                          year: 'numeric'
+                        })}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Parent Selection */}
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>Responsible Parent</Text>
+                <TouchableOpacity
+                  style={styles.dropdownButton}
+                  onPress={() => setShowParentDropdown(!showParentDropdown)}
+                >
+                  <Text style={styles.dropdownButtonText}>
+                    {editingSchedule?.parent ? parentOptions.find(p => p.id === editingSchedule.parent)?.label : 'Select parent'}
+                  </Text>
+                  <ChevronDown size={20} color="#6B7280" />
+                </TouchableOpacity>
+                
+                {showParentDropdown && (
+                  <View style={styles.dropdownMenu}>
+                    {parentOptions.map((parent) => (
+                      <TouchableOpacity
+                        key={parent.id}
+                        style={[
+                          styles.dropdownItem,
+                          editingSchedule?.parent === parent.id && styles.dropdownItemSelected
+                        ]}
+                        onPress={() => {
+                          setEditingSchedule((prev: any) => ({ ...prev, parent: parent.id }));
+                          setShowParentDropdown(false);
+                        }}
+                      >
+                        <Text style={[
+                          styles.dropdownItemText,
+                          editingSchedule?.parent === parent.id && styles.dropdownItemTextSelected
+                        ]}>
+                          {parent.label}
+                        </Text>
+                        {editingSchedule?.parent === parent.id && (
+                          <Check size={16} color="#FFFFFF" />
+                        )}
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+              </View>
+
+              {/* Location */}
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>Location</Text>
+                <TouchableOpacity
+                  style={styles.dropdownButton}
+                  onPress={() => setShowLocationDropdown(!showLocationDropdown)}
+                >
+                  <Text style={styles.dropdownButtonText}>
+                    {editingSchedule?.location || 'Select location'}
+                  </Text>
+                  <ChevronDown size={20} color="#6B7280" />
+                </TouchableOpacity>
+                
+                {showLocationDropdown && (
+                  <View style={styles.dropdownMenu}>
+                    {locationOptions.map((location) => (
+                      <TouchableOpacity
+                        key={location}
+                        style={[
+                          styles.dropdownItem,
+                          editingSchedule?.location === location && styles.dropdownItemSelected
+                        ]}
+                        onPress={() => {
+                          setEditingSchedule((prev: any) => ({ ...prev, location }));
+                          setShowLocationDropdown(false);
+                        }}
+                      >
+                        <Text style={[
+                          styles.dropdownItemText,
+                          editingSchedule?.location === location && styles.dropdownItemTextSelected
+                        ]}>
+                          {location}
+                        </Text>
+                        {editingSchedule?.location === location && (
+                          <Check size={16} color="#FFFFFF" />
+                        )}
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+              </View>
+
+              {/* Activities */}
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>Activities</Text>
+                <TextInput
+                  style={[styles.textInput, styles.textArea]}
+                  value={editingSchedule?.activities || ''}
+                  onChangeText={(text) => setEditingSchedule((prev: any) => ({ ...prev, activities: text }))}
+                  placeholder="List all planned activities"
+                  placeholderTextColor="#9CA3AF"
+                  multiline
+                  numberOfLines={3}
+                />
+              </View>
+
+              {/* Notes */}
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>Notes</Text>
+                <TextInput
+                  style={[styles.textInput, styles.textArea]}
+                  value={editingSchedule?.notes || ''}
+                  onChangeText={(text) => setEditingSchedule((prev: any) => ({ ...prev, notes: text }))}
+                  placeholder="Add any additional notes"
+                  placeholderTextColor="#9CA3AF"
+                  multiline
+                  numberOfLines={3}
+                />
+              </View>
+            </ScrollView>
+          </SafeAreaView>
+
+          {/* Date Pickers */}
+          {showStartDatePicker && (
+            <Modal
+              visible={showStartDatePicker}
+              animationType="slide"
+              transparent={true}
+              onRequestClose={() => setShowStartDatePicker(false)}
+            >
+              <View style={styles.overlay}>
+                <SafeAreaView style={styles.datePickerModal}>
+                  <View style={styles.datePickerHeader}>
+                    <TouchableOpacity onPress={() => setShowStartDatePicker(false)}>
+                      <Text style={styles.datePickerCancel}>Cancel</Text>
+                    </TouchableOpacity>
+                    <Text style={styles.datePickerTitle}>Select Start Date</Text>
+                    <TouchableOpacity onPress={() => setShowStartDatePicker(false)}>
+                      <Text style={styles.datePickerDone}>Done</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.datePickerContent}>
+                    <DateTimePicker
+                      value={editingSchedule?.startDate || new Date()}
+                      mode="date"
+                      display="spinner"
+                      minimumDate={new Date()}       
+                      onChange={(event, selectedDate) => {
+                        if (selectedDate) {
+                          setEditingSchedule((prev: any) => ({ ...prev, startDate: selectedDate }));
+                        }
+                      }}
+                      textColor="#000000"
+                      accentColor="#0e3c67"
+                    />
+                  </View>
+                </SafeAreaView>
+              </View>
+            </Modal>
+          )}
+
+          {showEndDatePicker && (
+            <Modal
+              visible={showEndDatePicker}
+              animationType="slide"
+              transparent={true}
+              onRequestClose={() => setShowEndDatePicker(false)}
+            >
+              <View style={styles.overlay}>
+                <SafeAreaView style={styles.datePickerModal}>
+                  <View style={styles.datePickerHeader}>
+                    <TouchableOpacity onPress={() => setShowEndDatePicker(false)}>
+                      <Text style={styles.datePickerCancel}>Cancel</Text>
+                    </TouchableOpacity>
+                    <Text style={styles.datePickerTitle}>Select End Date</Text>
+                    <TouchableOpacity onPress={() => setShowEndDatePicker(false)}>
+                      <Text style={styles.datePickerDone}>Done</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.datePickerContent}>
+                    <DateTimePicker
+                      value={editingSchedule?.endDate || new Date()}
+                      mode="date"
+                      display="spinner"
+                      minimumDate={new Date()}       
+                      onChange={(event, selectedDate) => {
+                        if (selectedDate) {
+                          setEditingSchedule((prev: any) => ({ ...prev, endDate: selectedDate }));
+                        }
+                      }}
+                      textColor="#000000"
+                      accentColor="#0e3c67"
+                    />
+                  </View>
+                </SafeAreaView>
+              </View>
+            </Modal>
+          )}
+        </Modal>
       </ScrollView>
     </SafeAreaView>
   );
@@ -744,6 +1889,35 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: '#FFFFFF',
+    gap: 8,
+  },
+  filterButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  filterButtonActive: {
+    backgroundColor: '#0e3c67',
+    borderColor: '#0e3c67',
+  },
+  filterButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#6B7280',
+  },
+  filterButtonTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
   calendarHeader: {
     flexDirection: 'row',
@@ -826,20 +2000,25 @@ const styles = StyleSheet.create({
     color: '#DC2626',
     fontWeight: '600',
   },
+  dotsContainer: {
+    position: 'absolute',
+    bottom: 2,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 3,
+  },
   eventDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    position: 'absolute',
-    bottom: 2,
   },
   holidayDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    position: 'absolute',
-    bottom: 2,
-    right: 8,
   },
   eventsSection: {
     padding: 20,
@@ -875,11 +2054,28 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 12,
   },
+  eventTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  eventTitleContent: {
+    flex: 1,
+  },
+  eventTypeIcon: {
+    fontSize: 16,
+    marginRight: 8,
+  },
   eventTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: '#111827',
     flex: 1,
+  },
+  eventDateRange: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginTop: 2,
   },
   eventType: {
     fontSize: 12,
@@ -890,6 +2086,93 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 6,
     textTransform: 'capitalize',
+  },
+  eventHeaderRight: {
+    alignItems: 'flex-end',
+    gap: 8,
+  },
+  eventActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  eventActionButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Schedule Modal Styles
+  dateRangeContainer: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  dateButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    gap: 8,
+  },
+  dateButtonContent: {
+    flex: 1,
+  },
+  dateButtonLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginBottom: 2,
+  },
+  dateButtonText: {
+    fontSize: 14,
+    color: '#111827',
+    fontWeight: '500',
+  },
+  // Date Picker Modal Styles (matching profile settings)
+  overlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0,0,0,0.5)", // dim background
+  },
+  datePickerModal: {
+    height: 300,
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    paddingBottom: 10,
+  },
+  datePickerHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  datePickerTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#111827",
+  },
+  datePickerContent: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+  },
+  datePickerCancel: {
+    fontSize: 16,
+    color: "#6B7280",
+  },
+  datePickerDone: {
+    fontSize: 16,
+    color: "#0e3c67",
+    fontWeight: "600",
   },
   eventMeta: {
     gap: 8,
@@ -902,6 +2185,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6B7280',
     marginLeft: 8,
+  },
+  eventDescription: {
+    fontSize: 14,
+    color: '#6B7280',
+    lineHeight: 20,
+    marginTop: 8,
   },
   noEvents: {
     backgroundColor: '#FFFFFF',
@@ -928,6 +2217,60 @@ const styles = StyleSheet.create({
   addEventText: {
     color: '#FFFFFF',
     fontWeight: '600',
+  },
+  loadingState: {
+    backgroundColor: '#FFFFFF',
+    padding: 32,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#6B7280',
+  },
+  errorState: {
+    backgroundColor: '#FFFFFF',
+    padding: 32,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  errorTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#DC2626',
+    marginBottom: 8,
+  },
+  errorSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  retryButton: {
+    backgroundColor: '#0e3c67',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#DC2626',
+    textAlign: 'center',
+    marginTop: 8,
   },
   // Modal Styles
   modalContainer: {
@@ -967,6 +2310,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: '#111827',
+    textAlign: 'center',
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginTop: 2,
     textAlign: 'center',
   },
   saveButton: {
@@ -1123,6 +2472,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 1,
+    justifyContent: 'center',
   },
   memberOptionSelected: {
     borderColor: '#0e3c67',
@@ -1132,10 +2482,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: '#6B7280',
+    textAlign: 'center',
   },
   memberLabelSelected: {
     color: '#0e3c67',
     fontWeight: '700',
+    textAlign: 'center',
   },
   // Time Picker Modal Styles
   timePickerModal: {

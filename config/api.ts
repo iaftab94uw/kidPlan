@@ -19,6 +19,10 @@ export const API_CONFIG = {
     CREATE_SCHEDULE: '/schedules/create',
     UPDATE_SCHEDULE: '/schedules/updateSchedule',
     DELETE_SCHEDULE: '/schedules/deleteSchedule',
+    GET_CALENDAR_EVENTS: '/events/getCalendarEvents',
+    CREATE_EVENT: '/events/create',
+    UPDATE_EVENT: '/events/update',
+    DELETE_EVENT: '/events/delete',
   },
   HEADERS: {
     'Content-Type': 'application/json',
