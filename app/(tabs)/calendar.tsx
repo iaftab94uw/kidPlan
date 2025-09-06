@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { 
   View, 
   Text, 
@@ -33,13 +34,17 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
 import { useFamilyDetails } from '@/hooks/useFamilyDetails';
+import { useAppEvents } from '@/hooks/useAppEvents';
 import { API_CONFIG, getApiUrl, getAuthHeaders } from '@/config/api';
 import { CalendarEvent, EventType } from '@/types/calendar';
 
 const { width } = Dimensions.get('window');
 
 export default function Calendar() {
+  const router = useRouter();
+  const searchParams = useLocalSearchParams();
   const { user, token } = useAuth();
+  const { triggerRefresh } = useAppEvents();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showAddEventModal, setShowAddEventModal] = useState(false);
@@ -403,11 +408,12 @@ export default function Calendar() {
         familyMembers = [newEvent.familyMember];
       }
 
-      // Format the selected date
-      const eventDate = selectedDate.toISOString().split('T')[0]; // Format as YYYY-MM-DD
-
+      // Format the selected date (avoid timezone issues)
+      const eventDate = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
+      console.log('Selected date:', selectedDate);
+      console.log('Formatted event date:', eventDate);
       const eventData = {
-        familyId: familyData._id,
+        familyId: familyData?._id,
         title: newEvent.title,
         eventType: newEvent.type,
         eventDate: eventDate,
@@ -421,7 +427,7 @@ export default function Calendar() {
       const url = getApiUrl(API_CONFIG.ENDPOINTS.CREATE_EVENT);
       const response = await fetch(url, {
         method: 'POST',
-        headers: getAuthHeaders(token),
+        headers: getAuthHeaders(token!),
         body: JSON.stringify(eventData),
       });
 
@@ -450,6 +456,9 @@ export default function Calendar() {
         
         // Refresh calendar events
         refetchEvents();
+        
+        // Trigger refresh event for home screen
+        triggerRefresh('events');
       } else {
         throw new Error(data.message || 'Failed to create event');
       }
@@ -526,10 +535,12 @@ export default function Calendar() {
         familyMembers = [newEvent.familyMember];
       }
 
-      // Format the event date
+      // Format the event date (avoid timezone issues)
+      const formatDate = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      
       const eventDate = editingEvent.eventDate ? 
-        new Date(editingEvent.eventDate).toISOString().split('T')[0] :
-        (editingEvent.startDate ? new Date(editingEvent.startDate).toISOString().split('T')[0] : selectedDate.toISOString().split('T')[0]);
+        formatDate(new Date(editingEvent.eventDate)) :
+        (editingEvent.startDate ? formatDate(new Date(editingEvent.startDate)) : formatDate(selectedDate));
 
       const eventData = {
         eventId: editingEvent._id,
@@ -574,6 +585,9 @@ export default function Calendar() {
         
         // Refresh calendar events
         refetchEvents();
+        
+        // Trigger refresh event for home screen
+        triggerRefresh('events');
       } else {
         throw new Error(data.message || 'Failed to update event');
       }
@@ -626,6 +640,9 @@ export default function Calendar() {
                   
                   // Refresh calendar events
                   refetchEvents();
+                  
+                  // Trigger refresh event for home screen
+                  triggerRefresh('events');
                 } else {
                   throw new Error(data.message || 'Failed to delete event');
                 }
@@ -696,6 +713,9 @@ export default function Calendar() {
         
         // Refresh calendar events
         refetchEvents();
+        
+        // Trigger refresh event for home screen
+        triggerRefresh('schedules');
       } else {
         throw new Error(data.message || 'Failed to update schedule');
       }
@@ -738,6 +758,9 @@ export default function Calendar() {
                 
                 // Refresh calendar events
                 refetchEvents();
+                
+                // Trigger refresh event for home screen
+                triggerRefresh('schedules');
               } else {
                 throw new Error(data.message || 'Failed to delete schedule');
               }
@@ -758,6 +781,16 @@ export default function Calendar() {
   const getFirstDayOfMonth = (date: Date) => {
     return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
   };
+
+  // Handle navigation parameters (e.g., opening add event modal from home screen)
+  useEffect(() => {
+    if (searchParams.action === 'addEvent') {
+      console.log('Opening add event modal from navigation parameter');
+      setShowAddEventModal(true);
+      // Clear the parameter to avoid reopening on subsequent renders
+      router.replace('/(tabs)/calendar');
+    }
+  }, [searchParams.action, router]);
 
   const renderCalendarDays = () => {
     const daysInMonth = getDaysInMonth(currentDate);
@@ -1154,7 +1187,12 @@ export default function Calendar() {
                 ) : familyError ? (
                   <Text style={styles.errorText}>Error loading family members: {familyError}</Text>
                 ) : (
-                  <View style={styles.memberGrid}>
+                  <ScrollView 
+                    horizontal 
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.memberScrollView}
+                    contentContainerStyle={styles.memberScrollContent}
+                  >
                     {getFamilyMembers().map((member) => (
                       <TouchableOpacity
                         key={member.id}
@@ -1172,7 +1210,7 @@ export default function Calendar() {
                         </Text>
                       </TouchableOpacity>
                     ))}
-                  </View>
+                  </ScrollView>
                 )}
               </View>
 
@@ -1426,7 +1464,12 @@ export default function Calendar() {
                 ) : familyError ? (
                   <Text style={styles.errorText}>Error loading family members: {familyError}</Text>
                 ) : (
-                  <View style={styles.memberGrid}>
+                  <ScrollView 
+                    horizontal 
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.memberScrollView}
+                    contentContainerStyle={styles.memberScrollContent}
+                  >
                     {getFamilyMembers().map((member) => (
                       <TouchableOpacity
                         key={member.id}
@@ -1444,7 +1487,7 @@ export default function Calendar() {
                         </Text>
                       </TouchableOpacity>
                     ))}
-                  </View>
+                  </ScrollView>
                 )}
               </View>
 
@@ -2457,6 +2500,12 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 12,
   },
+  memberScrollView: {
+    maxHeight: 60,
+  },
+  memberScrollContent: {
+    paddingRight: 20,
+  },
   memberOption: {
     backgroundColor: '#FFFFFF',
     borderWidth: 2,
@@ -2465,14 +2514,14 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     alignItems: 'center',
-    flex: 1,
+    justifyContent: 'center',
     minWidth: 100,
+    marginRight: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 1,
-    justifyContent: 'center',
   },
   memberOptionSelected: {
     borderColor: '#0e3c67',

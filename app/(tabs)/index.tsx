@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   View, 
   Text, 
@@ -7,10 +7,16 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Image,
-  Dimensions
+  Dimensions,
+  RefreshControl
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
+import { useCalendarEvents } from '@/hooks/useCalendarEvents';
+import { useFamilyDetails } from '@/hooks/useFamilyDetails';
+import { useAppEvents } from '@/hooks/useAppEvents';
+import { API_CONFIG, getApiUrl, getAuthHeaders } from '@/config/api';
+import { CalendarEvent, EventType } from '@/types/calendar';
 import { 
   Bell,
   Plus,
@@ -20,14 +26,43 @@ import {
   Users,
   ChevronRight,
   User,
-  Camera
+  Camera,
+  CalendarDays
 } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
 
 export default function Dashboard() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
+  const searchParams = useLocalSearchParams();
+  const { subscribeToRefresh } = useAppEvents();
+  
+  // State for refresh functionality
+  const [refreshing, setRefreshing] = useState(false);
+  
+  // Calendar Events hook
+  const { 
+    events: calendarEvents, 
+    loading: eventsLoading, 
+    error: eventsError, 
+    refetch: refetchEvents
+  } = useCalendarEvents(token || '');
+  
+  // Family Details hook
+  const { 
+    familyData, 
+    loading: familyLoading, 
+    error: familyError, 
+    refetch: refetchFamily,
+    getAllFamilyMembers 
+  } = useFamilyDetails(token || '');
+  
+  // State for today's and this week's events
+  const [todayEvents, setTodayEvents] = useState<CalendarEvent[]>([]);
+  const [thisWeekEvents, setThisWeekEvents] = useState<CalendarEvent[]>([]);
+  const [todayEventsLoading, setTodayEventsLoading] = useState(false);
+  const [thisWeekEventsLoading, setThisWeekEventsLoading] = useState(false);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -47,26 +82,232 @@ export default function Dashboard() {
     return 'User';
   };
 
-  const upcomingEvents = [
-    {
-      id: 1,
-      title: "Emma's Piano Lesson",
-      time: "4:00 PM",
-      location: "Music Academy",
-      child: "Emma",
-      color: "#22C55E",
-      avatar: "https://images.pexels.com/photos/1169084/pexels-photo-1169084.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2"
-    },
-    {
-      id: 2,
-      title: "Football Practice",
-      time: "6:00 PM",
-              location: "Community Centre",
-      child: "Jack",
-      color: "#F97316",
-      avatar: "https://images.pexels.com/photos/1765110/pexels-photo-1765110.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2"
+  // Helper functions for data processing
+  const getTodayEvents = useCallback(() => {
+    if (!Array.isArray(calendarEvents)) return [];
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    return calendarEvents.filter(event => {
+      if (!event) return false;
+      
+      const typeMatches = event.eventType !== 'Schedule'; // Exclude schedules from events count
+      if (!typeMatches) return false;
+      
+      if (event.eventDate) {
+        const eventDate = new Date(event.eventDate);
+        eventDate.setHours(0, 0, 0, 0);
+        return eventDate.getTime() === today.getTime();
+      }
+      
+      if (event.startDate && event.endDate) {
+        const startDate = new Date(event.startDate);
+        const endDate = new Date(event.endDate);
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(0, 0, 0, 0);
+        return today >= startDate && today <= endDate;
+      }
+      
+      return false;
+    });
+  }, [calendarEvents]);
+
+  const getThisWeekEvents = useCallback(() => {
+    if (!Array.isArray(calendarEvents)) return [];
+    
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+    
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    endOfWeek.setHours(23, 59, 59, 999);
+    
+    return calendarEvents.filter(event => {
+      if (!event) return false;
+      
+      const typeMatches = event.eventType !== 'Schedule'; // Exclude schedules from events count
+      if (!typeMatches) return false;
+      
+      if (event.eventDate) {
+        const eventDate = new Date(event.eventDate);
+        return eventDate >= startOfWeek && eventDate <= endOfWeek;
+      }
+      
+      if (event.startDate && event.endDate) {
+        const startDate = new Date(event.startDate);
+        const endDate = new Date(event.endDate);
+        return (startDate <= endOfWeek && endDate >= startOfWeek);
+      }
+      
+      return false;
+    });
+  }, [calendarEvents]);
+
+  // Fetch today's events from calendar API
+  const fetchTodayEvents = useCallback(async () => {
+    if (!token) return;
+    
+    setTodayEventsLoading(true);
+    try {
+      const today = new Date();
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`; // Format: YYYY-MM-DD
+      
+      const url = getApiUrl(API_CONFIG.ENDPOINTS.GET_CALENDAR_EVENTS);
+      const apiUrl = `${url}?startDate=${todayStr}&endDate=${todayStr}`;
+      
+      console.log('Fetching today\'s schedule:', apiUrl);
+      
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: getAuthHeaders(token),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch today's events: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Today\'s events response:', data);
+      
+      if (data.success && Array.isArray(data.data)) {
+        const scheduleEvents = data.data.filter((event: CalendarEvent) => event.eventType === 'Schedule');
+        console.log('Today\'s schedule events:', scheduleEvents);
+        setTodayEvents(scheduleEvents);
+      } else {
+        setTodayEvents([]);
+      }
+    } catch (error) {
+      console.error('Error fetching today\'s events:', error);
+      setTodayEvents([]);
+    } finally {
+      setTodayEventsLoading(false);
     }
-  ];
+  }, [token]);
+
+  // Fetch this week's events from calendar API
+  const fetchThisWeekEvents = useCallback(async () => {
+    if (!token) return;
+    
+    setThisWeekEventsLoading(true);
+    try {
+      const today = new Date();
+      
+      // Calculate start of week (Sunday)
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - today.getDay());
+      
+      // Calculate end of week (Saturday)
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      
+      const startDateStr = `${startOfWeek.getFullYear()}-${String(startOfWeek.getMonth() + 1).padStart(2, '0')}-${String(startOfWeek.getDate()).padStart(2, '0')}`; // Format: YYYY-MM-DD
+      const endDateStr = `${endOfWeek.getFullYear()}-${String(endOfWeek.getMonth() + 1).padStart(2, '0')}-${String(endOfWeek.getDate()).padStart(2, '0')}`; // Format: YYYY-MM-DD
+      
+      const url = getApiUrl(API_CONFIG.ENDPOINTS.GET_CALENDAR_EVENTS);
+      const apiUrl = `${url}?startDate=${startDateStr}&endDate=${endDateStr}`;
+      
+      console.log('Fetching this week\'s schedule:', apiUrl);
+      console.log('Week range:', startDateStr, 'to', endDateStr);
+      
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: getAuthHeaders(token),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch this week's events: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('This week\'s events response:', data);
+      
+      if (data.success && Array.isArray(data.data)) {
+        const scheduleEvents = data.data.filter((event: CalendarEvent) => event.eventType === 'Schedule');
+        console.log('This week\'s schedule events:', scheduleEvents);
+        setThisWeekEvents(scheduleEvents);
+      } else {
+        setThisWeekEvents([]);
+      }
+    } catch (error) {
+      console.error('Error fetching this week\'s events:', error);
+      setThisWeekEvents([]);
+    } finally {
+      setThisWeekEventsLoading(false);
+    }
+  }, [token]);
+
+  // Refresh all data
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        refetchEvents(),
+        refetchFamily(),
+        fetchTodayEvents(),
+        fetchThisWeekEvents()
+      ]);
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refetchEvents, refetchFamily, fetchTodayEvents, fetchThisWeekEvents]);
+
+  // Load events on mount
+  useEffect(() => {
+    if (token) {
+      fetchTodayEvents();
+      fetchThisWeekEvents();
+    }
+  }, [token, fetchTodayEvents, fetchThisWeekEvents]);
+
+  // Create a stable refresh handler
+  const handleRefreshEvent = useCallback((type: 'events' | 'schedules' | 'family' | 'all') => {
+    console.log(`Home screen received refresh event for: ${type}`);
+    
+    switch (type) {
+      case 'events':
+        fetchTodayEvents();
+        fetchThisWeekEvents();
+        refetchEvents();
+        break;
+      case 'schedules':
+        fetchTodayEvents();
+        fetchThisWeekEvents();
+        break;
+      case 'family':
+        refetchFamily();
+        break;
+      case 'all':
+        fetchTodayEvents();
+        fetchThisWeekEvents();
+        refetchEvents();
+        refetchFamily();
+        break;
+    }
+  }, [fetchTodayEvents, fetchThisWeekEvents, refetchEvents, refetchFamily]);
+
+  // Subscribe to refresh events instead of constantly refetching
+  useEffect(() => {
+    if (!token) return;
+
+    const unsubscribe = subscribeToRefresh(handleRefreshEvent);
+    return unsubscribe;
+  }, [token, subscribeToRefresh, handleRefreshEvent]);
+
+  // Handle navigation parameters (e.g., opening modals from home screen)
+  useFocusEffect(
+    useCallback(() => {
+      if (searchParams.action === 'addEvent' || searchParams.action === 'addSchedule') {
+        console.log('Clearing navigation parameters');
+        router.replace('/');
+      }
+    }, [searchParams.action, router])
+  );
+
 
   const quickActions = [
     {
@@ -74,7 +315,10 @@ export default function Dashboard() {
       title: "Add Event",
       color: "#3B82F6",
       background: "#EBF4FF",
-      action: () => router.push('/(tabs)/calendar')
+      action: () => {
+        // Navigate to calendar tab and trigger add event modal
+        router.push('/(tabs)/calendar?action=addEvent');
+      }
     },
     {
       icon: User,
@@ -84,11 +328,14 @@ export default function Dashboard() {
       action: () => router.push('/add-family-member')
     },
     {
-      icon: Users,
+      icon: CalendarDays,
       title: "Schedule",
       color: "#8B5CF6",
       background: "#F3E8FF",
-      action: () => router.push('/schedule')
+      action: () => {
+        // Navigate to family tab and trigger schedule modal
+        router.push('/(tabs)/family?action=addSchedule');
+      }
     },
     {
       icon: Camera,
@@ -99,22 +346,23 @@ export default function Dashboard() {
     }
   ];
 
+  // Dynamic family stats
   const familyStats = [
     {
       label: "Events Today",
-      value: "3",
+      value: getTodayEvents().length.toString(),
       icon: Calendar,
       color: "#3B82F6"
     },
     {
       label: "This Week",
-      value: "8",
+      value: getThisWeekEvents().length.toString(),
       icon: Clock,
       color: "#10B981"
     },
     {
       label: "Family Members",
-      value: "4",
+      value: (getAllFamilyMembers() || []).length.toString(),
       icon: Users,
       color: "#8B5CF6"
     }
@@ -122,7 +370,17 @@ export default function Dashboard() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#0e3c67']}
+            tintColor="#0e3c67"
+          />
+        }
+      >
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
@@ -180,29 +438,58 @@ export default function Dashboard() {
             </TouchableOpacity>
           </View>
           
-          {upcomingEvents.map((event) => (
-            <TouchableOpacity 
-              key={event.id} 
-              style={styles.eventCard}
-              onPress={() => router.push(`/event-detail/${event.id}`)}
-            >
-              <Image source={{ uri: event.avatar }} style={styles.eventAvatar} />
-              <View style={styles.eventInfo}>
-                <Text style={styles.eventTitle}>{event.title}</Text>
-                <View style={styles.eventMeta}>
-                  <View style={styles.eventMetaItem}>
-                    <Clock size={14} color="#6B7280" />
-                    <Text style={styles.eventMetaText}>{event.time}</Text>
-                  </View>
-                  <View style={styles.eventMetaItem}>
-                    <MapPin size={14} color="#6B7280" />
-                    <Text style={styles.eventMetaText}>{event.location}</Text>
+          {todayEventsLoading ? (
+            <View style={styles.loadingCard}>
+              <Text style={styles.loadingText}>Loading today's schedules...</Text>
+            </View>
+          ) : todayEvents.length === 0 ? (
+            <View style={styles.noDataCard}>
+              <Calendar size={24} color="#9CA3AF" />
+              <Text style={styles.noDataTitle}>No schedules today</Text>
+              <Text style={styles.noDataSubtitle}>Your day is free! Add a schedule to get started.</Text>
+            </View>
+          ) : (
+            todayEvents.slice(0, 2).map((schedule) => (
+              <TouchableOpacity 
+                key={schedule._id} 
+                style={styles.eventCard}
+                onPress={() => router.push(`/schedule-detail/${schedule._id}`)}
+              >
+                <View style={styles.eventAvatar}>
+                  <Calendar size={20} color="#8B5CF6" />
+                </View>
+                <View style={styles.eventInfo}>
+                  <Text style={styles.eventTitle}>{schedule.title}</Text>
+                  <View style={styles.eventMeta}>
+                    <View style={styles.eventMetaItem}>
+                      <Clock size={14} color="#6B7280" />
+                      <Text style={styles.eventMetaText}>
+                        {schedule.startDate && schedule.endDate ? (
+                          `${new Date(schedule.startDate).toLocaleDateString('en-GB', { 
+                            day: 'numeric', 
+                            month: 'short' 
+                          })} - ${new Date(schedule.endDate).toLocaleDateString('en-GB', { 
+                            day: 'numeric', 
+                            month: 'short' 
+                          })}`
+                        ) : (
+                          schedule.eventDate ? new Date(schedule.eventDate).toLocaleDateString('en-GB', { 
+                            day: 'numeric', 
+                            month: 'short' 
+                          }) : 'Today'
+                        )}
+                      </Text>
+                    </View>
+                    <View style={styles.eventMetaItem}>
+                      <MapPin size={14} color="#6B7280" />
+                      <Text style={styles.eventMetaText}>{schedule.location || 'No location'}</Text>
+                    </View>
                   </View>
                 </View>
-              </View>
-              <View style={[styles.eventColorBar, { backgroundColor: event.color }]} />
-            </TouchableOpacity>
-          ))}
+                <View style={[styles.eventColorBar, { backgroundColor: schedule.color || '#8B5CF6' }]} />
+              </TouchableOpacity>
+            ))
+          )}
         </View>
 
         {/* Family Members Overview */}
@@ -218,37 +505,43 @@ export default function Dashboard() {
             </TouchableOpacity>
           </View>
           
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.membersScroll}>
-            <TouchableOpacity 
-              style={styles.memberCard}
-              onPress={() => router.push('/member-detail/1')}
-            >
-              <Image 
-                source={{ uri: "https://images.pexels.com/photos/1169084/pexels-photo-1169084.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2" }} 
-                style={styles.memberAvatar} 
-              />
-              <Text style={styles.memberName}>Emma</Text>
-              <Text style={styles.memberAge}>8 years</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.memberCard}
-              onPress={() => router.push('/member-detail/2')}
-            >
-              <Image 
-                source={{ uri: "https://images.pexels.com/photos/1765110/pexels-photo-1765110.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2" }} 
-                style={styles.memberAvatar} 
-              />
-              <Text style={styles.memberName}>Jack</Text>
-              <Text style={styles.memberAge}>6 years</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.addMemberCard}
-              onPress={() => router.push('/add-family-member')}
-            >
-              <Plus size={24} color="#6B7280" />
-              <Text style={styles.addMemberText}>Add Member</Text>
-            </TouchableOpacity>
-          </ScrollView>
+          {familyLoading ? (
+            <View style={styles.loadingCard}>
+              <Text style={styles.loadingText}>Loading family members...</Text>
+            </View>
+          ) : (getAllFamilyMembers() || []).length === 0 ? (
+            <View style={styles.noDataCard}>
+              <Users size={24} color="#9CA3AF" />
+              <Text style={styles.noDataTitle}>No family members</Text>
+              <Text style={styles.noDataSubtitle}>Add your first family member to get started.</Text>
+            </View>
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.membersScroll}>
+              {(getAllFamilyMembers() || []).map((member) => (
+                <TouchableOpacity 
+                  key={member._id}
+                  style={styles.memberCard}
+                  onPress={() => router.push(`/member-detail/${member._id}`)}
+                >
+                  <Image 
+                    source={{ 
+                      uri: member.profilePhoto || "https://images.pexels.com/photos/1169084/pexels-photo-1169084.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2" 
+                    }} 
+                    style={styles.memberAvatar} 
+                  />
+                  <Text style={styles.memberName}>{member.name}</Text>
+                  <Text style={styles.memberAge}>{member.age || 'Family Member'}</Text>
+                </TouchableOpacity>
+              ))}
+              <TouchableOpacity 
+                style={styles.addMemberCard}
+                onPress={() => router.push('/add-family-member')}
+              >
+                <Plus size={24} color="#6B7280" />
+                <Text style={styles.addMemberText}>Add Member</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          )}
         </View>
 
         {/* Co-Parenting Schedule */}
@@ -264,49 +557,65 @@ export default function Dashboard() {
             </TouchableOpacity>
           </View>
           
-          <TouchableOpacity 
-            style={styles.scheduleCard}
-            onPress={() => router.push('/schedule-detail/1')}
-          >
-            <View style={styles.scheduleHeader}>
-              <View style={styles.scheduleInfo}>
-                <Text style={styles.scheduleTitle}>Weekend with Dad</Text>
-                <Text style={styles.scheduleDate}>Sat 24 - Sun 25 Aug</Text>
-              </View>
-              <View style={styles.scheduleParentBadge}>
-                <Text style={styles.scheduleParentText}>Co-Parent</Text>
-              </View>
+          {thisWeekEventsLoading ? (
+            <View style={styles.loadingCard}>
+              <Text style={styles.loadingText}>Loading this week's schedules...</Text>
             </View>
-            <View style={styles.scheduleDetails}>
-              <View style={styles.scheduleDetailRow}>
-                <MapPin size={16} color="#6B7280" />
-                <Text style={styles.scheduleDetailText}>Dad's House</Text>
-              </View>
-                              <Text style={styles.scheduleActivities}>Swimming, Film night, Cooking together</Text>
+          ) : thisWeekEvents.length === 0 ? (
+            <View style={styles.noDataCard}>
+              <CalendarDays size={24} color="#9CA3AF" />
+              <Text style={styles.noDataTitle}>No schedules this week</Text>
+              <Text style={styles.noDataSubtitle}>Plan your week by adding co-parenting schedules.</Text>
             </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.scheduleCard}
-            onPress={() => router.push('/schedule-detail/2')}
-          >
-            <View style={styles.scheduleHeader}>
-              <View style={styles.scheduleInfo}>
-                <Text style={styles.scheduleTitle}>School Week</Text>
-                <Text style={styles.scheduleDate}>Mon 26 - Fri 30 Aug</Text>
-              </View>
-              <View style={[styles.scheduleParentBadge, { backgroundColor: '#E6F3FF' }]}>
-                <Text style={[styles.scheduleParentText, { color: '#0e3c67' }]}>You</Text>
-              </View>
-            </View>
-            <View style={styles.scheduleDetails}>
-              <View style={styles.scheduleDetailRow}>
-                <MapPin size={16} color="#6B7280" />
-                <Text style={styles.scheduleDetailText}>Home</Text>
-              </View>
-              <Text style={styles.scheduleActivities}>School, homework, piano lessons</Text>
-            </View>
-          </TouchableOpacity>
+          ) : (
+            thisWeekEvents.slice(0, 2).map((schedule) => (
+              <TouchableOpacity 
+                key={schedule._id}
+                style={styles.scheduleCard}
+                onPress={() => router.push(`/schedule-detail/${schedule._id}`)}
+              >
+                <View style={styles.scheduleHeader}>
+                  <View style={styles.scheduleInfo}>
+                    <Text style={styles.scheduleTitle}>{schedule.title}</Text>
+                    <Text style={styles.scheduleDate}>
+                      {schedule.startDate && schedule.endDate ? (
+                        `${new Date(schedule.startDate).toLocaleDateString('en-GB', { 
+                          day: 'numeric', 
+                          month: 'short' 
+                        })} - ${new Date(schedule.endDate).toLocaleDateString('en-GB', { 
+                          day: 'numeric', 
+                          month: 'short' 
+                        })}`
+                      ) : (
+                        schedule.eventDate ? new Date(schedule.eventDate).toLocaleDateString('en-GB', { 
+                          day: 'numeric', 
+                          month: 'short' 
+                        }) : 'This week'
+                      )}
+                    </Text>
+                  </View>
+                  <View style={[
+                    styles.scheduleParentBadge, 
+                    { backgroundColor: schedule.responsibleParent === 'Primary' ? '#E6F3FF' : '#F3E8FF' }
+                  ]}>
+                    <Text style={[
+                      styles.scheduleParentText, 
+                      { color: schedule.responsibleParent === 'Primary' ? '#0e3c67' : '#8B5CF6' }
+                    ]}>
+                      {schedule.responsibleParent === 'Primary' ? 'You' : 'Co-Parent'}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.scheduleDetails}>
+                  <View style={styles.scheduleDetailRow}>
+                    <MapPin size={16} color="#6B7280" />
+                    <Text style={styles.scheduleDetailText}>{schedule.location || 'No location'}</Text>
+                  </View>
+                  <Text style={styles.scheduleActivities}>{schedule.activities || schedule.description || 'No activities specified'}</Text>
+                </View>
+              </TouchableOpacity>
+            ))
+          )}
         </View>
 
         {/* Bottom Spacing */}
@@ -613,5 +922,40 @@ const styles = StyleSheet.create({
   },
   bottomSpacing: {
     height: 32,
+  },
+  // Loading and No Data States
+  loadingCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 20,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  loadingText: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+  },
+  noDataCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 24,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    gap: 8,
+  },
+  noDataTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+    textAlign: 'center',
+  },
+  noDataSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 20,
   },
 });

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { 
   View, 
   Text, 
@@ -37,13 +38,17 @@ import {
   ChevronRight
 } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
+import { useAppEvents } from '@/hooks/useAppEvents';
 import { API_CONFIG, getAuthHeaders } from '@/config/api';
 import { uploadImage } from '@/config/supabase';
 
 const { width } = Dimensions.get('window');
 
 export default function Family() {
+  const router = useRouter();
+  const searchParams = useLocalSearchParams();
   const { user, token } = useAuth();
+  const { triggerRefresh } = useAppEvents();
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   const [showAddScheduleModal, setShowAddScheduleModal] = useState(false);
   const [showFamilyNameModal, setShowFamilyNameModal] = useState(false);
