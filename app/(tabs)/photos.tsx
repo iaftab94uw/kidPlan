@@ -19,19 +19,27 @@ import * as ImagePicker from 'expo-image-picker';
 import { Filter, Plus, Grid3x3 as Grid3X3, List, Camera, FolderPlus, X, Check, Search } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { useGallery } from '@/hooks/useGallery';
+import { useImageUpload } from '@/hooks/useImageUpload';
 
 const { width } = Dimensions.get('window');
 
 export default function Photos() {
   const router = useRouter();
   const { token } = useAuth();
-  const { gallery, albums: apiAlbums, media: apiMedia, loading: galleryLoading, error: galleryError, createGallery, isCreatingGallery } = useGallery(token || '');
+  const { gallery, albums: apiAlbums, media: apiMedia, loading: galleryLoading, error: galleryError, createGallery, isCreatingGallery, createAlbum, isCreatingAlbum } = useGallery(token || '');
+  const { uploadProgress, selectAndUploadImage, resetUpload } = useImageUpload();
   
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateGalleryModal, setShowCreateGalleryModal] = useState(false);
+  const [showCreateAlbumModal, setShowCreateAlbumModal] = useState(false);
+  const [newAlbum, setNewAlbum] = useState({
+    name: '',
+    coverImage: 'https://dummyjson.com/image/150',
+    description: ''
+  });
 
   // Auto-show create gallery modal if no gallery exists
   // This ensures the modal appears every time user comes back to photos tab without a gallery
@@ -193,32 +201,59 @@ export default function Photos() {
       return;
     }
 
-    Alert.alert(
-      'Create Album',
-      'Enter album name',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel'
-        },
-        {
-          text: 'Create',
-          onPress: (albumName) => {
-            if (albumName && albumName.trim()) {
-              const newAlbum = {
-                id: albums.length + 1,
-                name: albumName.trim(),
-                photoCount: 0,
-                coverPhoto: "https://images.pexels.com/photos/8613089/pexels-photo-8613089.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&dpr=2",
-                color: "#6B7280"
-              };
-              setAlbums(prev => [...prev, newAlbum]);
-              Alert.alert('Success', 'Album created successfully!');
-            }
-          }
-        }
-      ]
-    );
+    // Reset form and show modal
+    setNewAlbum({
+      name: '',
+      coverImage: 'https://dummyjson.com/image/150',
+      description: ''
+    });
+    setShowCreateAlbumModal(true);
+  };
+
+  const handleSelectCoverPhoto = async () => {
+    try {
+      const imageUrl = await selectAndUploadImage();
+      if (imageUrl) {
+        setNewAlbum(prev => ({ ...prev, coverImage: imageUrl }));
+      }
+    } catch (error) {
+      console.error('Error selecting cover photo:', error);
+      Alert.alert('Error', 'Failed to select cover photo. Please try again.');
+    }
+  };
+
+  const handleSaveAlbum = async () => {
+    if (!gallery || !newAlbum.name.trim()) {
+      Alert.alert('Error', 'Please enter an album name');
+      return;
+    }
+
+    // Don't allow saving while upload is in progress
+    if (uploadProgress.isUploading) {
+      Alert.alert('Please Wait', 'Please wait for the cover photo upload to complete.');
+      return;
+    }
+
+    try {
+      const albumData = {
+        galleryId: gallery._id,
+        name: newAlbum.name.trim(),
+        coverImage: newAlbum.coverImage,
+        description: newAlbum.description.trim()
+      };
+
+      const success = await createAlbum(albumData);
+      if (success) {
+        setShowCreateAlbumModal(false);
+        resetUpload(); // Reset upload state
+        Alert.alert('Success', 'Album created successfully!');
+      } else {
+        Alert.alert('Error', 'Failed to create album. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error creating album:', error);
+      Alert.alert('Error', 'Failed to create album. Please try again.');
+    }
   };
 
   const handleUploadPhoto = async () => {
@@ -396,7 +431,10 @@ export default function Photos() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView>
+      <ScrollView 
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Photos</Text>
@@ -470,6 +508,8 @@ export default function Photos() {
           <TouchableOpacity 
             style={styles.quickActionButton}
             onPress={handleCreateAlbum}
+            activeOpacity={0.7}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <FolderPlus size={20} color="#FFFFFF" />
             <Text style={styles.quickActionText}>Create Album</Text>
@@ -704,6 +744,138 @@ export default function Photos() {
                 </View>
               </View>
             </View>
+          </SafeAreaView>
+        </Modal>
+
+        {/* Create Album Modal */}
+        <Modal
+          visible={showCreateAlbumModal}
+          animationType="slide"
+          presentationStyle="formSheet"
+        >
+          <SafeAreaView style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <View style={styles.modalHeaderContent}>
+                <TouchableOpacity 
+                  onPress={() => setShowCreateAlbumModal(false)}
+                  style={styles.closeButton}
+                >
+                  <X size={20} color="#6B7280" />
+                </TouchableOpacity>
+                <Text style={styles.modalTitle}>Create Album</Text>
+                <TouchableOpacity 
+                  style={[
+                    styles.doneButton,
+                    (isCreatingAlbum || uploadProgress.isUploading) && styles.doneButtonDisabled
+                  ]}
+                  onPress={handleSaveAlbum}
+                  disabled={isCreatingAlbum || uploadProgress.isUploading}
+                >
+                  {(isCreatingAlbum || uploadProgress.isUploading) ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <Text style={styles.doneButtonText}>Create</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+              <View style={styles.modalHeaderDivider} />
+            </View>
+
+            <ScrollView style={styles.modalContent}>
+              <View style={styles.formContainer}>
+                {/* Album Name */}
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.fieldLabel}>Album Name *</Text>
+                  <TextInput
+                    style={styles.textInput}
+                    value={newAlbum.name}
+                    onChangeText={(text) => setNewAlbum(prev => ({ ...prev, name: text }))}
+                    placeholder="Enter album name"
+                    placeholderTextColor="#9CA3AF"
+                  />
+                </View>
+
+                {/* Cover Image */}
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.fieldLabel}>Cover Image</Text>
+                  
+                  {/* Photo Selection Button */}
+                  <TouchableOpacity 
+                    style={styles.selectPhotoButton}
+                    onPress={handleSelectCoverPhoto}
+                    disabled={uploadProgress.isUploading}
+                  >
+                    <Camera size={20} color="#0e3c67" />
+                    <Text style={styles.selectPhotoButtonText}>
+                      {uploadProgress.isUploading ? 'Uploading...' : 'Select Photo'}
+                    </Text>
+                  </TouchableOpacity>
+
+                  {/* Upload Progress */}
+                  {uploadProgress.isUploading && (
+                    <View style={styles.uploadProgressContainer}>
+                      <View style={styles.progressBar}>
+                        <View 
+                          style={[
+                            styles.progressFill, 
+                            { width: `${uploadProgress.progress}%` }
+                          ]} 
+                        />
+                      </View>
+                      <Text style={styles.progressText}>
+                        Uploading... {Math.round(uploadProgress.progress)}%
+                      </Text>
+                    </View>
+                  )}
+
+                  {/* Upload Error */}
+                  {uploadProgress.error && (
+                    <View style={styles.uploadErrorContainer}>
+                      <Text style={styles.uploadErrorText}>
+                        {uploadProgress.error}
+                      </Text>
+                      <TouchableOpacity 
+                        style={styles.uploadRetryButton}
+                        onPress={handleSelectCoverPhoto}
+                      >
+                        <Text style={styles.uploadRetryButtonText}>Retry</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+
+                  {/* Image Preview */}
+                  {newAlbum.coverImage && !uploadProgress.isUploading && (
+                    <View style={styles.imagePreview}>
+                      <Image 
+                        source={{ uri: newAlbum.coverImage }} 
+                        style={styles.previewImage}
+                        resizeMode="cover"
+                      />
+                      <TouchableOpacity 
+                        style={styles.changePhotoButton}
+                        onPress={handleSelectCoverPhoto}
+                      >
+                        <Text style={styles.changePhotoButtonText}>Change Photo</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
+
+                {/* Description */}
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.fieldLabel}>Description</Text>
+                  <TextInput
+                    style={[styles.textInput, styles.textArea]}
+                    value={newAlbum.description}
+                    onChangeText={(text) => setNewAlbum(prev => ({ ...prev, description: text }))}
+                    placeholder="Enter album description (optional)"
+                    placeholderTextColor="#9CA3AF"
+                    multiline
+                    numberOfLines={4}
+                  />
+                </View>
+              </View>
+            </ScrollView>
           </SafeAreaView>
         </Modal>
       </ScrollView>
@@ -993,6 +1165,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 14,
   },
+  doneButtonDisabled: {
+    backgroundColor: '#9CA3AF',
+    opacity: 0.6,
+  },
   modalContent: {
     flex: 1,
     backgroundColor: '#F9FAFB',
@@ -1227,6 +1403,120 @@ const styles = StyleSheet.create({
   cancelGalleryButtonText: {
     color: '#6B7280',
     fontSize: 16,
+    fontWeight: '600',
+  },
+  // Album Creation Modal Styles
+  formContainer: {
+    padding: 20,
+  },
+  fieldGroup: {
+    marginBottom: 24,
+  },
+  fieldLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 8,
+  },
+  textInput: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: '#111827',
+  },
+  textArea: {
+    height: 100,
+    textAlignVertical: 'top',
+  },
+  imagePreview: {
+    marginTop: 12,
+    alignItems: 'center',
+  },
+  previewImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 8,
+    backgroundColor: '#F3F4F6',
+  },
+  // Photo Selection and Upload Styles
+  selectPhotoButton: {
+    backgroundColor: '#F0F7FF',
+    borderWidth: 2,
+    borderColor: '#0e3c67',
+    borderStyle: 'dashed',
+    borderRadius: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  selectPhotoButtonText: {
+    color: '#0e3c67',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  uploadProgressContainer: {
+    marginBottom: 12,
+  },
+  progressBar: {
+    height: 8,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#0e3c67',
+    borderRadius: 4,
+  },
+  progressText: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+  },
+  uploadErrorContainer: {
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+  },
+  uploadErrorText: {
+    fontSize: 14,
+    color: '#DC2626',
+    marginBottom: 8,
+  },
+  uploadRetryButton: {
+    backgroundColor: '#DC2626',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  uploadRetryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  changePhotoButton: {
+    backgroundColor: '#0e3c67',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+    marginTop: 8,
+  },
+  changePhotoButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
     fontWeight: '600',
   },
 });

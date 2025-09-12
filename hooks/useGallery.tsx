@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { API_CONFIG, getApiUrl, getAuthHeaders } from '@/config/api';
-import { Gallery, GalleryData, Album, Media, GalleryResponse, CreateGalleryResponse } from '@/types/gallery';
+import { Gallery, GalleryData, Album, Media, GalleryResponse, CreateGalleryResponse, CreateAlbumRequest, CreateAlbumResponse } from '@/types/gallery';
 
 interface UseGalleryReturn {
   gallery: Gallery | null;
@@ -11,6 +11,8 @@ interface UseGalleryReturn {
   refetch: () => void;
   createGallery: () => Promise<boolean>;
   isCreatingGallery: boolean;
+  createAlbum: (albumData: CreateAlbumRequest) => Promise<boolean>;
+  isCreatingAlbum: boolean;
 }
 
 export const useGallery = (token: string): UseGalleryReturn => {
@@ -20,6 +22,7 @@ export const useGallery = (token: string): UseGalleryReturn => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isCreatingGallery, setIsCreatingGallery] = useState(false);
+  const [isCreatingAlbum, setIsCreatingAlbum] = useState(false);
 
   const fetchGallery = useCallback(async () => {
     if (!token) {
@@ -113,6 +116,49 @@ export const useGallery = (token: string): UseGalleryReturn => {
     }
   }, [token]);
 
+  const createAlbum = useCallback(async (albumData: CreateAlbumRequest): Promise<boolean> => {
+    if (!token) {
+      setError('No authentication token available');
+      return false;
+    }
+
+    setIsCreatingAlbum(true);
+    setError(null);
+
+    try {
+      const url = getApiUrl(API_CONFIG.ENDPOINTS.CREATE_ALBUM);
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: getAuthHeaders(token),
+        body: JSON.stringify(albumData),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log('Album create error response:', errorText);
+        throw new Error(`Failed to create album: ${response.status} - ${errorText}`);
+      }
+
+      const data: CreateAlbumResponse = await response.json();
+
+      if (data.success && data.data) {
+        // Add the new album to the albums list
+        setAlbums(prev => [...prev, data.data!]);
+        return true;
+      } else {
+        throw new Error(data.error || 'Failed to create album');
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      setError(errorMessage);
+      console.error('Error creating album:', err);
+      return false;
+    } finally {
+      setIsCreatingAlbum(false);
+    }
+  }, [token]);
+
   const refetch = () => {
     fetchGallery();
   };
@@ -132,5 +178,7 @@ export const useGallery = (token: string): UseGalleryReturn => {
     refetch,
     createGallery,
     isCreatingGallery,
+    createAlbum,
+    isCreatingAlbum,
   };
 };

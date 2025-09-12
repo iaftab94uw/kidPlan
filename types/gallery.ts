@@ -50,3 +50,17 @@ export interface CreateGalleryResponse {
   data?: Gallery;
   error?: string;
 }
+
+export interface CreateAlbumRequest {
+  galleryId: string;
+  name: string;
+  coverImage: string;
+  description: string;
+}
+
+export interface CreateAlbumResponse {
+  success: boolean;
+  message: string;
+  data?: Album;
+  error?: string;
+}
