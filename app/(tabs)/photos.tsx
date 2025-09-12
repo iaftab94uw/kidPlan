@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -11,20 +11,43 @@ import {
   Modal,
   TextInput,
   Alert,
-  FlatList
+  FlatList,
+  ActivityIndicator
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Filter, Plus, Grid3x3 as Grid3X3, List, Camera, FolderPlus, X, Check, Search } from 'lucide-react-native';
+import { useAuth } from '@/hooks/useAuth';
+import { useGallery } from '@/hooks/useGallery';
 
 const { width } = Dimensions.get('window');
 
 export default function Photos() {
   const router = useRouter();
+  const { token } = useAuth();
+  const { gallery, albums: apiAlbums, media: apiMedia, loading: galleryLoading, error: galleryError, createGallery, isCreatingGallery } = useGallery(token || '');
+  
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showCreateGalleryModal, setShowCreateGalleryModal] = useState(false);
+
+  // Auto-show create gallery modal if no gallery exists
+  // This ensures the modal appears every time user comes back to photos tab without a gallery
+  useEffect(() => {
+    if (!galleryLoading && !gallery && !galleryError) {
+      setShowCreateGalleryModal(true);
+    }
+  }, [galleryLoading, gallery, galleryError]);
+
+  // Reset modal state when gallery is created
+  // This automatically closes the modal once gallery is successfully created
+  useEffect(() => {
+    if (gallery) {
+      setShowCreateGalleryModal(false);
+    }
+  }, [gallery]);
 
   const [photos, setPhotos] = useState([
     {
@@ -148,7 +171,64 @@ export default function Photos() {
     return filter ? filter.label : 'All Photos';
   };
 
+  const handleCreateGallery = async () => {
+    try {
+      const success = await createGallery();
+      if (success) {
+        Alert.alert('Success', 'Gallery created successfully! You can now create albums and upload photos.');
+        // Modal will be closed automatically by useEffect when gallery state updates
+      } else {
+        Alert.alert('Error', 'Failed to create gallery. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error creating gallery:', error);
+      Alert.alert('Error', 'Failed to create gallery. Please try again.');
+    }
+  };
+
+  const handleCreateAlbum = () => {
+    // Check if gallery exists first
+    if (!gallery) {
+      setShowCreateGalleryModal(true);
+      return;
+    }
+
+    Alert.alert(
+      'Create Album',
+      'Enter album name',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Create',
+          onPress: (albumName) => {
+            if (albumName && albumName.trim()) {
+              const newAlbum = {
+                id: albums.length + 1,
+                name: albumName.trim(),
+                photoCount: 0,
+                coverPhoto: "https://images.pexels.com/photos/8613089/pexels-photo-8613089.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&dpr=2",
+                color: "#6B7280"
+              };
+              setAlbums(prev => [...prev, newAlbum]);
+              Alert.alert('Success', 'Album created successfully!');
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const handleUploadPhoto = async () => {
+    // Check if gallery exists first
+    if (!gallery) {
+      setShowCreateGalleryModal(true);
+      return;
+    }
+
+    // Original upload photo logic
     try {
       Alert.alert(
         'Upload Photo',
@@ -234,36 +314,6 @@ export default function Photos() {
     }
   };
 
-  const handleCreateAlbum = () => {
-    Alert.alert(
-      'Create Album',
-      'Enter album name',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel'
-        },
-        {
-          text: 'Create',
-          onPress: (albumName) => {
-            if (albumName && albumName.trim()) {
-              const newAlbum = {
-                id: albums.length + 1,
-                name: albumName.trim(),
-                photoCount: 0,
-                coverPhoto: "https://images.pexels.com/photos/8613089/pexels-photo-8613089.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&dpr=2",
-                color: "#6B7280"
-              };
-              setAlbums(prev => [...prev, newAlbum]);
-              Alert.alert('Success', 'Album created successfully!');
-            }
-          }
-        }
-      ],
-      'plain-text'
-    );
-  };
-
   const renderPhotoGrid = () => {
     const filteredPhotos = getFilteredPhotos();
     const photoSize = (width - 60) / 3;
@@ -274,7 +324,7 @@ export default function Photos() {
           <TouchableOpacity 
             key={photo.id} 
             style={[styles.photoGridItem, { width: photoSize, height: photoSize }]}
-            onPress={() => router.push(`/photo-detail/${photo.id}`)}
+            onPress={() => Alert.alert('Coming Soon', 'Photo detail screen will be implemented soon!')}
           >
             <Image source={{ uri: photo.uri }} style={styles.photoGridImage} />
             <View style={styles.photoOverlay}>
@@ -295,7 +345,7 @@ export default function Photos() {
           <TouchableOpacity 
             key={photo.id} 
             style={styles.photoListItem}
-            onPress={() => router.push(`/photo-detail/${photo.id}`)}
+            onPress={() => Alert.alert('Coming Soon', 'Photo detail screen will be implemented soon!')}
           >
             <Image source={{ uri: photo.uri }} style={styles.photoListImage} />
             <View style={styles.photoListContent}>
@@ -310,6 +360,39 @@ export default function Photos() {
       </View>
     );
   };
+
+  // Show loading state while checking gallery
+  if (galleryLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#0e3c67" />
+          <Text style={styles.loadingText}>Loading gallery...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Show error state if there's an error (but not "Gallery not found")
+  if (galleryError && galleryError !== 'Gallery not found') {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Error: {galleryError}</Text>
+          <TouchableOpacity 
+            style={styles.retryButton}
+            onPress={() => {
+              // Force a re-render by updating a state
+              setShowCreateGalleryModal(false);
+              // The useGallery hook will automatically refetch on mount
+            }}
+          >
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -401,7 +484,7 @@ export default function Photos() {
               <TouchableOpacity 
                 key={album.id} 
                 style={styles.albumCard}
-                onPress={() => router.push(`/album-detail/${album.id}`)}
+                onPress={() => Alert.alert('Coming Soon', 'Album detail screen will be implemented soon!')}
               >
                 <Image source={{ uri: album.coverPhoto }} style={styles.albumCover} />
                 <View style={[styles.albumColorBar, { backgroundColor: album.color }]} />
@@ -561,6 +644,66 @@ export default function Photos() {
                 </View>
               </View>
             </ScrollView>
+          </SafeAreaView>
+        </Modal>
+
+        {/* Create Gallery Modal */}
+        <Modal
+          visible={showCreateGalleryModal}
+          animationType="slide"
+          presentationStyle="formSheet"
+        >
+          <SafeAreaView style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <View style={styles.modalHeaderContent}>
+                <TouchableOpacity 
+                  onPress={() => {
+                    setShowCreateGalleryModal(false);
+                    // User can still access the modal again by trying to upload/create album
+                  }}
+                  style={styles.closeButton}
+                >
+                  <X size={20} color="#6B7280" />
+                </TouchableOpacity>
+                <Text style={styles.modalTitle}>Create Gallery</Text>
+                <View style={{ width: 36 }} />
+              </View>
+              <View style={styles.modalHeaderDivider} />
+            </View>
+
+            <View style={styles.modalContent}>
+              <View style={styles.createGalleryContainer}>
+                <Text style={styles.createGalleryTitle}>Welcome to Photos!</Text>
+                <Text style={styles.createGalleryDescription}>
+                  To start organizing your family photos, we need to create a gallery for you first. 
+                  This will allow you to create albums and upload photos.
+                </Text>
+                
+                <View style={styles.createGalleryActions}>
+                  <TouchableOpacity 
+                    style={styles.createGalleryButton}
+                    onPress={handleCreateGallery}
+                    disabled={isCreatingGallery}
+                  >
+                    {isCreatingGallery ? (
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                    ) : (
+                      <Text style={styles.createGalleryButtonText}>Create Gallery</Text>
+                    )}
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity 
+                    style={styles.cancelGalleryButton}
+                    onPress={() => {
+                      setShowCreateGalleryModal(false);
+                      // User can still access the modal again by trying to upload/create album
+                    }}
+                  >
+                    <Text style={styles.cancelGalleryButtonText}>Cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
           </SafeAreaView>
         </Modal>
       </ScrollView>
@@ -993,5 +1136,97 @@ const styles = StyleSheet.create({
   albumFilterCount: {
     fontSize: 12,
     color: '#6B7280',
+  },
+  // Loading and Error States
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#6B7280',
+    marginTop: 16,
+    fontWeight: '500',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    paddingHorizontal: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#EF4444',
+    textAlign: 'center',
+    marginBottom: 20,
+    fontWeight: '500',
+  },
+  retryButton: {
+    backgroundColor: '#0e3c67',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  // Create Gallery Modal Styles
+  createGalleryContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  createGalleryTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#111827',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  createGalleryDescription: {
+    fontSize: 16,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 32,
+  },
+  createGalleryActions: {
+    width: '100%',
+    gap: 12,
+  },
+  createGalleryButton: {
+    backgroundColor: '#0e3c67',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#0e3c67',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  createGalleryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  cancelGalleryButton: {
+    backgroundColor: '#F3F4F6',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelGalleryButtonText: {
+    color: '#6B7280',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

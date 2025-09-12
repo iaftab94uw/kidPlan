@@ -23,6 +23,9 @@ export const API_CONFIG = {
     CREATE_EVENT: '/events/create',
     UPDATE_EVENT: '/events/update',
     DELETE_EVENT: '/events/delete',
+    // Gallery endpoints
+    FETCH_GALLERY: '/gallery/fetch',
+    CREATE_GALLERY: '/gallery/create',
   },
   HEADERS: {
     'Content-Type': 'application/json',
