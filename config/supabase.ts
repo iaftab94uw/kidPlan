@@ -14,7 +14,6 @@ console.log('Supabase Key:', supabaseAnonKey ? 'SET' : 'NOT SET');
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Test Supabase connection
 export const testSupabaseConnection = async () => {
   try {
     console.log('Testing Supabase connection...');
