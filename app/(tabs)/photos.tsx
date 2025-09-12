@@ -388,6 +388,7 @@ export default function Photos() {
     return (
       <View style={styles.photoList}>
         {filteredPhotos.map((photo) => (
+          <TouchableOpacity
             key={photo.id} 
             style={styles.photoListItem}
             onPress={() => Alert.alert('Coming Soon', 'Photo detail screen will be implemented soon!')}
@@ -410,6 +411,7 @@ export default function Photos() {
   if (galleryLoading) {
     return (
       <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#0e3c67" />
           <Text style={styles.loadingText}>Loading gallery...</Text>
         </View>
@@ -424,6 +426,7 @@ export default function Photos() {
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Error: {galleryError}</Text>
           <TouchableOpacity 
+            style={styles.retryButton}
             onPress={() => window.location.reload()}
           >
             <Text style={styles.retryButtonText}>Retry</Text>
@@ -445,6 +448,7 @@ export default function Photos() {
               onPress={() => setShowFilterModal(true)}
             >
               <Filter size={20} color="#FFFFFF" />
+            </TouchableOpacity>
             <TouchableOpacity 
               style={styles.viewModeButton}
               onPress={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
@@ -471,6 +475,7 @@ export default function Photos() {
               <Text style={styles.clearFilterText}>Clear</Text>
             </TouchableOpacity>
           </View>
+        )}
 
         {/* Stats */}
         <View style={styles.statsContainer}>
@@ -489,6 +494,7 @@ export default function Photos() {
                 oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
                 return new Date(p.date) >= oneWeekAgo;
               }).length}
+            </Text>
             <Text style={styles.statLabel}>This Week</Text>
           </View>
         </View>
@@ -496,6 +502,7 @@ export default function Photos() {
         {/* Quick Actions */}
         <View style={styles.quickActions} pointerEvents="box-none">
           <TouchableOpacity 
+            style={styles.quickActionButton}
             onPress={handleUploadPhoto}
           >
             <Camera size={20} color="#FFFFFF" />
@@ -522,6 +529,11 @@ export default function Photos() {
         {/* Albums Section */}
         <View style={styles.albumsSection}>
           <Text style={styles.sectionTitle}>Albums</Text>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            style={styles.albumsScroll}
+          >
             {albums.map((album) => (
               <TouchableOpacity 
                 key={album.id} 
@@ -602,6 +614,7 @@ export default function Photos() {
                     ]}>All Photos</Text>
                     {activeFilter === 'all' && (
                       <Check size={16} color="#FFFFFF" />
+                    )}
                   </TouchableOpacity>
                   
                   <TouchableOpacity
@@ -646,6 +659,7 @@ export default function Photos() {
                           <Check size={16} color="#FFFFFF" />
                         </View>
                       )}
+                    </TouchableOpacity>
                   ))}
                 </View>
               </View>
@@ -682,6 +696,7 @@ export default function Photos() {
               </View>
             </ScrollView>
           </SafeAreaView>
+        </Modal>
 
         {/* Create Gallery Modal */}
         <Modal
@@ -692,6 +707,7 @@ export default function Photos() {
           <SafeAreaView style={styles.modalContainer}>
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderContent}>
+                <TouchableOpacity
                   onPress={() => {
                     setShowCreateGalleryModal(false);
                     // User can still access the modal again by trying to upload/create album
@@ -730,6 +746,7 @@ export default function Photos() {
                   <TouchableOpacity 
                     style={styles.cancelGalleryButton}
                     onPress={() => {
+                      setShowCreateGalleryModal(false);
                       // User can still access the modal again by trying to upload/create album
                     }}
                   >
@@ -794,6 +811,8 @@ export default function Photos() {
                   <Text style={styles.fieldLabel}>Cover Image</Text>
                   
                   {/* Photo Selection Button */}
+                  <TouchableOpacity
+                    onPress={handleSelectCoverPhoto}
                     style={styles.selectPhotoButton}
                     disabled={uploadProgress.isUploading}
                   >
@@ -815,6 +834,7 @@ export default function Photos() {
                         />
                       </View>
                       <Text style={styles.progressText}>
+                        {uploadProgress.progress}% uploaded
                       </Text>
                     </View>
                   )}
@@ -839,6 +859,7 @@ export default function Photos() {
                     <View style={styles.imagePreview}>
                       <Image 
                         source={{ uri: newAlbum.coverImage }} 
+                        style={styles.previewImage}
                         resizeMode="cover"
                       />
                       <TouchableOpacity 
