@@ -520,7 +520,6 @@ export default function Photos() {
               <Text style={styles.quickActionText}>Upload Photo</Text>
             </TouchableOpacity>
           </View>
-          
           <View style={{ flex: 1 }}>
             <TouchableOpacity 
               style={styles.quickActionButton}
