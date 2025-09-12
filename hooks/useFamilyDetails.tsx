@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { API_CONFIG, getApiUrl, getAuthHeaders } from '@/config/api';
+import { makeAuthenticatedApiCall } from '@/utils/apiUtils';
+import { useAuth } from '@/hooks/useAuth';
 
 interface FamilyMember {
   _id: string;
@@ -36,6 +38,7 @@ export const useFamilyDetails = (token: string): UseFamilyDetailsReturn => {
   const [familyData, setFamilyData] = useState<FamilyData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { setUser, setToken } = useAuth();
 
   const fetchFamilyDetails = async () => {
     if (!token) {
@@ -47,17 +50,15 @@ export const useFamilyDetails = (token: string): UseFamilyDetailsReturn => {
     setError(null);
 
     try {
-      const url = getApiUrl(API_CONFIG.ENDPOINTS.FAMILY_DETAILS);
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: getAuthHeaders(token),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch family details: ${response.status}`);
-      }
-
-      const data: FamilyDetailsResponse = await response.json();
+      const data: FamilyDetailsResponse = await makeAuthenticatedApiCall(
+        API_CONFIG.ENDPOINTS.FAMILY_DETAILS,
+        {
+          method: 'GET',
+        },
+        token,
+        setUser,
+        setToken
+      );
       
       if (data.success) {
         setFamilyData(data.data);
@@ -67,7 +68,6 @@ export const useFamilyDetails = (token: string): UseFamilyDetailsReturn => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       setError(errorMessage);
-      console.error('Error fetching family details:', err);
     } finally {
       setLoading(false);
     }
