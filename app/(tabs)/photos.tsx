@@ -389,6 +389,7 @@ export default function Photos() {
       <View style={styles.photoList}>
         {filteredPhotos.map((photo) => (
           <TouchableOpacity
+            key={photo.id}
             key={photo.id} 
             style={styles.photoListItem}
             onPress={() => Alert.alert('Coming Soon', 'Photo detail screen will be implemented soon!')}
@@ -401,6 +402,7 @@ export default function Photos() {
                 {new Date(photo.date).toLocaleDateString('en-GB')}
               </Text>
             </View>
+          </TouchableOpacity>
           </TouchableOpacity>
         ))}
       </View>
