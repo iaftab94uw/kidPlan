@@ -15,7 +15,7 @@ import {
   ActivityIndicator
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Plus, Camera, Search, Grid, List, Filter, MoreVertical, FolderPlus, X, Grid3x3 as Grid3X3, Check } from 'lucide-react-native';
+import { Plus, Camera, Search, Grid2x2 as Grid, List, Filter, MoveVertical as MoreVertical, FolderPlus, X, Grid3x3 as Grid3X3, Check } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { useGallery } from '@/hooks/useGallery';
 import { useImageUpload } from '@/hooks/useImageUpload';
@@ -426,76 +426,38 @@ export default function Photos() {
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Error: {galleryError}</Text>
           <TouchableOpacity 
-                {/* Album Name Section */}
-                <View style={styles.albumNameSection}>
-                  <Text style={styles.sectionLabel}>Album Name</Text>
-                  <TextInput
-                    style={[
-                      styles.albumNameInput,
-                      newAlbumName.trim() && styles.albumNameInputFilled
-                    ]}
-                    value={newAlbumName}
-                    onChangeText={setNewAlbumName}
-                    placeholder="Enter album name"
-                    placeholderTextColor="#9CA3AF"
-                    maxLength={50}
-                  />
-                  <Text style={styles.characterCount}>{newAlbumName.length}/50</Text>
-                </View>
+            style={styles.retryButton}
+            onPress={() => window.location.reload()}
+          >
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
-                {/* Description Section */}
-                <View style={styles.descriptionSection}>
-                  <Text style={styles.sectionLabel}>Description (Optional)</Text>
-                  <TextInput
-                    style={[
-                      styles.descriptionInput,
-                      newAlbumDescription.trim() && styles.descriptionInputFilled
-                    ]}
-                    value={newAlbumDescription}
-                    onChangeText={setNewAlbumDescription}
-                    placeholder="Add a description for this album..."
-                    placeholderTextColor="#9CA3AF"
-                    multiline
-                    numberOfLines={4}
-                    maxLength={200}
-                    textAlignVertical="top"
-                  />
-                  <Text style={styles.characterCount}>{newAlbumDescription.length}/200</Text>
-                </View>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Header */}
         <View style={styles.header}>
-                {/* Preview Section */}
-                {(newAlbumName.trim() || newAlbumCoverImage) && (
-                  <View style={styles.previewSection}>
-                    <Text style={styles.sectionLabel}>Preview</Text>
-                    <View style={styles.albumPreview}>
-                      <View style={styles.albumPreviewImageContainer}>
-                        {newAlbumCoverImage ? (
-                          <Image source={{ uri: newAlbumCoverImage }} style={styles.albumPreviewImage} />
-                        ) : (
-                          <View style={styles.albumPreviewPlaceholder}>
-                            <Camera size={24} color="#9CA3AF" />
-                          </View>
-                        )}
-                      </View>
-                      <View style={styles.albumPreviewInfo}>
-                        <Text style={styles.albumPreviewName}>
-                          {newAlbumName.trim() || 'Album Name'}
-                        </Text>
-                        <Text style={styles.albumPreviewDescription}>
-                          {newAlbumDescription.trim() || 'No description'}
-                        </Text>
-                        <Text style={styles.albumPreviewCount}>0 photos</Text>
-                      </View>
-                    </View>
-                  </View>
-                )}
+          <Text style={styles.headerTitle}>Photos</Text>
+          <View style={styles.headerActions}>
+            <TouchableOpacity 
+              style={styles.filterButton}
+              onPress={() => setShowFilterModal(true)}
+            >
+              <Filter size={20} color="#FFFFFF" />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.viewModeButton}
               onPress={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-                {/* Bottom Spacing */}
-                <View style={styles.modalBottomSpacing} />
-              </ScrollView>
-            </View>
-          </View>
-        </Modal>
+            >
+              {viewMode === 'grid' ? (
+                <List size={20} color="#FFFFFF" />
+              ) : (
+                <Grid3X3 size={20} color="#FFFFFF" />
+              )}
             </TouchableOpacity>
           </View>
         </View>
@@ -802,78 +764,9 @@ export default function Photos() {
           presentationStyle="formSheet"
         >
           <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContainer}>
-              <View style={styles.modalHandle} />
-              
-              {/* Header */}
-              <View style={styles.modalHeader}>
+            <View style={styles.modalHeader}>
+              <View style={styles.modalHeaderContent}>
                 <TouchableOpacity 
-                  style={styles.modalCloseButton}
-                  onPress={() => setShowCreateAlbumModal(false)}
-                >
-                  <X size={24} color="#6B7280" />
-                </TouchableOpacity>
-                <Text style={styles.modalTitle}>Create New Album</Text>
-                <TouchableOpacity 
-                  style={[
-                    styles.modalSaveButton,
-                    (!newAlbumName.trim() || !newAlbumCoverImage) && styles.modalSaveButtonDisabled
-                  ]}
-                  onPress={handleCreateAlbum}
-                  disabled={!newAlbumName.trim() || !newAlbumCoverImage || isCreatingAlbum}
-                >
-                  <Text style={[
-                    styles.modalSaveButtonText,
-                    (!newAlbumName.trim() || !newAlbumCoverImage) && styles.modalSaveButtonTextDisabled
-                  ]}>
-                    {isCreatingAlbum ? 'Creating...' : 'Create'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              <ScrollView style={styles.modalScrollView} showsVerticalScrollIndicator={false}>
-                {/* Cover Photo Section */}
-                <View style={styles.coverPhotoSection}>
-                  <Text style={styles.sectionLabel}>Cover Photo</Text>
-                  <TouchableOpacity 
-                    style={styles.coverPhotoContainer}
-                    onPress={handleSelectCoverPhoto}
-                    disabled={uploadProgress.isUploading}
-                  >
-                    {newAlbumCoverImage ? (
-                      <Image source={{ uri: newAlbumCoverImage }} style={styles.coverPhotoPreview} />
-                    ) : (
-                      <View style={styles.coverPhotoPlaceholder}>
-                        <View style={styles.coverPhotoIcon}>
-                          <Camera size={32} color="#0e3c67" />
-                        </View>
-                        <Text style={styles.coverPhotoText}>Add Cover Photo</Text>
-                        <Text style={styles.coverPhotoSubtext}>Choose a photo that represents this album</Text>
-                      </View>
-                    )}
-                    
-                    {uploadProgress.isUploading && (
-                      <View style={styles.uploadOverlay}>
-                        <ActivityIndicator size="large" color="#FFFFFF" />
-                        <Text style={styles.uploadText}>Uploading...</Text>
-                        <View style={styles.progressBar}>
-                          <View style={[styles.progressFill, { width: `${uploadProgress.progress}%` }]} />
-                        </View>
-                      </View>
-                    )}
-                    
-                    {newAlbumCoverImage && !uploadProgress.isUploading && (
-                      <View style={styles.coverPhotoOverlay}>
-                        <Camera size={20} color="#FFFFFF" />
-                      </View>
-                    )}
-                  </TouchableOpacity>
-                  
-                  {uploadProgress.error && (
-                    <Text style={styles.errorText}>{uploadProgress.error}</Text>
-                  )}
-                </View>
                   onPress={() => setShowCreateAlbumModal(false)}
                   style={styles.closeButton}
                 >
@@ -1529,292 +1422,104 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 20,
   },
-  heroSection: {
-    alignItems: 'center',
-    paddingVertical: 32,
-    paddingHorizontal: 20,
+  fieldGroup: {
+    marginBottom: 24,
   },
-  heroIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#E6F3FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-    shadowColor: '#0e3c67',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  heroTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  heroSubtitle: {
+  fieldLabel: {
     fontSize: 16,
-    color: '#6B7280',
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  coverImageSection: {
-    marginBottom: 32,
-  },
-  sectionTitle: {
-    fontSize: 18,
     fontWeight: '600',
     color: '#111827',
     marginBottom: 8,
   },
-  sectionDescription: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 20,
-    lineHeight: 20,
+  textInput: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: '#111827',
   },
-  coverImageContainer: {
-    marginBottom: 16,
+  textArea: {
+    minHeight: 80,
+    textAlignVertical: 'top',
   },
-  imagePreviewContainer: {
-    position: 'relative',
-    borderRadius: 16,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  coverImagePreview: {
-    width: '100%',
-    height: 200,
+  selectPhotoButton: {
     backgroundColor: '#F3F4F6',
-  },
-  imageOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  changeImageButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  changeImageText: {
-    color: '#111827',
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 6,
-  },
-  imagePlaceholder: {
-    height: 200,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: '#E5E7EB',
-    borderStyle: 'dashed',
-    backgroundColor: '#F9FAFB',
-    alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginBottom: 12,
   },
-  placeholderContent: {
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  placeholderIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#E6F3FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
-  placeholderTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 8,
-  },
-  placeholderSubtitle: {
-    fontSize: 14,
-    color: '#6B7280',
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  uploadingText: {
+  selectPhotoButtonText: {
+    color: '#0e3c67',
     fontSize: 16,
     fontWeight: '600',
-    color: '#0e3c67',
-    marginTop: 16,
-    marginBottom: 16,
+    marginLeft: 8,
   },
-  progressBarContainer: {
-    width: '100%',
-    alignItems: 'center',
+  uploadProgressContainer: {
+    marginBottom: 12,
   },
   progressBar: {
-    width: '80%',
-    height: 8,
+    height: 4,
     backgroundColor: '#E5E7EB',
-    borderRadius: 4,
+    borderRadius: 2,
     overflow: 'hidden',
     marginBottom: 8,
   },
   progressFill: {
     height: '100%',
     backgroundColor: '#0e3c67',
-    borderRadius: 4,
   },
   progressText: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#6B7280',
-    fontWeight: '500',
+    textAlign: 'center',
   },
-  errorContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  uploadErrorContainer: {
     backgroundColor: '#FEF2F2',
-    borderWidth: 1,
-    borderColor: '#FECACA',
-    borderRadius: 12,
     padding: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  uploadErrorText: {
+    color: '#DC2626',
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  uploadRetryButton: {
+    backgroundColor: '#DC2626',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  uploadRetryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  imagePreview: {
     marginTop: 12,
   },
-  errorIcon: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#DC2626',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 8,
+  previewImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    marginBottom: 8,
   },
-  errorText: {
-    flex: 1,
-    fontSize: 14,
-    color: '#DC2626',
-    fontWeight: '500',
-  },
-  retryButton: {
-    backgroundColor: '#DC2626',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+  changePhotoButton: {
+    backgroundColor: '#F3F4F6',
+    paddingVertical: 8,
     borderRadius: 6,
-  },
-  retryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  detailsSection: {
-    marginBottom: 32,
-  },
-  inputGroup: {
-    marginBottom: 24,
-  },
-  inputLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 6,
-  },
-  inputDescription: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 12,
-    lineHeight: 20,
-  },
-  inputContainer: {
-    flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 2,
-    borderColor: '#E5E7EB',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
   },
-  inputIcon: {
-    width: 24,
-    height: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  textInput: {
-    flex: 1,
-    fontSize: 16,
-    color: '#111827',
-    paddingVertical: 12,
-  },
-  textAreaContainer: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 2,
-    borderColor: '#E5E7EB',
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  textArea: {
-    fontSize: 16,
-    color: '#111827',
-    minHeight: 80,
-    textAlignVertical: 'top',
-  },
-  tipsSection: {
-    backgroundColor: '#F0F7FF',
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: '#E6F3FF',
-  },
-  tipsTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+  changePhotoButtonText: {
     color: '#0e3c67',
-    marginBottom: 16,
-  },
-  tipsList: {
-    gap: 12,
-  },
-  tipItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-  tipBullet: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#0e3c67',
-    marginTop: 6,
-    marginRight: 12,
-  },
-  tipText: {
-    flex: 1,
     fontSize: 14,
-    color: '#374151',
-    lineHeight: 20,
+    fontWeight: '600',
   },
-  // Photo Selection and Upload Styles
 });
