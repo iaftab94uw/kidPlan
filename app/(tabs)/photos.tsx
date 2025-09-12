@@ -15,7 +15,7 @@ import {
   ActivityIndicator
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import * as ImagePicker from 'expo-image-picker';
+import { Plus, Camera, Search, Grid, List, Filter, MoreVertical, FolderPlus, X } from 'lucide-react-native';
 import { Filter, Plus, Grid3x3 as Grid3X3, List, Camera, FolderPlus, X, Check, Search } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { useGallery } from '@/hooks/useGallery';
@@ -427,47 +427,76 @@ export default function Photos() {
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Error: {galleryError}</Text>
           <TouchableOpacity 
-            style={styles.retryButton}
-            onPress={() => {
-              // Force a re-render by updating a state
-              setShowCreateGalleryModal(false);
-              // The useGallery hook will automatically refetch on mount
-            }}
-          >
-            <Text style={styles.retryButtonText}>Retry</Text>
-          </TouchableOpacity>
-        </View>
+                {/* Album Name Section */}
+                <View style={styles.albumNameSection}>
+                  <Text style={styles.sectionLabel}>Album Name</Text>
+                  <TextInput
+                    style={[
+                      styles.albumNameInput,
+                      newAlbumName.trim() && styles.albumNameInputFilled
+                    ]}
+                    value={newAlbumName}
+                    onChangeText={setNewAlbumName}
+                    placeholder="Enter album name"
+                    placeholderTextColor="#9CA3AF"
+                    maxLength={50}
+                  />
+                  <Text style={styles.characterCount}>{newAlbumName.length}/50</Text>
+                </View>
       </SafeAreaView>
-    );
-  }
-
-  return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView 
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-        scrollEventThrottle={16}
-        nestedScrollEnabled={true}
-      >
-        {/* Header */}
+                {/* Description Section */}
+                <View style={styles.descriptionSection}>
+                  <Text style={styles.sectionLabel}>Description (Optional)</Text>
+                  <TextInput
+                    style={[
+                      styles.descriptionInput,
+                      newAlbumDescription.trim() && styles.descriptionInputFilled
+                    ]}
+                    value={newAlbumDescription}
+                    onChangeText={setNewAlbumDescription}
+                    placeholder="Add a description for this album..."
+                    placeholderTextColor="#9CA3AF"
+                    multiline
+                    numberOfLines={4}
+                    maxLength={200}
+                    textAlignVertical="top"
+                  />
+                  <Text style={styles.characterCount}>{newAlbumDescription.length}/200</Text>
+                </View>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Photos</Text>
-          <View style={styles.headerActions}>
-            <TouchableOpacity 
-              style={styles.filterButton}
-              onPress={() => setShowFilterModal(true)}
-            >
-              <Filter size={20} color="#FFFFFF" />
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.viewModeButton}
+                {/* Preview Section */}
+                {(newAlbumName.trim() || newAlbumCoverImage) && (
+                  <View style={styles.previewSection}>
+                    <Text style={styles.sectionLabel}>Preview</Text>
+                    <View style={styles.albumPreview}>
+                      <View style={styles.albumPreviewImageContainer}>
+                        {newAlbumCoverImage ? (
+                          <Image source={{ uri: newAlbumCoverImage }} style={styles.albumPreviewImage} />
+                        ) : (
+                          <View style={styles.albumPreviewPlaceholder}>
+                            <Camera size={24} color="#9CA3AF" />
+                          </View>
+                        )}
+                      </View>
+                      <View style={styles.albumPreviewInfo}>
+                        <Text style={styles.albumPreviewName}>
+                          {newAlbumName.trim() || 'Album Name'}
+                        </Text>
+                        <Text style={styles.albumPreviewDescription}>
+                          {newAlbumDescription.trim() || 'No description'}
+                        </Text>
+                        <Text style={styles.albumPreviewCount}>0 photos</Text>
+                      </View>
+                    </View>
+                  </View>
+                )}
               onPress={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-            >
-              {viewMode === 'grid' ? (
-                <List size={20} color="#FFFFFF" />
-              ) : (
-                <Grid3X3 size={20} color="#FFFFFF" />
-              )}
+                {/* Bottom Spacing */}
+                <View style={styles.modalBottomSpacing} />
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
             </TouchableOpacity>
           </View>
         </View>
@@ -774,9 +803,78 @@ export default function Photos() {
           presentationStyle="formSheet"
         >
           <SafeAreaView style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-              <View style={styles.modalHeaderContent}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              <View style={styles.modalHandle} />
+              
+              {/* Header */}
+              <View style={styles.modalHeader}>
                 <TouchableOpacity 
+                  style={styles.modalCloseButton}
+                  onPress={() => setShowCreateAlbumModal(false)}
+                >
+                  <X size={24} color="#6B7280" />
+                </TouchableOpacity>
+                <Text style={styles.modalTitle}>Create New Album</Text>
+                <TouchableOpacity 
+                  style={[
+                    styles.modalSaveButton,
+                    (!newAlbumName.trim() || !newAlbumCoverImage) && styles.modalSaveButtonDisabled
+                  ]}
+                  onPress={handleCreateAlbum}
+                  disabled={!newAlbumName.trim() || !newAlbumCoverImage || isCreatingAlbum}
+                >
+                  <Text style={[
+                    styles.modalSaveButtonText,
+                    (!newAlbumName.trim() || !newAlbumCoverImage) && styles.modalSaveButtonTextDisabled
+                  ]}>
+                    {isCreatingAlbum ? 'Creating...' : 'Create'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView style={styles.modalScrollView} showsVerticalScrollIndicator={false}>
+                {/* Cover Photo Section */}
+                <View style={styles.coverPhotoSection}>
+                  <Text style={styles.sectionLabel}>Cover Photo</Text>
+                  <TouchableOpacity 
+                    style={styles.coverPhotoContainer}
+                    onPress={handleSelectCoverPhoto}
+                    disabled={uploadProgress.isUploading}
+                  >
+                    {newAlbumCoverImage ? (
+                      <Image source={{ uri: newAlbumCoverImage }} style={styles.coverPhotoPreview} />
+                    ) : (
+                      <View style={styles.coverPhotoPlaceholder}>
+                        <View style={styles.coverPhotoIcon}>
+                          <Camera size={32} color="#0e3c67" />
+                        </View>
+                        <Text style={styles.coverPhotoText}>Add Cover Photo</Text>
+                        <Text style={styles.coverPhotoSubtext}>Choose a photo that represents this album</Text>
+                      </View>
+                    )}
+                    
+                    {uploadProgress.isUploading && (
+                      <View style={styles.uploadOverlay}>
+                        <ActivityIndicator size="large" color="#FFFFFF" />
+                        <Text style={styles.uploadText}>Uploading...</Text>
+                        <View style={styles.progressBar}>
+                          <View style={[styles.progressFill, { width: `${uploadProgress.progress}%` }]} />
+                        </View>
+                      </View>
+                    )}
+                    
+                    {newAlbumCoverImage && !uploadProgress.isUploading && (
+                      <View style={styles.coverPhotoOverlay}>
+                        <Camera size={20} color="#FFFFFF" />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                  
+                  {uploadProgress.error && (
+                    <Text style={styles.errorText}>{uploadProgress.error}</Text>
+                  )}
+                </View>
                   onPress={() => setShowCreateAlbumModal(false)}
                   style={styles.closeButton}
                 >
