@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import * as ImagePicker from 'expo-image-picker';
-import { uploadImage } from '@/config/supabase';
+import { uploadImage, testSupabaseConnection } from '@/config/supabase';
 
 interface UploadProgress {
   isUploading: boolean;
@@ -38,6 +38,13 @@ export const useImageUpload = (): UseImageUploadReturn => {
     });
 
     try {
+      // Test Supabase connection first
+      console.log('Testing Supabase connection before upload...');
+      const connectionOk = await testSupabaseConnection();
+      if (!connectionOk) {
+        throw new Error('Supabase connection failed. Please check your internet connection and try again.');
+      }
+
       // Simulate progress updates during upload
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => ({

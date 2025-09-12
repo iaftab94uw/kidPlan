@@ -8,7 +8,28 @@ global.Buffer = require('buffer').Buffer;
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
 
+// Debug environment variables
+console.log('Supabase URL:', supabaseUrl);
+console.log('Supabase Key:', supabaseAnonKey ? 'SET' : 'NOT SET');
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// Test Supabase connection
+export const testSupabaseConnection = async () => {
+  try {
+    console.log('Testing Supabase connection...');
+    const { data, error } = await supabase.storage.listBuckets();
+    if (error) {
+      console.error('Supabase connection test failed:', error);
+      return false;
+    }
+    console.log('Supabase connection successful, buckets:', data);
+    return true;
+  } catch (error) {
+    console.error('Supabase connection test error:', error);
+    return false;
+  }
+};
 
 // Helper function to upload image to Supabase Storage (based on working implementation)
 export const uploadImage = async (uri: string, fileName: string, bucket: string = 'profile-images') => {
@@ -52,6 +73,11 @@ export const uploadImage = async (uri: string, fileName: string, bucket: string 
 
     if (error) {
       console.error('Supabase upload error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        statusCode: error.statusCode,
+        error: error.error
+      });
       throw error;
     }
 

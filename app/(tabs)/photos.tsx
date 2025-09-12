@@ -35,6 +35,11 @@ export default function Photos() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateGalleryModal, setShowCreateGalleryModal] = useState(false);
   const [showCreateAlbumModal, setShowCreateAlbumModal] = useState(false);
+
+  // Debug modal state changes
+  useEffect(() => {
+    console.log('Create Album Modal state changed to:', showCreateAlbumModal);
+  }, [showCreateAlbumModal]);
   const [newAlbum, setNewAlbum] = useState({
     name: '',
     coverImage: 'https://dummyjson.com/image/150',
@@ -195,19 +200,26 @@ export default function Photos() {
   };
 
   const handleCreateAlbum = () => {
+    console.log('Create Album button pressed');
+    console.log('Gallery exists:', !!gallery);
+    console.log('Current modal state:', showCreateAlbumModal);
+    
     // Check if gallery exists first
     if (!gallery) {
+      console.log('No gallery found, showing create gallery modal');
       setShowCreateGalleryModal(true);
       return;
     }
 
+    console.log('Gallery exists, showing create album modal');
     // Reset form and show modal
     setNewAlbum({
       name: '',
-      coverImage: 'https://dummyjson.com/image/150',
+      coverImage: '',
       description: ''
     });
     setShowCreateAlbumModal(true);
+    console.log('Modal state set to true');
   };
 
   const handleSelectCoverPhoto = async () => {
@@ -434,6 +446,8 @@ export default function Photos() {
       <ScrollView 
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        nestedScrollEnabled={true}
       >
         {/* Header */}
         <View style={styles.header}>
@@ -496,24 +510,35 @@ export default function Photos() {
         </View>
 
         {/* Quick Actions */}
-        <View style={styles.quickActions}>
-          <TouchableOpacity 
-            style={styles.quickActionButton}
-            onPress={handleUploadPhoto}
-          >
-            <Camera size={20} color="#FFFFFF" />
-            <Text style={styles.quickActionText}>Upload Photo</Text>
-          </TouchableOpacity>
+        <View style={styles.quickActions} pointerEvents="box-none">
+          <View style={{ flex: 1 }}>
+            <TouchableOpacity 
+              style={styles.quickActionButton}
+              onPress={handleUploadPhoto}
+            >
+              <Camera size={20} color="#FFFFFF" />
+              <Text style={styles.quickActionText}>Upload Photo</Text>
+            </TouchableOpacity>
+          </View>
           
-          <TouchableOpacity 
-            style={styles.quickActionButton}
-            onPress={handleCreateAlbum}
-            activeOpacity={0.7}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <FolderPlus size={20} color="#FFFFFF" />
-            <Text style={styles.quickActionText}>Create Album</Text>
-          </TouchableOpacity>
+          <View style={{ flex: 1 }}>
+            <TouchableOpacity 
+              style={styles.quickActionButton}
+              onPress={() => {
+                console.log('BUTTON TOUCHED - Create Album');
+                handleCreateAlbum();
+              }}
+              onPressIn={() => console.log('BUTTON PRESS IN - Create Album')}
+              onPressOut={() => console.log('BUTTON PRESS OUT - Create Album')}
+              activeOpacity={0.7}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              delayPressIn={0}
+              delayPressOut={0}
+            >
+              <FolderPlus size={20} color="#FFFFFF" />
+              <Text style={styles.quickActionText}>Create Album</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Albums Section */}
@@ -997,6 +1022,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 4,
+    minHeight: 50,
+    zIndex: 1,
   },
   quickActionText: {
     color: '#FFFFFF',
