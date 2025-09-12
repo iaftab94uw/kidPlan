@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { API_CONFIG, getApiUrl, getAuthHeaders } from '@/config/api';
 import { CalendarEvent, CalendarEventsResponse, CalendarEventsParams } from '@/types/calendar';
+import { makeAuthenticatedApiCall } from '@/utils/apiUtils';
+import { useAuth } from '@/hooks/useAuth';
 
 interface UseCalendarEventsReturn {
   events: CalendarEvent[];
@@ -14,6 +16,7 @@ export const useCalendarEvents = (token: string, initialParams?: CalendarEventsP
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { setUser, setToken } = useAuth();
 
   const fetchEvents = async (params?: CalendarEventsParams) => {
     if (!token) {
@@ -35,19 +38,18 @@ export const useCalendarEvents = (token: string, initialParams?: CalendarEventsP
         url += `?${queryParams.toString()}`;
       }
 
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: getAuthHeaders(token),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch calendar events: ${response.status}`);
-      }
-
-      const data: CalendarEventsResponse = await response.json();
+      const data = await makeAuthenticatedApiCall(
+        url,
+        {
+          method: 'GET',
+        },
+        token,
+        setUser,
+        setToken
+      );
       
       if (data.success) {
-        setEvents(data.data);
+        setEvents(data.data || []);
       } else {
         throw new Error(data.message || 'Failed to fetch calendar events');
       }

@@ -49,7 +49,20 @@ export const makeAuthenticatedApiCall = async (
       },
     });
 
-    const data: ApiResponse = await response.json();
+    let data: ApiResponse;
+    
+    try {
+      data = await response.json();
+    } catch (jsonError) {
+      // Handle cases where server returns HTML instead of JSON
+      if (jsonError instanceof SyntaxError && jsonError.message.includes('Unexpected token')) {
+        return { 
+          success: false, 
+          error: 'Server returned invalid response format. Please check if the API server is running correctly.' 
+        };
+      }
+      throw jsonError;
+    }
     
     // Check for unauthorized token error
     const isUnauthorized = await handleUnauthorizedError(data, setUser, setToken);
@@ -60,6 +73,12 @@ export const makeAuthenticatedApiCall = async (
     return data;
   } catch (error) {
     console.error('API call error:', error);
+    if (error instanceof SyntaxError && error.message.includes('Unexpected token')) {
+      return { 
+        success: false, 
+        error: 'Server returned invalid response format. Please check if the API server is running correctly.' 
+      };
+    }
     return { success: false, error: 'Network error' };
   }
 };
