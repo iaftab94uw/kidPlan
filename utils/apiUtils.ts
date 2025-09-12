@@ -44,9 +44,12 @@ export const makeAuthenticatedApiCall = async (
     const response = await fetch(url, {
       ...options,
       headers: {
+        'Content-Type': 'application/json',
         ...options.headers,
         'Authorization': `Bearer ${token}`,
       },
+      // Add timeout to prevent hanging requests
+      signal: AbortSignal.timeout(30000), // 30 second timeout
     });
 
     let data: ApiResponse;
@@ -58,7 +61,7 @@ export const makeAuthenticatedApiCall = async (
       if (jsonError instanceof SyntaxError && jsonError.message.includes('Unexpected token')) {
         return { 
           success: false, 
-          error: 'Server returned invalid response format. Please check if the API server is running correctly.' 
+          error: 'Server is not responding correctly. Please try again later or contact support if the issue persists.' 
         };
       }
       throw jsonError;
@@ -73,12 +76,28 @@ export const makeAuthenticatedApiCall = async (
     return data;
   } catch (error) {
     console.error('API call error:', error);
-    if (error instanceof SyntaxError && error.message.includes('Unexpected token')) {
+    
+    // Handle different types of network errors
+    if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
       return { 
         success: false, 
-        error: 'Server returned invalid response format. Please check if the API server is running correctly.' 
+        error: 'Network error: Unable to connect to server. Please check your internet connection.' 
+      };
+    } else if (error instanceof DOMException && error.name === 'AbortError') {
+      return { 
+        success: false, 
+        error: 'Request timeout: The server is taking too long to respond. Please try again.' 
+      };
+    } else if (error instanceof SyntaxError && error.message.includes('Unexpected token')) {
+      return { 
+        success: false, 
+        error: 'Server response error: Invalid data format received from server.' 
       };
     }
-    return { success: false, error: 'Network error' };
+    
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.' 
+    };
   }
 };

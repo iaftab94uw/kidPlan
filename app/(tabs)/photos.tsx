@@ -421,14 +421,20 @@ export default function Photos() {
   }
 
   // Show error state if there's an error (but not "Gallery not found")
-  if (galleryError && galleryError !== 'Gallery not found') {
+  if (galleryError && !galleryError.includes('Gallery not found')) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Error: {galleryError}</Text>
+          <Text style={styles.errorTitle}>Unable to load photos</Text>
+          <Text style={styles.errorText}>{galleryError}</Text>
           <TouchableOpacity 
             style={styles.retryButton}
-            onPress={() => window.location.reload()}
+            onPress={() => {
+              // Retry fetching gallery data
+              if (typeof refetch === 'function') {
+                refetch();
+              }
+            }}
           >
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
@@ -1347,12 +1353,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#F9FAFB',
     paddingHorizontal: 20,
   },
-  errorText: {
-    fontSize: 16,
+  errorTitle: {
+    fontSize: 18,
+    fontWeight: '600',
     color: '#EF4444',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#6B7280',
     textAlign: 'center',
     marginBottom: 20,
-    fontWeight: '500',
+    lineHeight: 20,
   },
   retryButton: {
     backgroundColor: '#0e3c67',
