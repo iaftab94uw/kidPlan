@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import * as FileSystem from 'expo-file-system';
+import { Platform } from 'react-native';
 
 // Add Buffer for base64 conversion (like in your working code)
 global.Buffer = require('buffer').Buffer;
@@ -35,21 +36,36 @@ export const uploadImage = async (uri: string, fileName: string, bucket: string 
   try {
     console.log('Starting upload for URI:', uri);
     
-    // Read the image as base64 using FileSystem (this is the key difference)
-    const base64Image = await FileSystem.readAsStringAsync(uri, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
+    let arrayBuffer: ArrayBuffer;
     
-    console.log('Base64 image length:', base64Image.length);
-    
-    if (!base64Image || base64Image.length === 0) {
-      throw new Error('Failed to read image as base64');
+    if (Platform.OS === 'web') {
+      // For web platform, use fetch to get the image data
+      const response = await fetch(uri);
+      if (!response.ok) {
+        throw new Error('Failed to fetch image data');
+      }
+      arrayBuffer = await response.arrayBuffer();
+      console.log('Web ArrayBuffer size:', arrayBuffer.byteLength, 'bytes');
+    } else {
+      // For native platforms, use FileSystem
+      const base64Image = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      
+      console.log('Base64 image length:', base64Image.length);
+      
+      if (!base64Image || base64Image.length === 0) {
+        throw new Error('Failed to read image as base64');
+      }
+      
+      // Convert base64 to ArrayBuffer
+      arrayBuffer = Buffer.from(base64Image, 'base64');
+      console.log('Native ArrayBuffer size:', arrayBuffer.byteLength, 'bytes');
     }
     
-    // Convert base64 to ArrayBuffer (this is how your working code does it)
-    const arrayBuffer = Buffer.from(base64Image, 'base64');
-    
-    console.log('ArrayBuffer size:', arrayBuffer.length, 'bytes');
+    if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+      throw new Error('Failed to read image data');
+    }
     
     // Create a unique filename with timestamp
     const timestamp = Date.now();
@@ -58,7 +74,7 @@ export const uploadImage = async (uri: string, fileName: string, bucket: string 
     console.log('Uploading to Supabase:', {
       bucket,
       fileName: uniqueFileName,
-      arrayBufferSize: arrayBuffer.length
+      arrayBufferSize: arrayBuffer.byteLength
     });
 
     // Upload to Supabase Storage using update method (like your working code)
