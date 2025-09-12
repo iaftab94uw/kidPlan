@@ -403,7 +403,6 @@ export default function Photos() {
               </Text>
             </View>
           </TouchableOpacity>
-          </TouchableOpacity>
         ))}
       </View>
     );
