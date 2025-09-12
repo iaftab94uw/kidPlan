@@ -505,43 +505,59 @@ export default function Dashboard() {
             </TouchableOpacity>
           </View>
           
-          {familyLoading ? (
-            <View style={styles.loadingCard}>
-              <Text style={styles.loadingText}>Loading family members...</Text>
-            </View>
-          ) : (getAllFamilyMembers() || []).length === 0 ? (
-            <View style={styles.noDataCard}>
-              <Users size={24} color="#9CA3AF" />
-              <Text style={styles.noDataTitle}>No family members</Text>
-              <Text style={styles.noDataSubtitle}>Add your first family member to get started.</Text>
-            </View>
-          ) : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.membersScroll}>
-              {(getAllFamilyMembers() || []).map((member) => (
-                <TouchableOpacity 
-                  key={member._id}
-                  style={styles.memberCard}
-                  onPress={() => router.push(`/member-detail/${member._id}`)}
-                >
-                  <Image 
-                    source={{ 
-                      uri: member.profilePhoto || "https://images.pexels.com/photos/1169084/pexels-photo-1169084.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2" 
-                    }} 
-                    style={styles.memberAvatar} 
-                  />
-                  <Text style={styles.memberName}>{member.name}</Text>
-                  <Text style={styles.memberAge}>{member.age || 'Family Member'}</Text>
-                </TouchableOpacity>
-              ))}
-              <TouchableOpacity 
-                style={styles.addMemberCard}
-                onPress={() => router.push('/add-family-member')}
-              >
-                <Plus size={24} color="#6B7280" />
-                <Text style={styles.addMemberText}>Add Member</Text>
-              </TouchableOpacity>
-            </ScrollView>
-          )}
+          {(() => {
+            const familyMembers = getAllFamilyMembers() || [];
+            console.log('=== HOME SCREEN FAMILY DEBUG ===');
+            console.log('familyLoading:', familyLoading);
+            console.log('familyData:', familyData);
+            console.log('familyMembers count:', familyMembers.length);
+            console.log('familyMembers:', familyMembers);
+            console.log('=== END HOME SCREEN FAMILY DEBUG ===');
+            
+            if (familyLoading) {
+              return (
+                <View style={styles.loadingCard}>
+                  <Text style={styles.loadingText}>Loading family members...</Text>
+                </View>
+              );
+            } else if (familyMembers.length === 0) {
+              return (
+                <View style={styles.noDataCard}>
+                  <Users size={24} color="#9CA3AF" />
+                  <Text style={styles.noDataTitle}>No family members</Text>
+                  <Text style={styles.noDataSubtitle}>Add your first family member to get started.</Text>
+                </View>
+              );
+            } else {
+              return (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.membersScroll}>
+                  {familyMembers.map((member, index) => (
+                    <TouchableOpacity 
+                      key={`${member._id}-${index}`}
+                      style={styles.memberCard}
+                      onPress={() => router.push(`/member-detail/${member._id}`)}
+                    >
+                      <Image 
+                        source={{ 
+                          uri: member.profilePhoto || "https://images.pexels.com/photos/1169084/pexels-photo-1169084.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2" 
+                        }} 
+                        style={styles.memberAvatar} 
+                      />
+                      <Text style={styles.memberName}>{member.name}</Text>
+                      <Text style={styles.memberAge}>{member.age || 'Family Member'}</Text>
+                    </TouchableOpacity>
+                  ))}
+                  <TouchableOpacity 
+                    style={styles.addMemberCard}
+                    onPress={() => router.push('/add-family-member')}
+                  >
+                    <Plus size={24} color="#6B7280" />
+                    <Text style={styles.addMemberText}>Add Member</Text>
+                  </TouchableOpacity>
+                </ScrollView>
+              );
+            }
+          })()}
         </View>
 
         {/* Co-Parenting Schedule */}
