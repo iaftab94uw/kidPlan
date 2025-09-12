@@ -15,8 +15,7 @@ import {
   ActivityIndicator
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Plus, Camera, Search, Grid, List, Filter, MoreVertical, FolderPlus, X } from 'lucide-react-native';
-import { Filter, Plus, Grid3x3 as Grid3X3, List, Camera, FolderPlus, X, Check, Search } from 'lucide-react-native';
+import { Plus, Camera, Search, Grid, List, Filter, MoreVertical, FolderPlus, X, Grid3x3 as Grid3X3, Check } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { useGallery } from '@/hooks/useGallery';
 import { useImageUpload } from '@/hooks/useImageUpload';
