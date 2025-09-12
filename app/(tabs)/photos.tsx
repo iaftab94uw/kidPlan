@@ -511,33 +511,29 @@ export default function Photos() {
 
         {/* Quick Actions */}
         <View style={styles.quickActions} pointerEvents="box-none">
-          <View style={{ flex: 1 }}>
-            <TouchableOpacity 
-              style={styles.quickActionButton}
-              onPress={handleUploadPhoto}
-            >
-              <Camera size={20} color="#FFFFFF" />
-              <Text style={styles.quickActionText}>Upload Photo</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={{ flex: 1 }}>
-            <TouchableOpacity 
-              style={styles.quickActionButton}
-              onPress={() => {
-                console.log('BUTTON TOUCHED - Create Album');
-                handleCreateAlbum();
-              }}
-              onPressIn={() => console.log('BUTTON PRESS IN - Create Album')}
-              onPressOut={() => console.log('BUTTON PRESS OUT - Create Album')}
-              activeOpacity={0.7}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              delayPressIn={0}
-              delayPressOut={0}
-            >
-              <FolderPlus size={20} color="#FFFFFF" />
-              <Text style={styles.quickActionText}>Create Album</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity 
+            style={[styles.quickActionButton, { flex: 1, marginRight: 6 }]}
+            onPress={handleUploadPhoto}
+          >
+            <Camera size={20} color="#FFFFFF" />
+            <Text style={styles.quickActionText}>Upload Photo</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.quickActionButton, { flex: 1, marginLeft: 6 }]}
+            onPress={() => {
+              console.log('BUTTON TOUCHED - Create Album');
+              handleCreateAlbum();
+            }}
+            onPressIn={() => console.log('BUTTON PRESS IN - Create Album')}
+            onPressOut={() => console.log('BUTTON PRESS OUT - Create Album')}
+            activeOpacity={0.7}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            delayPressIn={0}
+            delayPressOut={0}
+          >
+            <FolderPlus size={20} color="#FFFFFF" />
+            <Text style={styles.quickActionText}>Create Album</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Albums Section */}
