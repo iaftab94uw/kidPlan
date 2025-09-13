@@ -809,14 +809,15 @@ export default function Photos() {
                         resizeMode="cover"
                       />
                       <TouchableOpacity 
-                        style={styles.changePhotoOverlay}
+                        style={styles.floatingChangeButton}
                         onPress={handleSelectCoverPhoto}
+                        activeOpacity={0.8}
                       >
-                        <View style={styles.changePhotoButton}>
-                          <Camera size={20} color="#FFFFFF" />
-                          <Text style={styles.changePhotoButtonText}>Change Photo</Text>
-                        </View>
+                        <Camera size={20} color="#FFFFFF" />
                       </TouchableOpacity>
+                      <View style={styles.changePhotoHint}>
+                        <Text style={styles.changePhotoHintText}>Tap to change photo</Text>
+                      </View>
                     </View>
                   ) : (
                     <TouchableOpacity 
@@ -1544,17 +1545,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 8,
   },
-  changePhotoButton: {
-    backgroundColor: '#F3F4F6',
-    paddingVertical: 8,
-    borderRadius: 6,
-    alignItems: 'center',
-  },
-  changePhotoButtonText: {
-    color: '#0e3c67',
-    fontSize: 14,
-    fontWeight: '600',
-  },
   
   // Modern Album Modal Styles
   modalTitleContainer: {
@@ -1633,15 +1623,37 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 16,
   },
-  changePhotoOverlay: {
+  floatingChangeButton: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    bottom: 12,
+    right: 12,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#0e3c67',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  changePhotoHint: {
+    position: 'absolute',
+    bottom: 12,
+    left: 12,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  changePhotoHintText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '500',
   },
   
   // Upload Progress
