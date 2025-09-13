@@ -3,6 +3,14 @@ import { API_CONFIG, getApiUrl, getAuthHeaders } from '@/config/api';
 import { Gallery, GalleryData, Album, Media, GalleryResponse, CreateGalleryResponse, CreateAlbumRequest, CreateAlbumResponse } from '@/types/gallery';
 import { useAuth } from '@/hooks/useAuth';
 
+interface AddMediaRequest {
+  galleryId: string;
+  albumId?: string | null;
+  type: 'image' | 'video';
+  url: string;
+  caption?: string;
+}
+
 interface UseGalleryReturn {
   gallery: Gallery | null;
   albums: Album[];
@@ -14,6 +22,8 @@ interface UseGalleryReturn {
   isCreatingGallery: boolean;
   createAlbum: (albumData: CreateAlbumRequest) => Promise<boolean>;
   isCreatingAlbum: boolean;
+  addMedia: (mediaData: AddMediaRequest) => Promise<boolean>;
+  isAddingMedia: boolean;
 }
 
 export const useGallery = (token: string): UseGalleryReturn => {
@@ -24,7 +34,7 @@ export const useGallery = (token: string): UseGalleryReturn => {
   const [error, setError] = useState<string | null>(null);
   const [isCreatingGallery, setIsCreatingGallery] = useState(false);
   const [isCreatingAlbum, setIsCreatingAlbum] = useState(false);
-  const { setUser, setToken } = useAuth();
+  const [isAddingMedia, setIsAddingMedia] = useState(false);
 
   const fetchGallery = useCallback(async () => {
     if (!token) {
@@ -214,6 +224,66 @@ export const useGallery = (token: string): UseGalleryReturn => {
     }
   }, [token]);
 
+  const addMedia = useCallback(async (mediaData: AddMediaRequest): Promise<boolean> => {
+    if (!token) {
+      setError('No authentication token available');
+      return false;
+    }
+
+    setIsAddingMedia(true);
+    setError(null);
+
+    try {
+      const url = getApiUrl(API_CONFIG.ENDPOINTS.ADD_MEDIA);
+      const headers = getAuthHeaders(token);
+      
+      console.log('=== ADD MEDIA API ===');
+      console.log('URL:', url);
+      console.log('Method: POST');
+      console.log('Headers:', headers);
+      console.log('Body:', mediaData);
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(mediaData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to add media: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      console.log('Response:', data);
+      console.log('=== END ADD MEDIA API ===');
+
+      if (data.success && data.data) {
+        // Add the new media to the media list
+        setMedia(prev => [...prev, data.data!]);
+        return true;
+      } else {
+        throw new Error(data.error || 'Failed to add media');
+      }
+    } catch (err) {
+      let errorMessage = 'An unknown error occurred';
+      
+      if (err instanceof Error) {
+        if (err.message.includes('Failed to fetch') || err.message.includes('Network error')) {
+          errorMessage = 'Unable to connect to server. Please check your internet connection and try again.';
+        } else {
+          errorMessage = err.message;
+        }
+      }
+      
+      setError(errorMessage);
+      console.error('Error adding media:', err);
+      return false;
+    } finally {
+      setIsAddingMedia(false);
+    }
+  }, [token]);
+
   const refetch = () => {
     fetchGallery();
   };
@@ -235,5 +305,7 @@ export const useGallery = (token: string): UseGalleryReturn => {
     isCreatingGallery,
     createAlbum,
     isCreatingAlbum,
+    addMedia,
+    isAddingMedia,
   };
 };

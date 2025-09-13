@@ -27,6 +27,7 @@ export const API_CONFIG = {
     FETCH_GALLERY: '/gallery/fetch',
     CREATE_GALLERY: '/gallery/create',
     CREATE_ALBUM: '/gallery/createAlbum',
+    ADD_MEDIA: '/gallery/addMedia',
   },
   HEADERS: {
     'Content-Type': 'application/json',

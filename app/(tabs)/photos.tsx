@@ -19,13 +19,14 @@ import { Plus, Camera, Search, Grid2x2 as Grid, List, Filter, MoveVertical as Mo
 import { useAuth } from '@/hooks/useAuth';
 import { useGallery } from '@/hooks/useGallery';
 import { useImageUpload } from '@/hooks/useImageUpload';
+import * as ImagePicker from 'expo-image-picker';
 
 const { width } = Dimensions.get('window');
 
 export default function Photos() {
   const router = useRouter();
   const { token } = useAuth();
-  const { gallery, albums: apiAlbums, media: apiMedia, loading: galleryLoading, error: galleryError, createGallery, isCreatingGallery, createAlbum, isCreatingAlbum } = useGallery(token || '');
+  const { gallery, albums: apiAlbums, media: apiMedia, loading: galleryLoading, error: galleryError, createGallery, isCreatingGallery, createAlbum, isCreatingAlbum, addMedia, isAddingMedia } = useGallery(token || '');
   const { uploadProgress, selectAndUploadImage, resetUpload } = useImageUpload();
   
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -34,6 +35,8 @@ export default function Photos() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateGalleryModal, setShowCreateGalleryModal] = useState(false);
   const [showCreateAlbumModal, setShowCreateAlbumModal] = useState(false);
+  const [showUploadMediaModal, setShowUploadMediaModal] = useState(false);
+  const [selectedAlbumForUpload, setSelectedAlbumForUpload] = useState<string | null>(null);
 
   // Debug modal state changes
   useEffect(() => {
@@ -43,6 +46,11 @@ export default function Photos() {
     name: '',
     coverImage: 'https://dummyjson.com/image/150',
     description: ''
+  });
+
+  const [newMedia, setNewMedia] = useState({
+    caption: '',
+    imageUrl: ''
   });
 
   // Auto-show create gallery modal if no gallery exists
@@ -61,87 +69,9 @@ export default function Photos() {
     }
   }, [gallery]);
 
-  const [photos, setPhotos] = useState([
-    {
-      id: 1,
-      uri: "https://images.pexels.com/photos/1169084/pexels-photo-1169084.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=2",
-      date: "2024-08-15",
-      album: "Emma's Activities",
-      familyMember: "Emma",
-      title: "Piano Recital"
-    },
-    {
-      id: 2,
-      uri: "https://images.pexels.com/photos/1765110/pexels-photo-1765110.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=2",
-      date: "2024-08-14",
-      album: "Jack's Sports",
-      familyMember: "Jack",
-      title: "Football Practice"
-    },
-    {
-      id: 3,
-      uri: "https://images.pexels.com/photos/8613089/pexels-photo-8613089.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=2",
-      date: "2024-08-13",
-      album: "Family Time",
-      familyMember: "Both",
-      title: "Weekend Fun"
-    },
-    {
-      id: 4,
-      uri: "https://images.pexels.com/photos/1346155/pexels-photo-1346155.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=2",
-      date: "2024-08-12",
-      album: "School Events",
-      familyMember: "Both",
-      title: "School Assembly"
-    },
-    {
-      id: 5,
-      uri: "https://images.pexels.com/photos/1146603/pexels-photo-1146603.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=2",
-      date: "2024-08-11",
-      album: "Emma's Activities",
-      familyMember: "Emma",
-      title: "Ballet Class"
-    },
-    {
-      id: 6,
-      uri: "https://images.pexels.com/photos/8613364/pexels-photo-8613364.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=2",
-      date: "2024-08-10",
-      album: "Jack's Sports",
-      familyMember: "Jack",
-      title: "Swimming Lesson"
-    }
-  ]);
+  // Photos are now fetched from API via useGallery hook (apiMedia)
 
-  const [albums, setAlbums] = useState([
-    {
-      id: 1,
-      name: "Emma's Activities",
-      photoCount: 12,
-      coverPhoto: "https://images.pexels.com/photos/1169084/pexels-photo-1169084.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&dpr=2",
-      color: "#22C55E"
-    },
-    {
-      id: 2,
-      name: "Jack's Sports",
-      photoCount: 8,
-      coverPhoto: "https://images.pexels.com/photos/1765110/pexels-photo-1765110.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&dpr=2",
-      color: "#F97316"
-    },
-    {
-      id: 3,
-      name: "Family Time",
-      photoCount: 15,
-      coverPhoto: "https://images.pexels.com/photos/8613089/pexels-photo-8613089.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&dpr=2",
-      color: "#3B82F6"
-    },
-    {
-      id: 4,
-      name: "School Events",
-      photoCount: 6,
-      coverPhoto: "https://images.pexels.com/photos/1346155/pexels-photo-1346155.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&dpr=2",
-      color: "#8B5CF6"
-    }
-  ]);
+  // Albums are now fetched from API via useGallery hook
 
   const familyMembers = [
     { id: 'Emma', name: 'Emma', avatar: 'https://images.pexels.com/photos/1169084/pexels-photo-1169084.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2' },
@@ -158,20 +88,24 @@ export default function Photos() {
   ];
 
   const getFilteredPhotos = () => {
-    let filtered = photos;
+    let filtered = apiMedia || [];
 
     if (activeFilter === 'recent') {
       const oneWeekAgo = new Date();
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-      filtered = photos.filter(photo => new Date(photo.date) >= oneWeekAgo);
+      filtered = filtered.filter(media => new Date(media.createdAt) >= oneWeekAgo);
     } else if (activeFilter !== 'all') {
-      filtered = photos.filter(photo => photo.familyMember === activeFilter);
+      // Filter by album name if it matches
+      const album = apiAlbums.find(album => album.name === activeFilter);
+      if (album) {
+        filtered = filtered.filter(media => media.albumId === album._id);
+      }
     }
 
     if (searchQuery) {
-      filtered = filtered.filter(photo => 
-        photo.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        photo.album.toLowerCase().includes(searchQuery.toLowerCase())
+      filtered = filtered.filter(media => 
+        (media.caption && media.caption.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (apiAlbums.find(album => album._id === media.albumId)?.name.toLowerCase().includes(searchQuery.toLowerCase()))
       );
     }
 
@@ -267,6 +201,60 @@ export default function Photos() {
     }
   };
 
+  const handleSelectMediaPhoto = async () => {
+    try {
+      const imageUrl = await selectAndUploadImage();
+      if (imageUrl) {
+        setNewMedia(prev => ({ ...prev, imageUrl }));
+      }
+    } catch (error) {
+      console.error('Error selecting media photo:', error);
+      Alert.alert('Error', 'Failed to select photo. Please try again.');
+    }
+  };
+
+  const handleUploadMedia = async () => {
+    if (!gallery || !newMedia.imageUrl.trim()) {
+      Alert.alert('Error', 'Please select a photo to upload');
+      return;
+    }
+
+    // Don't allow saving while upload is in progress
+    if (uploadProgress.isUploading) {
+      Alert.alert('Please Wait', 'Please wait for the photo upload to complete.');
+      return;
+    }
+
+    try {
+      const mediaData = {
+        galleryId: gallery._id,
+        albumId: selectedAlbumForUpload, // null for direct gallery upload
+        type: 'image' as const,
+        url: newMedia.imageUrl,
+        caption: newMedia.caption.trim()
+      };
+
+      const success = await addMedia(mediaData);
+      if (success) {
+        setShowUploadMediaModal(false);
+        setSelectedAlbumForUpload(null);
+        setNewMedia({ caption: '', imageUrl: '' });
+        resetUpload();
+        Alert.alert('Success', 'Media uploaded successfully!');
+      } else {
+        Alert.alert('Error', 'Failed to upload media. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error uploading media:', error);
+      Alert.alert('Error', 'Failed to upload media. Please try again.');
+    }
+  };
+
+  const openUploadModal = (albumId?: string) => {
+    setSelectedAlbumForUpload(albumId || null);
+    setShowUploadMediaModal(true);
+  };
+
   const handleUploadPhoto = async () => {
     // Check if gallery exists first
     if (!gallery) {
@@ -274,107 +262,41 @@ export default function Photos() {
       return;
     }
 
-    // Original upload photo logic
-    try {
-      Alert.alert(
-        'Upload Photo',
-        'Choose photo source',
-        [
-          {
-            text: 'Camera',
-            onPress: async () => {
-              try {
-                const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
-                if (cameraPermission.status !== 'granted') {
-                  Alert.alert('Permission needed', 'Please grant camera permissions to take photos.');
-                  return;
-                }
-                
-                const result = await ImagePicker.launchCameraAsync({
-                  mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                  allowsEditing: true,
-                  aspect: [4, 3],
-                  quality: 0.8,
-                });
-
-                if (!result.canceled && result.assets[0]) {
-                  const newPhoto = {
-                    id: photos.length + 1,
-                    uri: result.assets[0].uri,
-                    date: new Date().toISOString().split('T')[0],
-                    album: "Recent Photos",
-                    familyMember: "Both",
-                    title: "New Photo"
-                  };
-                  setPhotos(prev => [newPhoto, ...prev]);
-                  Alert.alert('Success', 'Photo uploaded successfully!');
-                }
-              } catch (error) {
-                console.error('Camera error:', error);
-                Alert.alert('Error', 'Failed to open camera. Please try again.');
-              }
-            }
-          },
-          {
-            text: 'Gallery',
-            onPress: async () => {
-              try {
-                const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-                if (status !== 'granted') {
-                  Alert.alert('Permission needed', 'Please grant photo library permissions to select photos.');
-                  return;
-                }
-
-                const result = await ImagePicker.launchImageLibraryAsync({
-                  mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                  allowsEditing: true,
-                  aspect: [4, 3],
-                  quality: 0.8,
-                });
-
-                if (!result.canceled && result.assets[0]) {
-                  const newPhoto = {
-                    id: photos.length + 1,
-                    uri: result.assets[0].uri,
-                    date: new Date().toISOString().split('T')[0],
-                    album: "Recent Photos",
-                    familyMember: "Both",
-                    title: "New Photo"
-                  };
-                  setPhotos(prev => [newPhoto, ...prev]);
-                  Alert.alert('Success', 'Photo uploaded successfully!');
-                }
-              } catch (error) {
-                console.error('Gallery error:', error);
-                Alert.alert('Error', 'Failed to open photo library. Please try again.');
-              }
-            }
-          },
-          { text: 'Cancel', style: 'cancel' }
-        ],
-        { cancelable: true }
-      );
-    } catch (error) {
-      console.error('Image picker error:', error);
-      Alert.alert('Error', 'Failed to open image picker. Please try again.');
-    }
+    // Open upload modal for direct gallery upload
+    openUploadModal();
   };
 
   const renderPhotoGrid = () => {
     const filteredPhotos = getFilteredPhotos();
     const photoSize = (width - 60) / 3;
 
+    if (filteredPhotos.length === 0) {
+      return (
+        <View style={styles.noPhotosCard}>
+          <Camera size={32} color="#9CA3AF" />
+          <Text style={styles.noPhotosTitle}>No photos yet</Text>
+          <Text style={styles.noPhotosSubtitle}>Upload your first photo to get started</Text>
+          <TouchableOpacity 
+            style={styles.uploadPhotoButton}
+            onPress={handleUploadPhoto}
+          >
+            <Text style={styles.uploadPhotoButtonText}>Upload Photo</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
     return (
       <View style={styles.photoGrid}>
-        {filteredPhotos.map((photo) => (
+        {filteredPhotos.map((media) => (
           <TouchableOpacity 
-            key={photo.id} 
+            key={media._id} 
             style={[styles.photoGridItem, { width: photoSize, height: photoSize }]}
             onPress={() => Alert.alert('Coming Soon', 'Photo detail screen will be implemented soon!')}
           >
-            <Image source={{ uri: photo.uri }} style={styles.photoGridImage} />
+            <Image source={{ uri: media.url }} style={styles.photoGridImage} />
             <View style={styles.photoOverlay}>
-              <Text style={styles.photoTitle}>{photo.title}</Text>
+              <Text style={styles.photoTitle}>{media.caption || 'Photo'}</Text>
             </View>
           </TouchableOpacity>
         ))}
@@ -385,24 +307,43 @@ export default function Photos() {
   const renderPhotoList = () => {
     const filteredPhotos = getFilteredPhotos();
 
+    if (filteredPhotos.length === 0) {
+      return (
+        <View style={styles.noPhotosCard}>
+          <Camera size={32} color="#9CA3AF" />
+          <Text style={styles.noPhotosTitle}>No photos yet</Text>
+          <Text style={styles.noPhotosSubtitle}>Upload your first photo to get started</Text>
+          <TouchableOpacity 
+            style={styles.uploadPhotoButton}
+            onPress={handleUploadPhoto}
+          >
+            <Text style={styles.uploadPhotoButtonText}>Upload Photo</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
     return (
       <View style={styles.photoList}>
-        {filteredPhotos.map((photo) => (
-          <TouchableOpacity 
-            key={photo.id} 
-            style={styles.photoListItem}
-            onPress={() => Alert.alert('Coming Soon', 'Photo detail screen will be implemented soon!')}
-          >
-            <Image source={{ uri: photo.uri }} style={styles.photoListImage} />
-            <View style={styles.photoListContent}>
-              <Text style={styles.photoListTitle}>{photo.title}</Text>
-              <Text style={styles.photoListAlbum}>{photo.album}</Text>
-              <Text style={styles.photoListDate}>
-                {new Date(photo.date).toLocaleDateString('en-GB')}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        ))}
+        {filteredPhotos.map((media) => {
+          const album = apiAlbums.find(album => album._id === media.albumId);
+          return (
+            <TouchableOpacity 
+              key={media._id} 
+              style={styles.photoListItem}
+              onPress={() => Alert.alert('Coming Soon', 'Photo detail screen will be implemented soon!')}
+            >
+              <Image source={{ uri: media.url }} style={styles.photoListImage} />
+              <View style={styles.photoListContent}>
+                <Text style={styles.photoListTitle}>{media.caption || 'Photo'}</Text>
+                <Text style={styles.photoListAlbum}>{album?.name || 'Gallery'}</Text>
+                <Text style={styles.photoListDate}>
+                  {new Date(media.createdAt).toLocaleDateString('en-GB')}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
       </View>
     );
   };
@@ -484,15 +425,15 @@ export default function Photos() {
             <Text style={styles.statLabel}>Photos</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statNumber}>{albums.length}</Text>
+            <Text style={styles.statNumber}>{apiAlbums.length}</Text>
             <Text style={styles.statLabel}>Albums</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statNumber}>
-              {photos.filter(p => {
+              {(apiMedia || []).filter(media => {
                 const oneWeekAgo = new Date();
                 oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-                return new Date(p.date) >= oneWeekAgo;
+                return new Date(media.createdAt) >= oneWeekAgo;
               }).length}
             </Text>
             <Text style={styles.statLabel}>This Week</Text>
@@ -529,20 +470,41 @@ export default function Photos() {
         {/* Albums Section */}
         <View style={styles.albumsSection}>
           <Text style={styles.sectionTitle}>Albums</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.albumsScroll}>
-            {albums.map((album) => (
+          {apiAlbums.length === 0 ? (
+            <View style={styles.noAlbumsCard}>
+              <FolderPlus size={32} color="#9CA3AF" />
+              <Text style={styles.noAlbumsTitle}>No albums yet</Text>
+              <Text style={styles.noAlbumsSubtitle}>Create your first album to organize your photos</Text>
               <TouchableOpacity 
-                key={album.id} 
-                style={styles.albumCard}
-                onPress={() => Alert.alert('Coming Soon', 'Album detail screen will be implemented soon!')}
+                style={styles.createAlbumButton}
+                onPress={handleCreateAlbum}
               >
-                <Image source={{ uri: album.coverPhoto }} style={styles.albumCover} />
-                <View style={[styles.albumColorBar, { backgroundColor: album.color }]} />
-                <Text style={styles.albumName}>{album.name}</Text>
-                <Text style={styles.albumCount}>{album.photoCount} photos</Text>
+                <Text style={styles.createAlbumButtonText}>Create Album</Text>
               </TouchableOpacity>
-            ))}
-          </ScrollView>
+            </View>
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.albumsScroll}>
+              {apiAlbums.map((album) => (
+                <View key={album._id} style={styles.albumCardContainer}>
+                  <TouchableOpacity 
+                    style={styles.albumCard}
+                    onPress={() => Alert.alert('Coming Soon', 'Album detail screen will be implemented soon!')}
+                  >
+                    <Image source={{ uri: album.coverImage || 'https://dummyjson.com/image/150' }} style={styles.albumCover} />
+                    <View style={[styles.albumColorBar, { backgroundColor: '#0e3c67' }]} />
+                    <Text style={styles.albumName}>{album.name}</Text>
+                    <Text style={styles.albumCount}>Album</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={styles.albumUploadButton}
+                    onPress={() => openUploadModal(album._id)}
+                  >
+                    <Plus size={16} color="#FFFFFF" />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </ScrollView>
+          )}
         </View>
 
         {/* Photos Section */}
@@ -667,16 +629,16 @@ export default function Photos() {
               <View style={styles.filterSection}>
                 <Text style={styles.filterSectionTitle}>Filter by Album</Text>
                 <View style={styles.albumFilterOptions}>
-                  {albums.map((album) => (
+                  {apiAlbums.map((album) => (
                     <TouchableOpacity
-                      key={album.id}
+                      key={album._id}
                       style={[
                         styles.albumFilterOption,
                         activeFilter === album.name && styles.albumFilterOptionSelected
                       ]}
                       onPress={() => setActiveFilter(album.name)}
                     >
-                      <Image source={{ uri: album.coverPhoto }} style={styles.albumFilterCover} />
+                      <Image source={{ uri: album.coverImage || 'https://dummyjson.com/image/150' }} style={styles.albumFilterCover} />
                       <View style={styles.albumFilterContent}>
                         <Text style={[
                           styles.albumFilterName,
@@ -684,7 +646,7 @@ export default function Photos() {
                         ]}>
                           {album.name}
                         </Text>
-                        <Text style={styles.albumFilterCount}>{album.photoCount} photos</Text>
+                        <Text style={styles.albumFilterCount}>Album</Text>
                       </View>
                       {activeFilter === album.name && (
                         <Check size={16} color="#FFFFFF" />
@@ -922,6 +884,142 @@ export default function Photos() {
             </ScrollView>
           </SafeAreaView>
         </Modal>
+
+        {/* Upload Media Modal */}
+        <Modal
+          visible={showUploadMediaModal}
+          animationType="slide"
+          presentationStyle="formSheet"
+          statusBarTranslucent={false}
+        >
+          <SafeAreaView style={styles.modalContainer}>
+            {/* Modern Header */}
+            <View style={styles.modalHeader}>
+              <View style={styles.modalHeaderContent}>
+                <TouchableOpacity 
+                  onPress={() => setShowUploadMediaModal(false)}
+                  style={styles.closeButton}
+                >
+                  <X size={24} color="#6B7280" />
+                </TouchableOpacity>
+                <View style={styles.modalTitleContainer}>
+                  <Text style={styles.modalTitle}>
+                    {selectedAlbumForUpload ? 'Upload to Album' : 'Upload to Gallery'}
+                  </Text>
+                  <Text style={styles.modalSubtitle}>
+                    {selectedAlbumForUpload ? 'Add photos to this album' : 'Add photos to your gallery'}
+                  </Text>
+                </View>
+                <TouchableOpacity 
+                  style={[
+                    styles.createButton,
+                    (isAddingMedia || uploadProgress.isUploading || !newMedia.imageUrl.trim()) && styles.createButtonDisabled
+                  ]}
+                  onPress={handleUploadMedia}
+                  disabled={isAddingMedia || uploadProgress.isUploading || !newMedia.imageUrl.trim()}
+                >
+                  {(isAddingMedia || uploadProgress.isUploading) ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <Text style={styles.createButtonText}>Upload</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+              <View style={styles.formContainer}>
+                {/* Photo Selection Section */}
+                <View style={styles.coverImageSection}>
+                  <Text style={styles.sectionTitle}>Select Photo</Text>
+                  
+                  {newMedia.imageUrl && !uploadProgress.isUploading ? (
+                    <View style={styles.imagePreviewContainer}>
+                      <Image 
+                        source={{ uri: newMedia.imageUrl }} 
+                        style={styles.coverImagePreview}
+                        resizeMode="cover"
+                      />
+                      <TouchableOpacity 
+                        style={styles.floatingChangeButton}
+                        onPress={handleSelectMediaPhoto}
+                        activeOpacity={0.8}
+                      >
+                        <Camera size={20} color="#FFFFFF" />
+                      </TouchableOpacity>
+                      <View style={styles.changePhotoHint}>
+                        <Text style={styles.changePhotoHintText}>Tap to change photo</Text>
+                      </View>
+                    </View>
+                  ) : (
+                    <TouchableOpacity 
+                      style={styles.selectPhotoCard}
+                      onPress={handleSelectMediaPhoto}
+                      disabled={uploadProgress.isUploading}
+                    >
+                      <View style={styles.selectPhotoIconContainer}>
+                        <Camera size={32} color="#0e3c67" />
+                      </View>
+                      <Text style={styles.selectPhotoTitle}>
+                        {uploadProgress.isUploading ? 'Uploading...' : 'Select Photo'}
+                      </Text>
+                      <Text style={styles.selectPhotoSubtitle}>
+                        Tap to choose from gallery
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+
+                  {/* Upload Progress */}
+                  {uploadProgress.isUploading && (
+                    <View style={styles.uploadProgressCard}>
+                      <ActivityIndicator size="small" color="#0e3c67" />
+                      <Text style={styles.progressText}>
+                        Uploading... {uploadProgress.progress}%
+                      </Text>
+                    </View>
+                  )}
+
+                  {/* Upload Error */}
+                  {uploadProgress.error && (
+                    <View style={styles.uploadErrorCard}>
+                      <Text style={styles.uploadErrorText}>{uploadProgress.error}</Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* Caption Section */}
+                <View style={styles.detailsSection}>
+                  <Text style={styles.sectionTitle}>Caption (Optional)</Text>
+                  <View style={styles.inputGroup}>
+                    <TextInput
+                      style={styles.textInput}
+                      placeholder="Add a caption for this photo..."
+                      placeholderTextColor="#9CA3AF"
+                      value={newMedia.caption}
+                      onChangeText={(text) => setNewMedia(prev => ({ ...prev, caption: text }))}
+                      multiline
+                      numberOfLines={3}
+                      maxLength={200}
+                    />
+                    <Text style={styles.characterCount}>
+                      {newMedia.caption.length}/200
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Tips Section */}
+                <View style={styles.tipsSection}>
+                  <Text style={styles.tipsTitle}>💡 Tips</Text>
+                  <Text style={styles.tipText}>
+                    • Add meaningful captions to make your photos easier to find{'\n'}
+                    • Photos are automatically organized by date{'\n'}
+                    • You can always edit captions later
+                  </Text>
+                </View>
+              </View>
+            </ScrollView>
+          </SafeAreaView>
+        </Modal>
       </ScrollView>
     </SafeAreaView>
   );
@@ -1064,17 +1162,110 @@ const styles = StyleSheet.create({
     marginHorizontal: -20,
     paddingHorizontal: 20,
   },
+  noAlbumsCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 32,
+    alignItems: 'center',
+    marginHorizontal: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  noAlbumsTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#374151',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  noAlbumsSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  createAlbumButton: {
+    backgroundColor: '#0e3c67',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  createAlbumButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  noPhotosCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 32,
+    alignItems: 'center',
+    marginHorizontal: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  noPhotosTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#374151',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  noPhotosSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  uploadPhotoButton: {
+    backgroundColor: '#0e3c67',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  uploadPhotoButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  albumCardContainer: {
+    position: 'relative',
+    marginRight: 12,
+  },
   albumCard: {
     backgroundColor: '#FFFFFF',
     width: 140,
     borderRadius: 12,
-    marginRight: 12,
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
+  },
+  albumUploadButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#0e3c67',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 4,
   },
   albumCover: {
     width: '100%',
@@ -1579,12 +1770,6 @@ const styles = StyleSheet.create({
   coverImageSection: {
     marginBottom: 32,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1E293B',
-    marginBottom: 16,
-  },
   selectPhotoCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
@@ -1708,18 +1893,6 @@ const styles = StyleSheet.create({
     color: '#DC2626',
     marginBottom: 8,
   },
-  retryButton: {
-    backgroundColor: '#DC2626',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    alignSelf: 'flex-start',
-  },
-  retryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
-  },
   
   // Details Section
   detailsSection: {
@@ -1783,6 +1956,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#0369A1',
     marginBottom: 12,
+  },
+  tipText: {
+    fontSize: 14,
+    color: '#0369A1',
+    lineHeight: 20,
   },
   tipsList: {
     gap: 6,

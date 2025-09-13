@@ -11,6 +11,9 @@ export interface Album {
   _id: string;
   name: string;
   galleryId: string;
+  coverImage?: string;
+  description?: string;
+  createdBy?: string;
   createdAt: string;
   updatedAt: string;
   __v?: number;
@@ -18,14 +21,12 @@ export interface Album {
 
 export interface Media {
   _id: string;
-  filename: string;
-  originalName: string;
-  mimeType: string;
-  size: number;
-  url: string;
-  albumId?: string;
   galleryId: string;
+  albumId?: string | null;
   uploadedBy: string;
+  type: 'image' | 'video';
+  url: string;
+  caption?: string;
   createdAt: string;
   updatedAt: string;
   __v?: number;
