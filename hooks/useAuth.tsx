@@ -40,6 +40,8 @@ interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  setUser: (user: User | null) => void;
+  setToken: (token: string | null) => void;
   login: (email: string, password: string) => Promise<boolean>;
   signup: (fullName: string, email: string, password: string) => Promise<boolean>;
   forgotPassword: (email: string) => Promise<boolean>;
@@ -342,6 +344,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     token,
     isLoading,
     isAuthenticated,
+    setUser,
+    setToken,
     login,
     signup,
     forgotPassword,
