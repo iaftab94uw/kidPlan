@@ -20,6 +20,7 @@ import { Plus, Camera, Search, Grid2x2 as Grid, List, Filter, MoveVertical as Mo
 import { useAuth } from '@/hooks/useAuth';
 import { useGallery } from '@/hooks/useGallery';
 import { useImageUpload } from '@/hooks/useImageUpload';
+import { Album, Media } from '@/types/gallery';
 import * as ImagePicker from 'expo-image-picker';
 
 const { width } = Dimensions.get('window');
@@ -281,6 +282,61 @@ export default function Photos() {
     openUploadModal();
   };
 
+  // Separate component for Album Card
+  const AlbumCard = ({ album }: { album: Album }) => {
+    console.log('AlbumCard rendering:', album._id, album.name);
+    
+    return (
+      <View style={styles.albumCardContainer}>
+        <TouchableOpacity 
+          style={styles.albumCard}
+          onPress={() => {
+            console.log('Album tapped:', album.name);
+            router.push(`/album-detail/${album._id}`);
+          }}
+          activeOpacity={0.8}
+        >
+          <Image source={{ uri: album.coverImage || 'https://dummyjson.com/image/150' }} style={styles.albumCover} />
+          <View style={[styles.albumColorBar, { backgroundColor: '#0e3c67' }]} />
+          <Text style={styles.albumName}>{album.name}</Text>
+          <Text style={styles.albumCount}>Album</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.albumUploadButton}
+          onPress={() => {
+            console.log('Upload tapped for:', album.name);
+            openUploadModal(album._id);
+          }}
+          activeOpacity={0.8}
+        >
+          <Plus size={16} color="#FFFFFF" />
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  // Separate component for Photo Card
+  const PhotoCard = ({ media }: { media: Media }) => {
+    const photoSize = 120;
+    
+    return (
+      <TouchableOpacity 
+        style={[styles.photoGridItem, { width: photoSize, height: photoSize }]}
+        onPress={() => {
+          console.log('Photo tapped:', media.caption || 'Photo');
+          Alert.alert('Coming Soon', 'Photo detail screen will be implemented soon!');
+        }}
+        activeOpacity={0.8}
+      >
+        <Image source={{ uri: media.url }} style={styles.photoGridImage} />
+        <View style={styles.photoOverlay}>
+          <Text style={styles.photoTitle}>{media.caption || 'Photo'}</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+
   const renderPhotoGrid = () => {
     const filteredPhotos = getFilteredPhotos();
     const photoSize = (width - 60) / 3;
@@ -317,31 +373,17 @@ export default function Photos() {
         showsHorizontalScrollIndicator={false}
         style={styles.photosScroll}
         contentContainerStyle={styles.photosScrollContent}
-        scrollEnabled={true}
-        decelerationRate="fast"
-        snapToInterval={photoSize + 8}
-        snapToAlignment="start"
         keyExtractor={(item) => item._id}
-        renderItem={({ item: media }) => (
-          <TouchableOpacity 
-            style={[styles.photoGridItem, { width: photoSize, height: photoSize }]}
-            onPress={() => {
-              console.log('PHOTO CARD TOUCHED -', media.caption || 'Photo');
-              Alert.alert('Coming Soon', 'Photo detail screen will be implemented soon!');
-            }}
-            onPressIn={() => console.log('PHOTO CARD PRESS IN -', media.caption || 'Photo')}
-            onPressOut={() => console.log('PHOTO CARD PRESS OUT -', media.caption || 'Photo')}
-            activeOpacity={0.7}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            delayPressIn={0}
-            delayPressOut={0}
-          >
-            <Image source={{ uri: media.url }} style={styles.photoGridImage} />
-            <View style={styles.photoOverlay}>
-              <Text style={styles.photoTitle}>{media.caption || 'Photo'}</Text>
-            </View>
-          </TouchableOpacity>
+        renderItem={({ item: media }) => <PhotoCard media={media} />}
+        ListEmptyComponent={() => (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No photos found</Text>
+          </View>
         )}
+        removeClippedSubviews={false}
+        initialNumToRender={5}
+        maxToRenderPerBatch={3}
+        windowSize={10}
       />
     );
   };
@@ -374,15 +416,10 @@ export default function Photos() {
               key={media._id} 
               style={styles.photoListItem}
               onPress={() => {
-                console.log('PHOTO LIST ITEM TOUCHED -', media.caption || 'Photo');
+                console.log('Photo list item tapped:', media.caption || 'Photo');
                 Alert.alert('Coming Soon', 'Photo detail screen will be implemented soon!');
               }}
-              onPressIn={() => console.log('PHOTO LIST ITEM PRESS IN -', media.caption || 'Photo')}
-              onPressOut={() => console.log('PHOTO LIST ITEM PRESS OUT -', media.caption || 'Photo')}
-              activeOpacity={0.7}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              delayPressIn={0}
-              delayPressOut={0}
+              activeOpacity={0.8}
             >
               <Image source={{ uri: media.url }} style={styles.photoListImage} />
               <View style={styles.photoListContent}>
@@ -502,26 +539,19 @@ export default function Photos() {
         </View>
 
         {/* Quick Actions */}
-        <View style={styles.quickActions} pointerEvents="box-none">
+        <View style={styles.quickActions}>
           <TouchableOpacity 
             style={[styles.quickActionButton, { flex: 1, marginRight: 6 }]}
             onPress={handleUploadPhoto}
+            activeOpacity={0.8}
           >
             <Camera size={20} color="#FFFFFF" />
             <Text style={styles.quickActionText}>Upload Photo</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             style={[styles.quickActionButton, { flex: 1, marginLeft: 6 }]}
-            onPress={() => {
-              console.log('BUTTON TOUCHED - Create Album');
-              handleCreateAlbum();
-            }}
-            onPressIn={() => console.log('BUTTON PRESS IN - Create Album')}
-            onPressOut={() => console.log('BUTTON PRESS OUT - Create Album')}
-            activeOpacity={0.7}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            delayPressIn={0}
-            delayPressOut={0}
+            onPress={handleCreateAlbum}
+            activeOpacity={0.8}
           >
             <FolderPlus size={20} color="#FFFFFF" />
             <Text style={styles.quickActionText}>Create Album</Text>
@@ -531,6 +561,14 @@ export default function Photos() {
         {/* Albums Section */}
         <View style={styles.albumsSection}>
           <Text style={styles.sectionTitle}>Albums ({apiAlbums.length})</Text>
+          {(() => {
+            console.log('=== ALBUMS DEBUG ===');
+            console.log('apiAlbums.length:', apiAlbums.length);
+            console.log('apiAlbums:', apiAlbums);
+            console.log('galleryLoading:', galleryLoading);
+            console.log('galleryError:', galleryError);
+            return null;
+          })()}
           {galleryLoading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color="#0e3c67" />
@@ -555,48 +593,17 @@ export default function Photos() {
               showsHorizontalScrollIndicator={false}
               style={styles.albumsScroll}
               contentContainerStyle={styles.albumsScrollContent}
-              scrollEnabled={true}
-              decelerationRate="fast"
-              snapToInterval={152}
-              snapToAlignment="start"
               keyExtractor={(item) => item._id}
-              renderItem={({ item: album }) => (
-                <View style={styles.albumCardContainer}>
-                  <TouchableOpacity 
-                    style={styles.albumCard}
-                    onPress={() => {
-                      console.log('ALBUM CARD TOUCHED -', album.name);
-                      router.push(`/album-detail/${album._id}`);
-                    }}
-                    onPressIn={() => console.log('ALBUM CARD PRESS IN -', album.name)}
-                    onPressOut={() => console.log('ALBUM CARD PRESS OUT -', album.name)}
-                    activeOpacity={0.7}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                    delayPressIn={0}
-                    delayPressOut={0}
-                  >
-                    <Image source={{ uri: album.coverImage || 'https://dummyjson.com/image/150' }} style={styles.albumCover} />
-                    <View style={[styles.albumColorBar, { backgroundColor: '#0e3c67' }]} />
-                    <Text style={styles.albumName}>{album.name}</Text>
-                    <Text style={styles.albumCount}>Album</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                    style={styles.albumUploadButton}
-                    onPress={() => {
-                      console.log('ALBUM UPLOAD TOUCHED -', album.name);
-                      openUploadModal(album._id);
-                    }}
-                    onPressIn={() => console.log('ALBUM UPLOAD PRESS IN -', album.name)}
-                    onPressOut={() => console.log('ALBUM UPLOAD PRESS OUT -', album.name)}
-                    activeOpacity={0.7}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                    delayPressIn={0}
-                    delayPressOut={0}
-                  >
-                    <Plus size={16} color="#FFFFFF" />
-                  </TouchableOpacity>
+              renderItem={({ item: album }) => <AlbumCard album={album} />}
+              ListEmptyComponent={() => (
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>No albums found</Text>
                 </View>
               )}
+              removeClippedSubviews={false}
+              initialNumToRender={5}
+              maxToRenderPerBatch={3}
+              windowSize={10}
             />
           )}
         </View>
@@ -2075,5 +2082,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#0369A1',
     lineHeight: 20,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 20,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
   },
 });
