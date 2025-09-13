@@ -48,8 +48,6 @@ export const makeAuthenticatedApiCall = async (
         ...options.headers,
         'Authorization': `Bearer ${token}`,
       },
-      // Add timeout to prevent hanging requests
-      signal: AbortSignal.timeout(30000), // 30 second timeout
     });
 
     let data: ApiResponse;
@@ -82,11 +80,6 @@ export const makeAuthenticatedApiCall = async (
       return { 
         success: false, 
         error: 'Network error: Unable to connect to server. Please check your internet connection.' 
-      };
-    } else if (error instanceof DOMException && error.name === 'AbortError') {
-      return { 
-        success: false, 
-        error: 'Request timeout: The server is taking too long to respond. Please try again.' 
       };
     } else if (error instanceof SyntaxError && error.message.includes('Unexpected token')) {
       return { 

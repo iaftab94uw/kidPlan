@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { API_CONFIG, getApiUrl, getAuthHeaders } from '@/config/api';
 import { Gallery, GalleryData, Album, Media, GalleryResponse, CreateGalleryResponse, CreateAlbumRequest, CreateAlbumResponse } from '@/types/gallery';
-import { makeAuthenticatedApiCall } from '@/utils/apiUtils';
 import { useAuth } from '@/hooks/useAuth';
 
 interface UseGalleryReturn {
@@ -38,16 +37,26 @@ export const useGallery = (token: string): UseGalleryReturn => {
 
     try {
       const url = getApiUrl(API_CONFIG.ENDPOINTS.FETCH_GALLERY);
+      const headers = getAuthHeaders(token);
       
-      const data = await makeAuthenticatedApiCall(
-        url,
-        {
-          method: 'GET',
-        },
-        token,
-        setUser,
-        setToken
-      );
+      console.log('=== FETCH GALLERY API ===');
+      console.log('URL:', url);
+      console.log('Method: GET');
+      console.log('Headers:', headers);
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: headers,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch gallery: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      console.log('Response:', data);
+      console.log('=== END FETCH GALLERY API ===');
 
       if (data.success && data.data) {
         setGallery(data.data.gallery);
@@ -86,7 +95,7 @@ export const useGallery = (token: string): UseGalleryReturn => {
     } finally {
       setLoading(false);
     }
-  }, [token, setUser, setToken]);
+  }, [token]);
 
   const createGallery = useCallback(async (): Promise<boolean> => {
     if (!token) {
@@ -99,16 +108,26 @@ export const useGallery = (token: string): UseGalleryReturn => {
 
     try {
       const url = getApiUrl(API_CONFIG.ENDPOINTS.CREATE_GALLERY);
+      const headers = getAuthHeaders(token);
       
-      const data = await makeAuthenticatedApiCall(
-        url,
-        {
-          method: 'POST',
-        },
-        token,
-        setUser,
-        setToken
-      );
+      console.log('=== CREATE GALLERY API ===');
+      console.log('URL:', url);
+      console.log('Method: POST');
+      console.log('Headers:', headers);
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: headers,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to create gallery: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      console.log('Response:', data);
+      console.log('=== END CREATE GALLERY API ===');
 
       if (data.success && data.data) {
         setGallery(data.data);
@@ -133,7 +152,7 @@ export const useGallery = (token: string): UseGalleryReturn => {
     } finally {
       setIsCreatingGallery(false);
     }
-  }, [token, setUser, setToken]);
+  }, [token]);
 
   const createAlbum = useCallback(async (albumData: CreateAlbumRequest): Promise<boolean> => {
     if (!token) {
@@ -146,17 +165,28 @@ export const useGallery = (token: string): UseGalleryReturn => {
 
     try {
       const url = getApiUrl(API_CONFIG.ENDPOINTS.CREATE_ALBUM);
+      const headers = getAuthHeaders(token);
       
-      const data = await makeAuthenticatedApiCall(
-        url,
-        {
-          method: 'POST',
-          body: JSON.stringify(albumData),
-        },
-        token,
-        setUser,
-        setToken
-      );
+      console.log('=== CREATE ALBUM API ===');
+      console.log('URL:', url);
+      console.log('Method: POST');
+      console.log('Headers:', headers);
+      console.log('Body:', albumData);
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(albumData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to create album: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      console.log('Response:', data);
+      console.log('=== END CREATE ALBUM API ===');
 
       if (data.success && data.data) {
         // Add the new album to the albums list
@@ -182,7 +212,7 @@ export const useGallery = (token: string): UseGalleryReturn => {
     } finally {
       setIsCreatingAlbum(false);
     }
-  }, [token, setUser, setToken]);
+  }, [token]);
 
   const refetch = () => {
     fetchGallery();
