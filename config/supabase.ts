@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { Platform } from 'react-native';
 
 // Add Buffer for base64 conversion (like in your working code)
@@ -75,7 +75,7 @@ export const uploadImage = async (uri: string, fileName: string, bucket: string 
     } else {
       // For native platforms, use FileSystem
       const base64Image = await FileSystem.readAsStringAsync(uri, {
-        encoding: FileSystem.EncodingType.Base64,
+        encoding: 'base64' as any,
       });
       
       console.log('Base64 image length:', base64Image.length);

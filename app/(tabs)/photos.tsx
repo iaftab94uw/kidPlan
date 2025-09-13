@@ -226,9 +226,9 @@ export default function Photos() {
     // Don't allow saving while upload is in progress
     if (uploadProgress.isUploading) {
       Alert.alert('Please Wait', 'Please wait for the photo upload to complete.');
-      return;
-    }
-
+                  return;
+                }
+                
     try {
       const mediaData = {
         galleryId: gallery._id,
@@ -247,8 +247,8 @@ export default function Photos() {
         Alert.alert('Success', 'Media uploaded successfully!');
       } else {
         Alert.alert('Error', 'Failed to upload media. Please try again.');
-      }
-    } catch (error) {
+                }
+              } catch (error) {
       console.error('Error uploading media:', error);
       Alert.alert('Error', 'Failed to upload media. Please try again.');
     }
@@ -275,8 +275,8 @@ export default function Photos() {
     // Check if gallery exists first
     if (!gallery) {
       setShowCreateGalleryModal(true);
-      return;
-    }
+                  return;
+                }
 
     // Open upload modal for direct gallery upload
     openUploadModal();
@@ -291,8 +291,19 @@ export default function Photos() {
         <TouchableOpacity 
           style={styles.albumCard}
           onPress={() => {
+            console.log('=== ALBUM NAVIGATION DEBUG ===');
             console.log('Album tapped:', album.name);
-            router.push(`/album-detail/${album._id}`);
+            console.log('Album ID:', album._id);
+            console.log('Router object:', router);
+            console.log('Navigation path:', `/album-detail/${album._id}`);
+            
+            try {
+              router.push(`/album-detail/${album._id}`);
+              console.log('Navigation successful');
+            } catch (error: any) {
+              console.error('Navigation error:', error);
+              Alert.alert('Navigation Error', `Failed to navigate: ${error.message || error}`);
+            }
           }}
           activeOpacity={0.8}
         >
@@ -304,8 +315,18 @@ export default function Photos() {
         <TouchableOpacity 
           style={styles.albumUploadButton}
           onPress={() => {
+            console.log('=== UPLOAD BUTTON DEBUG ===');
             console.log('Upload tapped for:', album.name);
-            openUploadModal(album._id);
+            console.log('Album ID:', album._id);
+            console.log('openUploadModal function:', openUploadModal);
+            
+            try {
+              openUploadModal(album._id);
+              console.log('Upload modal opened successfully');
+            } catch (error: any) {
+              console.error('Upload modal error:', error);
+              Alert.alert('Upload Error', `Failed to open upload modal: ${error.message || error}`);
+            }
           }}
           activeOpacity={0.8}
         >
@@ -318,10 +339,10 @@ export default function Photos() {
   // Separate component for Photo Card
   const PhotoCard = ({ media }: { media: Media }) => {
     const photoSize = 120;
-    
+
     return (
-      <TouchableOpacity 
-        style={[styles.photoGridItem, { width: photoSize, height: photoSize }]}
+          <TouchableOpacity 
+            style={[styles.photoGridItem, { width: photoSize, height: photoSize }]}
         onPress={() => {
           console.log('Photo tapped:', media.caption || 'Photo');
           Alert.alert('Coming Soon', 'Photo detail screen will be implemented soon!');
@@ -329,10 +350,10 @@ export default function Photos() {
         activeOpacity={0.8}
       >
         <Image source={{ uri: media.url }} style={styles.photoGridImage} />
-        <View style={styles.photoOverlay}>
+            <View style={styles.photoOverlay}>
           <Text style={styles.photoTitle}>{media.caption || 'Photo'}</Text>
-        </View>
-      </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
     );
   };
 
@@ -346,7 +367,7 @@ export default function Photos() {
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#0e3c67" />
           <Text style={styles.loadingText}>Loading photos...</Text>
-        </View>
+      </View>
       );
     }
 
@@ -412,9 +433,9 @@ export default function Photos() {
         {filteredPhotos.map((media) => {
           const album = apiAlbums.find(album => album._id === media.albumId);
           return (
-            <TouchableOpacity 
+          <TouchableOpacity 
               key={media._id} 
-              style={styles.photoListItem}
+            style={styles.photoListItem}
               onPress={() => {
                 console.log('Photo list item tapped:', media.caption || 'Photo');
                 Alert.alert('Coming Soon', 'Photo detail screen will be implemented soon!');
@@ -422,14 +443,14 @@ export default function Photos() {
               activeOpacity={0.8}
             >
               <Image source={{ uri: media.url }} style={styles.photoListImage} />
-              <View style={styles.photoListContent}>
+            <View style={styles.photoListContent}>
                 <Text style={styles.photoListTitle}>{media.caption || 'Photo'}</Text>
                 <Text style={styles.photoListAlbum}>{album?.name || 'Gallery'}</Text>
-                <Text style={styles.photoListDate}>
+              <Text style={styles.photoListDate}>
                   {new Date(media.createdAt).toLocaleDateString('en-GB')}
-                </Text>
-              </View>
-            </TouchableOpacity>
+              </Text>
+            </View>
+          </TouchableOpacity>
           );
         })}
       </View>
@@ -542,7 +563,19 @@ export default function Photos() {
         <View style={styles.quickActions}>
           <TouchableOpacity 
             style={[styles.quickActionButton, { flex: 1, marginRight: 6 }]}
-            onPress={handleUploadPhoto}
+            onPress={() => {
+              console.log('=== UPLOAD PHOTO BUTTON DEBUG ===');
+              console.log('Upload Photo button tapped');
+              console.log('handleUploadPhoto function:', handleUploadPhoto);
+              
+              try {
+                handleUploadPhoto();
+                console.log('Upload photo handler executed successfully');
+              } catch (error: any) {
+                console.error('Upload photo error:', error);
+                Alert.alert('Upload Error', `Failed to handle upload: ${error.message || error}`);
+              }
+            }}
             activeOpacity={0.8}
           >
             <Camera size={20} color="#FFFFFF" />
@@ -550,7 +583,19 @@ export default function Photos() {
           </TouchableOpacity>
           <TouchableOpacity 
             style={[styles.quickActionButton, { flex: 1, marginLeft: 6 }]}
-            onPress={handleCreateAlbum}
+            onPress={() => {
+              console.log('=== CREATE ALBUM BUTTON DEBUG ===');
+              console.log('Create Album button tapped');
+              console.log('handleCreateAlbum function:', handleCreateAlbum);
+              
+              try {
+              handleCreateAlbum();
+                console.log('Create album handler executed successfully');
+              } catch (error: any) {
+                console.error('Create album error:', error);
+                Alert.alert('Create Album Error', `Failed to handle create album: ${error.message || error}`);
+              }
+            }}
             activeOpacity={0.8}
           >
             <FolderPlus size={20} color="#FFFFFF" />
@@ -827,7 +872,7 @@ export default function Photos() {
           presentationStyle="formSheet"
           statusBarTranslucent={false}
         >
-          <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalContainer}>
             {/* Modern Header */}
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderContent}>
@@ -880,14 +925,14 @@ export default function Photos() {
                       </TouchableOpacity>
                       <View style={styles.changePhotoHint}>
                         <Text style={styles.changePhotoHintText}>Tap to change photo</Text>
-                      </View>
+                </View>
                     </View>
                   ) : (
-                    <TouchableOpacity 
+                  <TouchableOpacity 
                       style={styles.selectPhotoCard}
-                      onPress={handleSelectCoverPhoto}
-                      disabled={uploadProgress.isUploading}
-                    >
+                    onPress={handleSelectCoverPhoto}
+                    disabled={uploadProgress.isUploading}
+                  >
                       <View style={styles.selectPhotoIconContainer}>
                         <Camera size={32} color="#0e3c67" />
                       </View>
@@ -896,8 +941,8 @@ export default function Photos() {
                       </Text>
                       <Text style={styles.selectPhotoSubtitle}>
                         Tap to select from gallery
-                      </Text>
-                    </TouchableOpacity>
+                    </Text>
+                  </TouchableOpacity>
                   )}
 
                   {/* Upload Progress */}
@@ -983,7 +1028,7 @@ export default function Photos() {
                 </View>
               </View>
             </ScrollView>
-          </SafeAreaView>
+          </View>
         </Modal>
 
         {/* Upload Media Modal */}
@@ -1050,7 +1095,7 @@ export default function Photos() {
                       </TouchableOpacity>
                       <View style={styles.changePhotoHint}>
                         <Text style={styles.changePhotoHintText}>Tap to change photo</Text>
-                      </View>
+                    </View>
                     </View>
                   ) : (
                     <TouchableOpacity 
@@ -1077,7 +1122,7 @@ export default function Photos() {
                       <Text style={styles.progressText}>
                         Uploading... {uploadProgress.progress}%
                       </Text>
-                    </View>
+                </View>
                   )}
 
                   {/* Upload Error */}
@@ -1092,13 +1137,13 @@ export default function Photos() {
                 <View style={styles.detailsSection}>
                   <Text style={styles.sectionTitle}>Caption (Optional)</Text>
                   <View style={styles.inputGroup}>
-                    <TextInput
+                  <TextInput
                       style={styles.textInput}
                       placeholder="Add a caption for this photo..."
-                      placeholderTextColor="#9CA3AF"
+                    placeholderTextColor="#9CA3AF"
                       value={newMedia.caption}
                       onChangeText={(text) => setNewMedia(prev => ({ ...prev, caption: text }))}
-                      multiline
+                    multiline
                       numberOfLines={3}
                       maxLength={200}
                     />
@@ -1121,10 +1166,10 @@ export default function Photos() {
             </ScrollView>
           </SafeAreaView>
         </Modal>
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
 
 const styles = StyleSheet.create({
   container: {
