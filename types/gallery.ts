@@ -65,3 +65,15 @@ export interface CreateAlbumResponse {
   data?: Album;
   error?: string;
 }
+
+export interface AlbumDetailData {
+  album: Album;
+  mediaList: Media[];
+}
+
+export interface AlbumDetailResponse {
+  success: boolean;
+  message: string;
+  data?: AlbumDetailData;
+  error?: string;
+}

@@ -18,15 +18,36 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export const testSupabaseConnection = async () => {
   try {
     console.log('Testing Supabase connection...');
-    const { data, error } = await supabase.storage.listBuckets();
+    console.log('Supabase URL:', supabaseUrl);
+    console.log('Supabase Key available:', !!supabaseAnonKey);
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error('Supabase configuration missing');
+      return false;
+    }
+    
+    // Test with a simple query with timeout
+    const testPromise = supabase.storage.listBuckets();
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Connection timeout')), 10000);
+    });
+    
+    const { data, error } = await Promise.race([testPromise, timeoutPromise]) as any;
+    
     if (error) {
       console.error('Supabase connection test failed:', error);
+      if (error.message?.includes('Network request failed')) {
+        console.error('Network connection issue detected');
+      }
       return false;
     }
     console.log('Supabase connection successful, buckets:', data);
     return true;
   } catch (error) {
     console.error('Supabase connection test error:', error);
+    if (error instanceof Error && error.message.includes('timeout')) {
+      console.error('Connection timeout - check internet connection');
+    }
     return false;
   }
 };
@@ -35,6 +56,11 @@ export const testSupabaseConnection = async () => {
 export const uploadImage = async (uri: string, fileName: string, bucket: string = 'profile-images') => {
   try {
     console.log('Starting upload for URI:', uri);
+    
+    // Check if Supabase is properly configured
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error('Supabase configuration is missing. Please check your environment variables.');
+    }
     
     let arrayBuffer: ArrayBuffer;
     
@@ -74,17 +100,25 @@ export const uploadImage = async (uri: string, fileName: string, bucket: string 
     console.log('Uploading to Supabase:', {
       bucket,
       fileName: uniqueFileName,
-      arrayBufferSize: arrayBuffer.byteLength
+      arrayBufferSize: arrayBuffer.byteLength,
+      supabaseUrl: supabaseUrl
     });
 
-    // Upload to Supabase Storage using update method (like your working code)
-    const { data, error } = await supabase.storage
+    // Upload to Supabase Storage with timeout
+    const uploadPromise = supabase.storage
       .from(bucket)
       .upload(uniqueFileName, arrayBuffer, {
         cacheControl: '3600',
         upsert: false,
         contentType: 'image/jpeg'
       });
+
+    // Add timeout to prevent hanging
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Upload timeout - please check your internet connection')), 30000);
+    });
+
+    const { data, error } = await Promise.race([uploadPromise, timeoutPromise]) as any;
 
     if (error) {
       console.error('Supabase upload error:', error);
@@ -93,7 +127,15 @@ export const uploadImage = async (uri: string, fileName: string, bucket: string 
         statusCode: error.statusCode,
         error: error.error
       });
-      throw error;
+      
+      // Provide more specific error messages
+      if (error.message?.includes('Network request failed')) {
+        throw new Error('Network connection failed. Please check your internet connection and try again.');
+      } else if (error.message?.includes('timeout')) {
+        throw new Error('Upload timed out. Please check your internet connection and try again.');
+      } else {
+        throw new Error(error.message || 'Upload failed. Please try again.');
+      }
     }
 
     console.log('Upload successful, data:', data);
@@ -112,9 +154,23 @@ export const uploadImage = async (uri: string, fileName: string, bucket: string 
     };
   } catch (error: any) {
     console.error('Image upload error:', error);
+    
+    // Provide user-friendly error messages
+    let errorMessage = 'Failed to upload image';
+    
+    if (error.message?.includes('Network request failed')) {
+      errorMessage = 'Network connection failed. Please check your internet connection and try again.';
+    } else if (error.message?.includes('timeout')) {
+      errorMessage = 'Upload timed out. Please check your internet connection and try again.';
+    } else if (error.message?.includes('Supabase configuration')) {
+      errorMessage = 'Upload service configuration error. Please contact support.';
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
     return {
       success: false,
-      error: error?.message || 'Failed to upload image'
+      error: errorMessage
     };
   }
 };

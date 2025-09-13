@@ -12,7 +12,8 @@ import {
   TextInput,
   Alert,
   FlatList,
-  ActivityIndicator
+  ActivityIndicator,
+  RefreshControl
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Plus, Camera, Search, Grid2x2 as Grid, List, Filter, MoveVertical as MoreVertical, FolderPlus, X, Grid3x3 as Grid3X3, Check } from 'lucide-react-native';
@@ -26,7 +27,8 @@ const { width } = Dimensions.get('window');
 export default function Photos() {
   const router = useRouter();
   const { token } = useAuth();
-  const { gallery, albums: apiAlbums, media: apiMedia, loading: galleryLoading, error: galleryError, createGallery, isCreatingGallery, createAlbum, isCreatingAlbum, addMedia, isAddingMedia } = useGallery(token || '');
+  const { gallery, albums: apiAlbums, media: apiMedia, loading: galleryLoading, error: galleryError, createGallery, isCreatingGallery, createAlbum, isCreatingAlbum, addMedia, isAddingMedia, refetch } = useGallery(token || '');
+  
   const { uploadProgress, selectAndUploadImage, resetUpload } = useImageUpload();
   
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -37,6 +39,7 @@ export default function Photos() {
   const [showCreateAlbumModal, setShowCreateAlbumModal] = useState(false);
   const [showUploadMediaModal, setShowUploadMediaModal] = useState(false);
   const [selectedAlbumForUpload, setSelectedAlbumForUpload] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Debug modal state changes
   useEffect(() => {
@@ -255,6 +258,18 @@ export default function Photos() {
     setShowUploadMediaModal(true);
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      // Refetch gallery data
+      await refetch();
+    } catch (error) {
+      console.error('Error refreshing gallery:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   const handleUploadPhoto = async () => {
     // Check if gallery exists first
     if (!gallery) {
@@ -269,6 +284,15 @@ export default function Photos() {
   const renderPhotoGrid = () => {
     const filteredPhotos = getFilteredPhotos();
     const photoSize = (width - 60) / 3;
+
+    if (galleryLoading) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#0e3c67" />
+          <Text style={styles.loadingText}>Loading photos...</Text>
+        </View>
+      );
+    }
 
     if (filteredPhotos.length === 0) {
       return (
@@ -287,20 +311,38 @@ export default function Photos() {
     }
 
     return (
-      <View style={styles.photoGrid}>
-        {filteredPhotos.map((media) => (
+      <FlatList
+        data={filteredPhotos}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.photosScroll}
+        contentContainerStyle={styles.photosScrollContent}
+        scrollEnabled={true}
+        decelerationRate="fast"
+        snapToInterval={photoSize + 8}
+        snapToAlignment="start"
+        keyExtractor={(item) => item._id}
+        renderItem={({ item: media }) => (
           <TouchableOpacity 
-            key={media._id} 
             style={[styles.photoGridItem, { width: photoSize, height: photoSize }]}
-            onPress={() => Alert.alert('Coming Soon', 'Photo detail screen will be implemented soon!')}
+            onPress={() => {
+              console.log('PHOTO CARD TOUCHED -', media.caption || 'Photo');
+              Alert.alert('Coming Soon', 'Photo detail screen will be implemented soon!');
+            }}
+            onPressIn={() => console.log('PHOTO CARD PRESS IN -', media.caption || 'Photo')}
+            onPressOut={() => console.log('PHOTO CARD PRESS OUT -', media.caption || 'Photo')}
+            activeOpacity={0.7}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            delayPressIn={0}
+            delayPressOut={0}
           >
             <Image source={{ uri: media.url }} style={styles.photoGridImage} />
             <View style={styles.photoOverlay}>
               <Text style={styles.photoTitle}>{media.caption || 'Photo'}</Text>
             </View>
           </TouchableOpacity>
-        ))}
-      </View>
+        )}
+      />
     );
   };
 
@@ -331,7 +373,16 @@ export default function Photos() {
             <TouchableOpacity 
               key={media._id} 
               style={styles.photoListItem}
-              onPress={() => Alert.alert('Coming Soon', 'Photo detail screen will be implemented soon!')}
+              onPress={() => {
+                console.log('PHOTO LIST ITEM TOUCHED -', media.caption || 'Photo');
+                Alert.alert('Coming Soon', 'Photo detail screen will be implemented soon!');
+              }}
+              onPressIn={() => console.log('PHOTO LIST ITEM PRESS IN -', media.caption || 'Photo')}
+              onPressOut={() => console.log('PHOTO LIST ITEM PRESS OUT -', media.caption || 'Photo')}
+              activeOpacity={0.7}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              delayPressIn={0}
+              delayPressOut={0}
             >
               <Image source={{ uri: media.url }} style={styles.photoListImage} />
               <View style={styles.photoListContent}>
@@ -379,7 +430,17 @@ export default function Photos() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#0e3c67"
+            colors={['#0e3c67']}
+          />
+        }
+      >
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Photos</Text>
@@ -469,8 +530,13 @@ export default function Photos() {
 
         {/* Albums Section */}
         <View style={styles.albumsSection}>
-          <Text style={styles.sectionTitle}>Albums</Text>
-          {apiAlbums.length === 0 ? (
+          <Text style={styles.sectionTitle}>Albums ({apiAlbums.length})</Text>
+          {galleryLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#0e3c67" />
+              <Text style={styles.loadingText}>Loading albums...</Text>
+            </View>
+          ) : apiAlbums.length === 0 ? (
             <View style={styles.noAlbumsCard}>
               <FolderPlus size={32} color="#9CA3AF" />
               <Text style={styles.noAlbumsTitle}>No albums yet</Text>
@@ -483,12 +549,31 @@ export default function Photos() {
               </TouchableOpacity>
             </View>
           ) : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.albumsScroll}>
-              {apiAlbums.map((album) => (
-                <View key={album._id} style={styles.albumCardContainer}>
+            <FlatList
+              data={apiAlbums}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.albumsScroll}
+              contentContainerStyle={styles.albumsScrollContent}
+              scrollEnabled={true}
+              decelerationRate="fast"
+              snapToInterval={152}
+              snapToAlignment="start"
+              keyExtractor={(item) => item._id}
+              renderItem={({ item: album }) => (
+                <View style={styles.albumCardContainer}>
                   <TouchableOpacity 
                     style={styles.albumCard}
-                    onPress={() => Alert.alert('Coming Soon', 'Album detail screen will be implemented soon!')}
+                    onPress={() => {
+                      console.log('ALBUM CARD TOUCHED -', album.name);
+                      router.push(`/album-detail/${album._id}`);
+                    }}
+                    onPressIn={() => console.log('ALBUM CARD PRESS IN -', album.name)}
+                    onPressOut={() => console.log('ALBUM CARD PRESS OUT -', album.name)}
+                    activeOpacity={0.7}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    delayPressIn={0}
+                    delayPressOut={0}
                   >
                     <Image source={{ uri: album.coverImage || 'https://dummyjson.com/image/150' }} style={styles.albumCover} />
                     <View style={[styles.albumColorBar, { backgroundColor: '#0e3c67' }]} />
@@ -497,13 +582,22 @@ export default function Photos() {
                   </TouchableOpacity>
                   <TouchableOpacity 
                     style={styles.albumUploadButton}
-                    onPress={() => openUploadModal(album._id)}
+                    onPress={() => {
+                      console.log('ALBUM UPLOAD TOUCHED -', album.name);
+                      openUploadModal(album._id);
+                    }}
+                    onPressIn={() => console.log('ALBUM UPLOAD PRESS IN -', album.name)}
+                    onPressOut={() => console.log('ALBUM UPLOAD PRESS OUT -', album.name)}
+                    activeOpacity={0.7}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    delayPressIn={0}
+                    delayPressOut={0}
                   >
                     <Plus size={16} color="#FFFFFF" />
                   </TouchableOpacity>
                 </View>
-              ))}
-            </ScrollView>
+              )}
+            />
           )}
         </View>
 
@@ -1162,6 +1256,9 @@ const styles = StyleSheet.create({
     marginHorizontal: -20,
     paddingHorizontal: 20,
   },
+  albumsScrollContent: {
+    paddingRight: 20,
+  },
   noAlbumsCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
@@ -1297,10 +1394,19 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 8,
   },
+  photosScroll: {
+    marginHorizontal: -20,
+    paddingHorizontal: 20,
+  },
+  photosScrollContent: {
+    paddingRight: 20,
+    gap: 8,
+  },
   photoGridItem: {
     borderRadius: 8,
     overflow: 'hidden',
     position: 'relative',
+    marginRight: 8,
   },
   photoGridImage: {
     width: '100%',
