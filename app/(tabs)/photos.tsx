@@ -16,7 +16,7 @@
   } from 'react-native';
   import { useSafeAreaInsets } from 'react-native-safe-area-context';
   import { useRouter } from 'expo-router';
-  import { Plus, Camera, Search, Grid2x2 as Grid, List, Filter, MoveVertical as MoreVertical, FolderPlus, X, Grid3x3 as Grid3X3, Check } from 'lucide-react-native';
+  import { Plus, Camera, Search, Filter, MoveVertical as MoreVertical, FolderPlus, X, Check } from 'lucide-react-native';
   import { useAuth } from '@/hooks/useAuth';
   import { useGallery } from '@/hooks/useGallery';
   import { useImageUpload } from '@/hooks/useImageUpload';
@@ -33,7 +33,7 @@ export default function Photos() {
   
   const { uploadProgress, selectAndUploadImage, resetUpload } = useImageUpload();
   
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<'grid'>('grid');
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -312,147 +312,10 @@ export default function Photos() {
       openUploadModal();
     };
 
-    // Separate component for Album Card
-  const AlbumCard = ({ album }: { album: Album }) => {
-    if (!album) {
-      console.warn('AlbumCard received null album');
-      return null;
-    }
-    
-      return (
-        <View style={styles.albumCardContainer}>
-          <TouchableOpacity 
-            style={styles.albumCard}
-            onPress={() => router.push(`/album-detail/${album._id}`)}
-            activeOpacity={0.8}
-          >
-            <Image source={{ uri: album.coverImage || 'https://dummyjson.com/image/150' }} style={styles.albumCover} />
-            <View style={[styles.albumColorBar, { backgroundColor: '#0e3c67' }]} />
-            <Text style={styles.albumName}>{album.name}</Text>
-            <Text style={styles.albumCount}>Album</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.albumUploadButton}
-            onPress={() => openUploadModal(album._id)}
-            activeOpacity={0.8}
-          >
-            <Plus size={16} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
-      );
-    };
-
-    // Separate component for Photo Card
-    const PhotoCard = ({ media }: { media: Media }) => {
-      const photoSize = 120;
-
-      return (
-        <TouchableOpacity 
-          style={[styles.photoGridItem, { width: photoSize, height: photoSize }]}
-          onPress={() => {
-            console.log('Photo tapped:', media.caption || 'Photo');
-            Alert.alert('Coming Soon', 'Photo detail screen will be implemented soon!');
-          }}
-          activeOpacity={0.8}
-        >
-          <Image source={{ uri: media.url }} style={styles.photoGridImage} />
-          <View style={styles.photoOverlay}>
-            <Text style={styles.photoTitle}>{media.caption || 'Photo'}</Text>
-          </View>
-        </TouchableOpacity>
-      );
-    };
 
 
-    const renderPhotoGrid = () => {
-      const filteredPhotos = getFilteredPhotos();
-      const photoSize = (width - 60) / 3;
 
-      if (galleryLoading) {
-        return (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#0e3c67" />
-            <Text style={styles.loadingText}>Loading photos...</Text>
-        </View>
-        );
-      }
 
-      if (filteredPhotos.length === 0) {
-        return (
-          <View style={styles.noPhotosCard}>
-            <Camera size={32} color="#9CA3AF" />
-            <Text style={styles.noPhotosTitle}>No photos yet</Text>
-            <Text style={styles.noPhotosSubtitle}>Upload your first photo to get started</Text>
-            <TouchableOpacity 
-              style={styles.uploadPhotoButton}
-              onPress={handleUploadPhoto}
-            >
-              <Text style={styles.uploadPhotoButtonText}>Upload Photo</Text>
-            </TouchableOpacity>
-          </View>
-        );
-      }
-
-      return (
-        <FlatList
-          data={filteredPhotos}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.photosScroll}
-          contentContainerStyle={styles.photosScrollContent}
-          keyExtractor={(media: Media) => media._id}
-          renderItem={({ item: media }: { item: Media }) => <PhotoCard media={media} />}
-        />
-      );
-    };
-
-    const renderPhotoList = () => {
-      const filteredPhotos = getFilteredPhotos();
-
-      if (filteredPhotos.length === 0) {
-        return (
-          <View style={styles.noPhotosCard}>
-            <Camera size={32} color="#9CA3AF" />
-            <Text style={styles.noPhotosTitle}>No photos yet</Text>
-            <Text style={styles.noPhotosSubtitle}>Upload your first photo to get started</Text>
-            <TouchableOpacity 
-              style={styles.uploadPhotoButton}
-              onPress={handleUploadPhoto}
-            >
-              <Text style={styles.uploadPhotoButtonText}>Upload Photo</Text>
-            </TouchableOpacity>
-          </View>
-        );
-      }
-
-      return (
-        <View style={styles.photoList}>
-          {filteredPhotos.map((media) => {
-            const album = apiAlbums.find(album => album._id === media.albumId);
-            return (
-            <TouchableOpacity 
-                key={media._id} 
-              style={styles.photoListItem}
-                onPress={() => {
-                  console.log('Photo list item tapped:', media.caption || 'Photo');
-                  Alert.alert('Coming Soon', 'Photo detail screen will be implemented soon!');
-                }}
-                activeOpacity={0.8}
-              >
-                <Image source={{ uri: media.url }} style={styles.photoListImage} />
-              <View style={styles.photoListContent}>
-                  <Text style={styles.photoListTitle}>{media.caption || 'Photo'}</Text>
-                  <Text style={styles.photoListAlbum}>{album?.name || 'Gallery'}</Text>
-                <Text style={styles.photoListDate}>
-                    {new Date(media.createdAt).toLocaleDateString('en-GB')}
-                </Text>
-              </View>
-            </TouchableOpacity>
-            );
-          })}
-        </View>
-      );
-    };
 
     // Show loading state while checking gallery
     if (galleryLoading) {
@@ -495,19 +358,6 @@ export default function Photos() {
             >
               <Filter size={20} color="#FFFFFF" />
             </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.viewModeButton}
-              onPress={() => {
-                const newMode = viewMode === 'grid' ? 'list' : 'grid';
-                setViewMode(newMode);
-              }}
-            >
-              {viewMode === 'grid' ? (
-                <List size={20} color="#FFFFFF" />
-              ) : (
-                <Grid3X3 size={20} color="#FFFFFF" />
-              )}
-            </TouchableOpacity>
           </View>
         </View>
 
@@ -521,6 +371,8 @@ export default function Photos() {
               colors={['#0e3c67']}
             />
           }
+          scrollEventThrottle={16}
+          nestedScrollEnabled={true}
         >
 
           {/* Active Filter Display */}
@@ -560,6 +412,61 @@ export default function Photos() {
             </View>
           </View>
 
+          {/* Albums Section */}
+          {(apiAlbums && apiAlbums.length > 0) && (
+            <View style={styles.albumsSection}>
+              <View style={styles.albumsHeader}>
+                <Text style={styles.albumsTitle}>Albums</Text>
+                <TouchableOpacity 
+                  style={styles.viewAllButton}
+                  onPress={() => setActiveFilter('all')}
+                >
+                  <Text style={styles.viewAllText}>View All</Text>
+                </TouchableOpacity>
+              </View>
+              
+              <FlatList
+                style={styles.albumsFlatList}
+                data={apiAlbums}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                keyExtractor={(item) => item._id}
+                contentContainerStyle={styles.albumsList}
+                nestedScrollEnabled={true}
+                scrollEventThrottle={16}
+                decelerationRate="fast"
+                snapToInterval={176}
+                snapToAlignment="start"
+                renderItem={({ item }) => (
+                  <TouchableOpacity 
+                    style={styles.albumCard}
+                    onPress={() => {
+                      console.log('Album pressed:', item.name);
+                      router.push(`/album-detail/${item._id}`);
+                    }}
+                    activeOpacity={0.7}
+                    delayPressIn={0}
+                    delayPressOut={0}
+                  >
+                    <Image 
+                      source={{ uri: item.coverImage || 'https://dummyjson.com/image/150' }} 
+                      style={styles.albumCoverImage}
+                      resizeMode="cover"
+                    />
+                    <View style={styles.albumOverlay}>
+                      <Text style={styles.albumName} numberOfLines={2}>
+                        {item.name}
+                      </Text>
+                      <Text style={styles.albumCount}>
+                        {apiMedia?.filter(media => media.albumId === item._id).length || 0} photos
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+          )}
+
           {/* Quick Actions */}
           <View style={styles.quickActions}>
             <TouchableOpacity 
@@ -580,54 +487,6 @@ export default function Photos() {
             </TouchableOpacity>
           </View>
 
-          {/* Albums Section */}
-          <View style={styles.albumsSection}>
-            <Text style={styles.sectionTitle}>Albums ({apiAlbums.length})</Text>
-            {(() => {
-              console.log('=== ALBUMS DEBUG ===');
-              console.log('apiAlbums.length:', apiAlbums.length);
-              console.log('apiAlbums:', apiAlbums);
-              console.log('galleryLoading:', galleryLoading);
-              console.log('galleryError:', galleryError);
-              return null;
-            })()}
-            {galleryLoading ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#0e3c67" />
-                <Text style={styles.loadingText}>Loading albums...</Text>
-              </View>
-            ) : apiAlbums.length === 0 ? (
-              <View style={styles.noAlbumsCard}>
-                <FolderPlus size={32} color="#9CA3AF" />
-                <Text style={styles.noAlbumsTitle}>No albums yet</Text>
-                <Text style={styles.noAlbumsSubtitle}>Create your first album to organize your photos</Text>
-                <TouchableOpacity 
-                  style={styles.createAlbumButton}
-                  onPress={handleCreateAlbum}
-                >
-                  <Text style={styles.createAlbumButtonText}>Create Album</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-            <FlatList
-              data={apiAlbums}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.albumsScroll}
-              contentContainerStyle={styles.albumsScrollContent}
-              keyExtractor={(album: Album) => album._id}
-              renderItem={({ item: album }: { item: Album }) => <AlbumCard album={album} />}
-            />
-            )}
-          </View>
-
-          {/* Photos Section */}
-          <View style={styles.photosSection}>
-            <Text style={styles.sectionTitle}>
-              {activeFilter === 'all' ? 'All Photos' : getActiveFilterLabel()}
-            </Text>
-            {viewMode === 'grid' ? renderPhotoGrid() : renderPhotoList()}
-          </View>
 
           {/* Filter Modal */}
           <Modal
@@ -1169,14 +1028,6 @@ export default function Photos() {
       alignItems: 'center',
       justifyContent: 'center',
     },
-    viewModeButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: 'rgba(255, 255, 255, 0.3)',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
     activeFilterContainer: {
       backgroundColor: '#E6F3FF',
       flexDirection: 'row',
@@ -1260,229 +1111,6 @@ export default function Photos() {
       fontSize: 14,
       fontWeight: '600',
       marginLeft: 8,
-    },
-    albumsSection: {
-      paddingHorizontal: 20,
-      paddingTop: 32,
-    },
-    sectionTitle: {
-      fontSize: 18,
-      fontWeight: '600',
-      color: '#111827',
-      marginBottom: 16,
-    },
-    albumsScroll: {
-      marginHorizontal: -20,
-      paddingHorizontal: 20,
-    },
-    albumsScrollContent: {
-      paddingRight: 20,
-      flexDirection: 'row',
-    },
-    noAlbumsCard: {
-      backgroundColor: '#FFFFFF',
-      borderRadius: 16,
-      padding: 32,
-      alignItems: 'center',
-      marginHorizontal: 20,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.05,
-      shadowRadius: 8,
-      elevation: 2,
-    },
-    noAlbumsTitle: {
-      fontSize: 18,
-      fontWeight: '600',
-      color: '#374151',
-      marginTop: 16,
-      marginBottom: 8,
-    },
-    noAlbumsSubtitle: {
-      fontSize: 14,
-      color: '#6B7280',
-      textAlign: 'center',
-      marginBottom: 24,
-      lineHeight: 20,
-    },
-    createAlbumButton: {
-      backgroundColor: '#0e3c67',
-      paddingHorizontal: 24,
-      paddingVertical: 12,
-      borderRadius: 12,
-    },
-    createAlbumButtonText: {
-      color: '#FFFFFF',
-      fontSize: 16,
-      fontWeight: '600',
-    },
-    noPhotosCard: {
-      backgroundColor: '#FFFFFF',
-      borderRadius: 16,
-      padding: 32,
-      alignItems: 'center',
-      marginHorizontal: 20,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.05,
-      shadowRadius: 8,
-      elevation: 2,
-    },
-    noPhotosTitle: {
-      fontSize: 18,
-      fontWeight: '600',
-      color: '#374151',
-      marginTop: 16,
-      marginBottom: 8,
-    },
-    noPhotosSubtitle: {
-      fontSize: 14,
-      color: '#6B7280',
-      textAlign: 'center',
-      marginBottom: 24,
-      lineHeight: 20,
-    },
-    uploadPhotoButton: {
-      backgroundColor: '#0e3c67',
-      paddingHorizontal: 24,
-      paddingVertical: 12,
-      borderRadius: 12,
-    },
-    uploadPhotoButtonText: {
-      color: '#FFFFFF',
-      fontSize: 16,
-      fontWeight: '600',
-    },
-    albumCardContainer: {
-      position: 'relative',
-      marginRight: 12,
-    },
-    albumCard: {
-      backgroundColor: '#FFFFFF',
-      width: 140,
-      borderRadius: 12,
-      overflow: 'hidden',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.05,
-      shadowRadius: 4,
-      elevation: 2,
-    },
-    albumUploadButton: {
-      position: 'absolute',
-      top: 8,
-      right: 8,
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      backgroundColor: '#0e3c67',
-      alignItems: 'center',
-      justifyContent: 'center',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 4,
-      elevation: 4,
-    },
-    albumCover: {
-      width: '100%',
-      height: 100,
-    },
-    albumColorBar: {
-      height: 4,
-    },
-    albumName: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: '#111827',
-      padding: 12,
-      paddingBottom: 4,
-    },
-    albumCount: {
-      fontSize: 12,
-      color: '#6B7280',
-      paddingHorizontal: 12,
-      paddingBottom: 12,
-    },
-    photosSection: {
-      paddingHorizontal: 20,
-      paddingTop: 32,
-      paddingBottom: 32,
-    },
-    photoGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 8,
-    },
-    photosScroll: {
-      marginHorizontal: -20,
-      paddingHorizontal: 20,
-    },
-    photosScrollContent: {
-      paddingRight: 20,
-      flexDirection: 'row',
-      gap: 8,
-    },
-    photoGridItem: {
-      borderRadius: 8,
-      overflow: 'hidden',
-      position: 'relative',
-      marginRight: 8,
-    },
-    photoGridImage: {
-      width: '100%',
-      height: '100%',
-    },
-    photoOverlay: {
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.6)',
-      padding: 8,
-    },
-    photoTitle: {
-      color: '#FFFFFF',
-      fontSize: 12,
-      fontWeight: '500',
-    },
-    photoList: {
-      gap: 12,
-    },
-    photoListItem: {
-      backgroundColor: '#FFFFFF',
-      flexDirection: 'row',
-      borderRadius: 12,
-      overflow: 'hidden',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.05,
-      shadowRadius: 4,
-      elevation: 2,
-    },
-    photoListImage: {
-      width: 80,
-      height: 80,
-    },
-    photoListContent: {
-      flex: 1,
-      padding: 16,
-      justifyContent: 'center',
-    },
-    photoListTitle: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: '#111827',
-      marginBottom: 4,
-    },
-    photoListAlbum: {
-      fontSize: 14,
-      color: '#6B7280',
-      marginBottom: 2,
-    },
-    photoListDate: {
-      fontSize: 12,
-      color: '#9CA3AF',
     },
     // Modal Styles
     modalContainer: {
@@ -2108,5 +1736,77 @@ export default function Photos() {
       fontSize: 16,
       color: '#666',
       textAlign: 'center',
+    },
+    
+    // Albums Section Styles
+    albumsSection: {
+      marginTop: 20,
+      paddingHorizontal: 20,
+      zIndex: 10,
+    },
+    albumsHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    albumsTitle: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: '#111827',
+    },
+    viewAllButton: {
+      backgroundColor: '#F3F4F6',
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 12,
+    },
+    viewAllText: {
+      fontSize: 14,
+      color: '#0e3c67',
+      fontWeight: '600',
+    },
+    albumsFlatList: {
+      flexGrow: 0,
+    },
+    albumsList: {
+      paddingRight: 20,
+    },
+    albumCard: {
+      width: 160,
+      height: 200,
+      marginRight: 16,
+      borderRadius: 16,
+      overflow: 'hidden',
+      backgroundColor: '#FFFFFF',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+      elevation: 4,
+      zIndex: 1,
+    },
+    albumCoverImage: {
+      width: '100%',
+      height: '100%',
+    },
+    albumOverlay: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      padding: 12,
+    },
+    albumName: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: '#FFFFFF',
+      marginBottom: 4,
+    },
+    albumCount: {
+      fontSize: 12,
+      color: 'rgba(255, 255, 255, 0.8)',
+      fontWeight: '500',
     },
   });
