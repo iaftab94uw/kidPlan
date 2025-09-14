@@ -16,7 +16,7 @@
   } from 'react-native';
   import { useSafeAreaInsets } from 'react-native-safe-area-context';
   import { useRouter } from 'expo-router';
-  import { Plus, Camera, Search, Filter, MoveVertical as MoreVertical, FolderPlus, X, Check } from 'lucide-react-native';
+  import { Plus, Camera, Search, Filter, MoveVertical as MoreVertical, FolderPlus, X, Check, Grid3X3, List } from 'lucide-react-native';
   import { useAuth } from '@/hooks/useAuth';
   import { useGallery } from '@/hooks/useGallery';
   import { useImageUpload } from '@/hooks/useImageUpload';
@@ -42,6 +42,10 @@ export default function Photos() {
   const [showUploadMediaModal, setShowUploadMediaModal] = useState(false);
   const [selectedAlbumForUpload, setSelectedAlbumForUpload] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [showViewAllAlbumsModal, setShowViewAllAlbumsModal] = useState(false);
+  const [showViewAllPhotosModal, setShowViewAllPhotosModal] = useState(false);
+  const [albumsViewMode, setAlbumsViewMode] = useState<'grid' | 'list'>('grid');
+  const [photosViewMode, setPhotosViewMode] = useState<'grid' | 'list'>('grid');
 
 
 
@@ -412,6 +416,26 @@ export default function Photos() {
             </View>
           </View>
 
+          {/* Quick Actions */}
+          <View style={styles.quickActions}>
+            <TouchableOpacity 
+              style={[styles.quickActionButton, { flex: 1, marginRight: 6 }]}
+              onPress={handleUploadPhoto}
+              activeOpacity={0.8}
+            >
+              <Camera size={20} color="#FFFFFF" />
+              <Text style={styles.quickActionText}>Upload Photo</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.quickActionButton, { flex: 1, marginLeft: 6 }]}
+              onPress={handleCreateAlbum}
+              activeOpacity={0.8}
+            >
+              <FolderPlus size={20} color="#FFFFFF" />
+              <Text style={styles.quickActionText}>Create Album</Text>
+            </TouchableOpacity>
+          </View>
+
           {/* Albums Section */}
           {(apiAlbums && apiAlbums.length > 0) && (
             <View style={styles.albumsSection}>
@@ -419,7 +443,7 @@ export default function Photos() {
                 <Text style={styles.albumsTitle}>Albums</Text>
                 <TouchableOpacity 
                   style={styles.viewAllButton}
-                  onPress={() => setActiveFilter('all')}
+                  onPress={() => setShowViewAllAlbumsModal(true)}
                 >
                   <Text style={styles.viewAllText}>View All</Text>
                 </TouchableOpacity>
@@ -467,25 +491,55 @@ export default function Photos() {
             </View>
           )}
 
-          {/* Quick Actions */}
-          <View style={styles.quickActions}>
-            <TouchableOpacity 
-              style={[styles.quickActionButton, { flex: 1, marginRight: 6 }]}
-              onPress={handleUploadPhoto}
-              activeOpacity={0.8}
-            >
-              <Camera size={20} color="#FFFFFF" />
-              <Text style={styles.quickActionText}>Upload Photo</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.quickActionButton, { flex: 1, marginLeft: 6 }]}
-              onPress={handleCreateAlbum}
-              activeOpacity={0.8}
-            >
-              <FolderPlus size={20} color="#FFFFFF" />
-              <Text style={styles.quickActionText}>Create Album</Text>
-            </TouchableOpacity>
-          </View>
+          {/* Photos Section */}
+          {getFilteredPhotos().length > 0 && (
+            <View style={styles.photosSection}>
+              <View style={styles.photosHeader}>
+                <Text style={styles.photosTitle}>All Photos</Text>
+                <TouchableOpacity 
+                  style={styles.viewAllButton}
+                  onPress={() => setShowViewAllPhotosModal(true)}
+                >
+                  <Text style={styles.viewAllText}>View All</Text>
+                </TouchableOpacity>
+              </View>
+              
+              <FlatList
+                data={getFilteredPhotos()}
+                numColumns={3}
+                keyExtractor={(item) => item._id}
+                contentContainerStyle={styles.photosGrid}
+                nestedScrollEnabled={true}
+                scrollEventThrottle={16}
+                renderItem={({ item }) => (
+                  <TouchableOpacity 
+                    style={styles.photoCard}
+                    onPress={() => {
+                      console.log('Photo pressed:', item.caption || 'Untitled');
+                      // Navigate to photo detail or gallery view
+                      router.push(`/gallery`);
+                    }}
+                    activeOpacity={0.8}
+                    delayPressIn={0}
+                    delayPressOut={0}
+                  >
+                    <Image 
+                      source={{ uri: item.url }} 
+                      style={styles.photoImage}
+                      resizeMode="cover"
+                    />
+                    {item.caption && (
+                      <View style={styles.photoOverlay}>
+                        <Text style={styles.photoCaption} numberOfLines={1}>
+                          {item.caption}
+                        </Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+          )}
 
 
           {/* Filter Modal */}
@@ -990,6 +1044,172 @@ export default function Photos() {
                     </Text>
                   </View>
                 </View>
+              </ScrollView>
+            </View>
+          </Modal>
+
+          {/* View All Albums Modal */}
+          <Modal
+            visible={showViewAllAlbumsModal}
+            animationType="slide"
+            presentationStyle="formSheet"
+            statusBarTranslucent={false}
+          >
+            <View style={[styles.modalContainer, { paddingTop: insets.top }]}>
+              {/* Header */}
+              <View style={styles.modalHeader}>
+                <View style={styles.modalHeaderContent}>
+                  <TouchableOpacity 
+                    onPress={() => setShowViewAllAlbumsModal(false)}
+                    style={styles.closeButton}
+                  >
+                    <X size={24} color="#6B7280" />
+                  </TouchableOpacity>
+                  <View style={styles.modalTitleContainer}>
+                    <Text style={styles.modalTitle}>All Albums</Text>
+                    <Text style={styles.modalSubtitle}>{apiAlbums?.length || 0} albums</Text>
+                  </View>
+                  <View style={styles.viewModeButtons}>
+                    <TouchableOpacity 
+                      style={[styles.viewModeButton, albumsViewMode === 'grid' && styles.viewModeButtonActive]}
+                      onPress={() => setAlbumsViewMode('grid')}
+                    >
+                      <Grid3X3 size={18} color={albumsViewMode === 'grid' ? '#FFFFFF' : '#6B7280'} />
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.viewModeButton, albumsViewMode === 'list' && styles.viewModeButtonActive]}
+                      onPress={() => setAlbumsViewMode('list')}
+                    >
+                      <List size={18} color={albumsViewMode === 'list' ? '#FFFFFF' : '#6B7280'} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+
+              <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+                {apiAlbums && apiAlbums.length > 0 ? (
+                  <View style={styles.viewAllSection}>
+                    <View style={albumsViewMode === 'grid' ? styles.viewAllAlbumsGrid : styles.viewAllAlbumsList}>
+                      {apiAlbums.map((album) => (
+                        <TouchableOpacity 
+                          key={album._id}
+                          style={albumsViewMode === 'grid' ? styles.viewAllAlbumCard : styles.viewAllAlbumCardList}
+                          onPress={() => {
+                            setShowViewAllAlbumsModal(false);
+                            router.push(`/album-detail/${album._id}`);
+                          }}
+                          activeOpacity={0.8}
+                        >
+                          <Image 
+                            source={{ uri: album.coverImage || 'https://dummyjson.com/image/150' }} 
+                            style={albumsViewMode === 'grid' ? styles.viewAllAlbumImage : styles.viewAllAlbumImageList}
+                            resizeMode="cover"
+                          />
+                          <View style={albumsViewMode === 'grid' ? styles.viewAllAlbumInfo : styles.viewAllAlbumInfoList}>
+                            <Text style={styles.viewAllAlbumName} numberOfLines={2}>
+                              {album.name}
+                            </Text>
+                            <Text style={styles.viewAllAlbumCount}>
+                              {apiMedia?.filter(media => media.albumId === album._id).length || 0} photos
+                            </Text>
+                            {album.description && (
+                              <Text style={styles.viewAllAlbumDescription} numberOfLines={albumsViewMode === 'grid' ? 2 : 3}>
+                                {album.description}
+                              </Text>
+                            )}
+                          </View>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                ) : (
+                  <View style={styles.viewAllEmptyState}>
+                    <Text style={styles.viewAllEmptyTitle}>No Albums Yet</Text>
+                    <Text style={styles.viewAllEmptyDescription}>
+                      Create your first album to organize your photos!
+                    </Text>
+                  </View>
+                )}
+              </ScrollView>
+            </View>
+          </Modal>
+
+          {/* View All Photos Modal */}
+          <Modal
+            visible={showViewAllPhotosModal}
+            animationType="slide"
+            presentationStyle="formSheet"
+            statusBarTranslucent={false}
+          >
+            <View style={[styles.modalContainer, { paddingTop: insets.top }]}>
+              {/* Header */}
+              <View style={styles.modalHeader}>
+                <View style={styles.modalHeaderContent}>
+                  <TouchableOpacity 
+                    onPress={() => setShowViewAllPhotosModal(false)}
+                    style={styles.closeButton}
+                  >
+                    <X size={24} color="#6B7280" />
+                  </TouchableOpacity>
+                  <View style={styles.modalTitleContainer}>
+                    <Text style={styles.modalTitle}>All Photos</Text>
+                    <Text style={styles.modalSubtitle}>{getFilteredPhotos().length} photos</Text>
+                  </View>
+                  <View style={styles.viewModeButtons}>
+                    <TouchableOpacity 
+                      style={[styles.viewModeButton, photosViewMode === 'grid' && styles.viewModeButtonActive]}
+                      onPress={() => setPhotosViewMode('grid')}
+                    >
+                      <Grid3X3 size={18} color={photosViewMode === 'grid' ? '#FFFFFF' : '#6B7280'} />
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.viewModeButton, photosViewMode === 'list' && styles.viewModeButtonActive]}
+                      onPress={() => setPhotosViewMode('list')}
+                    >
+                      <List size={18} color={photosViewMode === 'list' ? '#FFFFFF' : '#6B7280'} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+
+              <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+                {getFilteredPhotos().length > 0 ? (
+                  <View style={styles.viewAllSection}>
+                    <View style={photosViewMode === 'grid' ? styles.viewAllPhotosGrid : styles.viewAllPhotosList}>
+                      {getFilteredPhotos().map((photo) => (
+                        <TouchableOpacity 
+                          key={photo._id}
+                          style={photosViewMode === 'grid' ? styles.viewAllPhotoCard : styles.viewAllPhotoCardList}
+                          onPress={() => {
+                            setShowViewAllPhotosModal(false);
+                            router.push(`/gallery`);
+                          }}
+                          activeOpacity={0.8}
+                        >
+                          <Image 
+                            source={{ uri: photo.url }} 
+                            style={photosViewMode === 'grid' ? styles.viewAllPhotoImage : styles.viewAllPhotoImageList}
+                            resizeMode="cover"
+                          />
+                          {photo.caption && (
+                            <View style={styles.viewAllPhotoOverlay}>
+                              <Text style={styles.viewAllPhotoCaption} numberOfLines={1}>
+                                {photo.caption}
+                              </Text>
+                            </View>
+                          )}
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                ) : (
+                  <View style={styles.viewAllEmptyState}>
+                    <Text style={styles.viewAllEmptyTitle}>No Photos Yet</Text>
+                    <Text style={styles.viewAllEmptyDescription}>
+                      Upload your first photo to get started!
+                    </Text>
+                  </View>
+                )}
               </ScrollView>
             </View>
           </Modal>
@@ -1808,5 +2028,232 @@ export default function Photos() {
       fontSize: 12,
       color: 'rgba(255, 255, 255, 0.8)',
       fontWeight: '500',
+    },
+    
+    // Photos Section Styles
+    photosSection: {
+      marginTop: 20,
+      paddingHorizontal: 20,
+      zIndex: 10,
+    },
+    photosHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    photosTitle: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: '#111827',
+    },
+    photosCount: {
+      fontSize: 14,
+      color: '#6B7280',
+      fontWeight: '500',
+    },
+    photosGrid: {
+      paddingBottom: 20,
+    },
+    photoCard: {
+      flex: 1,
+      aspectRatio: 1,
+      margin: 2,
+      borderRadius: 8,
+      overflow: 'hidden',
+      backgroundColor: '#FFFFFF',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+    photoImage: {
+      width: '100%',
+      height: '100%',
+    },
+    photoOverlay: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+    },
+    photoCaption: {
+      fontSize: 12,
+      color: '#FFFFFF',
+      fontWeight: '500',
+    },
+    
+    // View All Modal Styles
+    viewAllSection: {
+      marginBottom: 32,
+    },
+    viewAllSectionTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: '#111827',
+      marginBottom: 16,
+    },
+    viewAllAlbumsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 12,
+    },
+    viewAllAlbumCard: {
+      width: '48%',
+      backgroundColor: '#FFFFFF',
+      borderRadius: 12,
+      overflow: 'hidden',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+    viewAllAlbumImage: {
+      width: '100%',
+      height: 120,
+    },
+    viewAllAlbumInfo: {
+      padding: 12,
+    },
+    viewAllAlbumName: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: '#111827',
+      marginBottom: 4,
+    },
+    viewAllAlbumCount: {
+      fontSize: 12,
+      color: '#6B7280',
+      fontWeight: '500',
+      marginBottom: 4,
+    },
+    viewAllAlbumDescription: {
+      fontSize: 12,
+      color: '#9CA3AF',
+      lineHeight: 16,
+    },
+    viewAllPhotosGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 4,
+    },
+    viewAllPhotoCard: {
+      width: '32%',
+      aspectRatio: 1,
+      borderRadius: 8,
+      overflow: 'hidden',
+      backgroundColor: '#FFFFFF',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
+      elevation: 1,
+    },
+    viewAllPhotoImage: {
+      width: '100%',
+      height: '100%',
+    },
+    viewAllPhotoOverlay: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+      paddingHorizontal: 6,
+      paddingVertical: 3,
+    },
+    viewAllPhotoCaption: {
+      fontSize: 10,
+      color: '#FFFFFF',
+      fontWeight: '500',
+    },
+    viewAllEmptyState: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingVertical: 60,
+      paddingHorizontal: 20,
+    },
+    viewAllEmptyTitle: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: '#111827',
+      marginBottom: 8,
+      textAlign: 'center',
+    },
+    viewAllEmptyDescription: {
+      fontSize: 16,
+      color: '#6B7280',
+      textAlign: 'center',
+      lineHeight: 24,
+    },
+    
+    // View Mode Buttons
+    viewModeButtons: {
+      flexDirection: 'row',
+      backgroundColor: '#F3F4F6',
+      borderRadius: 8,
+      padding: 2,
+    },
+    viewModeButton: {
+      width: 32,
+      height: 32,
+      borderRadius: 6,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    viewModeButtonActive: {
+      backgroundColor: '#0e3c67',
+    },
+    
+    // List View Styles for Albums
+    viewAllAlbumsList: {
+      gap: 12,
+    },
+    viewAllAlbumCardList: {
+      backgroundColor: '#FFFFFF',
+      borderRadius: 12,
+      flexDirection: 'row',
+      overflow: 'hidden',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+    viewAllAlbumImageList: {
+      width: 100,
+      height: 100,
+    },
+    viewAllAlbumInfoList: {
+      flex: 1,
+      padding: 16,
+      justifyContent: 'center',
+    },
+    
+    // List View Styles for Photos
+    viewAllPhotosList: {
+      gap: 12,
+    },
+    viewAllPhotoCardList: {
+      backgroundColor: '#FFFFFF',
+      borderRadius: 12,
+      flexDirection: 'row',
+      overflow: 'hidden',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 2,
+      alignItems: 'center',
+    },
+    viewAllPhotoImageList: {
+      width: 80,
+      height: 80,
     },
   });
