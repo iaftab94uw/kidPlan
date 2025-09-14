@@ -4,6 +4,7 @@
     Text, 
     StyleSheet, 
     ScrollView, 
+    FlatList,
     TouchableOpacity,
     Image,
     Dimensions,
@@ -393,16 +394,15 @@ export default function Photos() {
       }
 
       return (
-        <ScrollView
+        <FlatList
+          data={filteredPhotos}
           horizontal
           showsHorizontalScrollIndicator={false}
           style={styles.photosScroll}
           contentContainerStyle={styles.photosScrollContent}
-        >
-          {filteredPhotos.map((media) => (
-            media ? <PhotoCard key={media._id} media={media} /> : null
-          ))}
-        </ScrollView>
+          keyExtractor={(media: Media) => media._id}
+          renderItem={({ item: media }: { item: Media }) => <PhotoCard media={media} />}
+        />
       );
     };
 
@@ -609,16 +609,15 @@ export default function Photos() {
                 </TouchableOpacity>
               </View>
             ) : (
-            <ScrollView
+            <FlatList
+              data={apiAlbums}
               horizontal
               showsHorizontalScrollIndicator={false}
               style={styles.albumsScroll}
               contentContainerStyle={styles.albumsScrollContent}
-            >
-              {apiAlbums.map((album) => (
-                album ? <AlbumCard key={album._id} album={album} /> : null
-              ))}
-            </ScrollView>
+              keyExtractor={(album: Album) => album._id}
+              renderItem={({ item: album }: { item: Album }) => <AlbumCard album={album} />}
+            />
             )}
           </View>
 
