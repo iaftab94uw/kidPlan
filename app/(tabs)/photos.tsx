@@ -16,19 +16,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 import { useGallery } from '@/hooks/useGallery';
 import { useImageUpload } from '@/hooks/useImageUpload';
-import { 
-  Plus,
-  Camera,
-  Image as ImageIcon,
-  Grid3X3,
-  List,
-  Search,
-  Filter,
-  MoreVertical,
-  Heart,
-  Share,
-  Download
-} from 'lucide-react-native';
+import { Plus, Camera, Image as ImageIcon, Grid3x3 as Grid3X3, List, Search, Filter, MoveVertical as MoreVertical, Heart, Share, Download } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
 const ALBUM_ITEM_WIDTH = (width - 60) / 2; // 2 columns with margins
