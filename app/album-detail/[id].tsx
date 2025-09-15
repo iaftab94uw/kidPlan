@@ -693,37 +693,66 @@ export default function AlbumDetail() {
       </ScrollView>
 
       {/* Upload Modal */}
-      {showUploadModal && (
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Add Photo to Album</Text>
+      <Modal
+        visible={showUploadModal}
+        animationType="slide"
+        presentationStyle="formSheet"
+        statusBarTranslucent={false}
+      >
+        <View style={[styles.modalContainer, { paddingTop: insets.top }]}>
+          {/* Modern Header */}
+          <View style={styles.modalHeader}>
+            <View style={styles.modalHeaderContent}>
               <TouchableOpacity 
                 onPress={() => setShowUploadModal(false)}
                 style={styles.closeButton}
               >
-                <X size={20} color="#6B7280" />
+                <X size={24} color="#6B7280" />
+              </TouchableOpacity>
+              <View style={styles.modalTitleContainer}>
+                <Text style={styles.modalTitle}>Add Photo to Album</Text>
+                <Text style={styles.modalSubtitle}>Upload photos to this album</Text>
+              </View>
+              <TouchableOpacity 
+                style={[
+                  styles.createButton,
+                  (isAddingMedia || uploadProgress.isUploading || !newMedia.imageUrl.trim()) && styles.createButtonDisabled
+                ]}
+                onPress={handleUploadMedia}
+                disabled={isAddingMedia || uploadProgress.isUploading || !newMedia.imageUrl.trim()}
+              >
+                {(isAddingMedia || uploadProgress.isUploading) ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.createButtonText}>Upload</Text>
+                )}
               </TouchableOpacity>
             </View>
+          </View>
 
-            <ScrollView style={styles.modalContent}>
-              {/* Photo Selection */}
-              <View style={styles.photoSelectionSection}>
+          <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+            <View style={styles.formContainer}>
+              {/* Photo Selection Section */}
+              <View style={styles.coverImageSection}>
                 <Text style={styles.sectionTitle}>Select Photo</Text>
                 
                 {newMedia.imageUrl && !uploadProgress.isUploading ? (
                   <View style={styles.imagePreviewContainer}>
                     <Image 
                       source={{ uri: newMedia.imageUrl }} 
-                      style={styles.imagePreview}
+                      style={styles.coverImagePreview}
                       resizeMode="cover"
                     />
                     <TouchableOpacity 
-                      style={styles.changePhotoButton}
+                      style={styles.floatingChangeButton}
                       onPress={handleSelectMediaPhoto}
+                      activeOpacity={0.8}
                     >
                       <Camera size={20} color="#FFFFFF" />
                     </TouchableOpacity>
+                    <View style={styles.changePhotoHint}>
+                      <Text style={styles.changePhotoHintText}>Tap to change photo</Text>
+                    </View>
                   </View>
                 ) : (
                   <TouchableOpacity 
@@ -731,9 +760,14 @@ export default function AlbumDetail() {
                     onPress={handleSelectMediaPhoto}
                     disabled={uploadProgress.isUploading}
                   >
-                    <Camera size={32} color="#0e3c67" />
+                    <View style={styles.selectPhotoIconContainer}>
+                      <Camera size={32} color="#0e3c67" />
+                    </View>
                     <Text style={styles.selectPhotoTitle}>
                       {uploadProgress.isUploading ? 'Uploading...' : 'Select Photo'}
+                    </Text>
+                    <Text style={styles.selectPhotoSubtitle}>
+                      Tap to choose from gallery
                     </Text>
                   </TouchableOpacity>
                 )}
@@ -741,59 +775,69 @@ export default function AlbumDetail() {
                 {/* Upload Progress */}
                 {uploadProgress.isUploading && (
                   <View style={styles.uploadProgressCard}>
-                    <ActivityIndicator size="small" color="#0e3c67" />
-                    <Text style={styles.progressText}>
-                      Uploading... {uploadProgress.progress}%
-                    </Text>
+                    <View style={styles.progressHeader}>
+                      <Text style={styles.progressTitle}>Uploading Photo</Text>
+                      <Text style={styles.progressPercentage}>{Math.round(uploadProgress.progress)}%</Text>
+                    </View>
+                    <View style={styles.progressBarContainer}>
+                      <View 
+                        style={[
+                          styles.progressBarFill, 
+                          { width: `${uploadProgress.progress}%` }
+                        ]} 
+                      />
+                    </View>
+                  </View>
+                )}
+
+                {/* Upload Error */}
+                {uploadProgress.error && (
+                  <View style={styles.uploadErrorCard}>
+                    <Text style={styles.uploadErrorTitle}>Upload Failed</Text>
+                    <Text style={styles.uploadErrorText}>{uploadProgress.error}</Text>
+                    <TouchableOpacity 
+                      style={styles.retryButton}
+                      onPress={handleSelectMediaPhoto}
+                    >
+                      <Text style={styles.retryButtonText}>Try Again</Text>
+                    </TouchableOpacity>
                   </View>
                 )}
               </View>
 
               {/* Caption Section */}
-              <View style={styles.captionSection}>
+              <View style={styles.detailsSection}>
                 <Text style={styles.sectionTitle}>Caption (Optional)</Text>
-                <TextInput
-                  style={styles.captionInput}
-                  placeholder="Add a caption for this photo..."
-                  placeholderTextColor="#9CA3AF"
-                  value={newMedia.caption}
-                  onChangeText={(text) => setNewMedia(prev => ({ ...prev, caption: text }))}
-                  multiline
-                  numberOfLines={3}
-                  maxLength={200}
-                />
-                <Text style={styles.characterCount}>
-                  {newMedia.caption.length}/200
-                </Text>
+                <View style={styles.inputGroup}>
+                  <View style={styles.textAreaContainer}>
+                    <TextInput
+                      style={styles.modernTextArea}
+                      value={newMedia.caption}
+                      onChangeText={(text) => setNewMedia(prev => ({ ...prev, caption: text }))}
+                      placeholder="Add a caption for this photo..."
+                      placeholderTextColor="#9CA3AF"
+                      multiline
+                      numberOfLines={3}
+                      maxLength={200}
+                    />
+                    <Text style={styles.characterCount}>{newMedia.caption.length}/200</Text>
+                  </View>
+                </View>
               </View>
 
-              {/* Action Buttons */}
-              <View style={styles.actionButtons}>
-                <TouchableOpacity 
-                  style={styles.cancelButton}
-                  onPress={() => setShowUploadModal(false)}
-                >
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={[
-                    styles.uploadActionButton,
-                    (isAddingMedia || uploadProgress.isUploading || !newMedia.imageUrl.trim()) && styles.uploadActionButtonDisabled
-                  ]}
-                  onPress={handleUploadMedia}
-                  disabled={isAddingMedia || uploadProgress.isUploading || !newMedia.imageUrl.trim()}
-                >
-                  {(isAddingMedia || uploadProgress.isUploading) ? (
-                    <ActivityIndicator size="small" color="#FFFFFF" />
-                  ) : (
-                    <Text style={styles.uploadActionButtonText}>Upload to Album</Text>
-                  )}
-                </TouchableOpacity>
+              {/* Tips Section */}
+              <View style={styles.tipsSection}>
+                <Text style={styles.tipsTitle}>💡 Tips</Text>
+                <View style={styles.tipsList}>
+                  <Text style={styles.tipItem}>• Add meaningful captions to make photos easier to find</Text>
+                  <Text style={styles.tipItem}>• Photos are automatically organized by date</Text>
+                  <Text style={styles.tipItem}>• You can always edit captions later</Text>
+                </View>
               </View>
-            </ScrollView>
-          </View>
+            </View>
+          </ScrollView>
         </View>
-      )}
+      </Modal>
 
       {/* Photo Preview Modal */}
       <Modal
@@ -891,7 +935,7 @@ export default function AlbumDetail() {
           <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
             <View style={styles.formContainer}>
               {/* Cover Image Section */}
-              <View style={styles.coverImageSection}>
+              <View style={[styles.coverImageSection, {marginTop: 10}]}>
                 <Text style={styles.sectionTitle}>Cover Photo</Text>
                 
                 {editCoverImage && editCoverImage.trim() !== '' && !editUploadProgress.isUploading ? (
@@ -1037,7 +1081,6 @@ export default function AlbumDetail() {
 
               {/* Album Actions Section */}
               <View style={styles.albumActionsSection}>
-                <Text style={styles.sectionTitle}>Album Actions</Text>
                 <TouchableOpacity 
                   style={styles.deleteAlbumButton}
                   onPress={() => {
@@ -1190,6 +1233,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#111827',
+    marginBottom: 16,
   },
   uploadButton: {
     flexDirection: 'row',
@@ -1315,16 +1359,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   // Modal styles
-  modalOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   modalContainer: {
     flex: 1,
     backgroundColor: '#F8FAFC',
@@ -1350,74 +1384,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F9FAFB',
   },
-  photoSelectionSection: {
-    marginBottom: 24,
-  },
   imagePreviewContainer: {
     position: 'relative',
-    borderRadius: 12,
+    borderRadius: 16,
     overflow: 'hidden',
-  },
-  imagePreview: {
-    width: '100%',
-    height: 200,
-    borderRadius: 12,
-  },
-  changePhotoButton: {
-    position: 'absolute',
-    bottom: 12,
-    right: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  captionSection: {
-    marginBottom: 24,
-  },
-  captionInput: {
-    backgroundColor: '#F9FAFB',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: '#111827',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    marginTop: 8,
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  cancelButton: {
-    flex: 1,
-    backgroundColor: '#F3F4F6',
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    color: '#6B7280',
-    fontWeight: '500',
-  },
-  uploadActionButton: {
-    flex: 1,
-    backgroundColor: '#0e3c67',
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  uploadActionButtonDisabled: {
-    backgroundColor: '#9CA3AF',
-  },
-  uploadActionButtonText: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    fontWeight: '600',
   },
   
   // Photo Preview Modal Styles
@@ -1786,7 +1756,7 @@ const styles = StyleSheet.create({
   
   // Album Actions Section
   albumActionsSection: {
-    marginBottom: 32,
+    marginVertical: 32,
   },
   deleteAlbumButton: {
     backgroundColor: '#DC2626',

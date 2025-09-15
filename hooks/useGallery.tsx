@@ -288,9 +288,9 @@ export const useGallery = (token: string): UseGalleryReturn => {
     }
   }, [token]);
 
-  const refetch = () => {
+  const refetch = useCallback(() => {
     fetchGallery();
-  };
+  }, [fetchGallery]);
 
   useEffect(() => {
     if (token) {

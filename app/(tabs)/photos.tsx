@@ -4,7 +4,6 @@
     Text, 
     StyleSheet, 
     ScrollView, 
-    FlatList,
     TouchableOpacity,
     Image,
     Dimensions,
@@ -14,8 +13,8 @@
     ActivityIndicator,
     RefreshControl
   } from 'react-native';
-  import { useSafeAreaInsets } from 'react-native-safe-area-context';
-  import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
   import { Plus, Camera, Search, Filter, MoveVertical as MoreVertical, FolderPlus, X, Check, Grid3X3, List } from 'lucide-react-native';
   import { useAuth } from '@/hooks/useAuth';
   import { useGallery } from '@/hooks/useGallery';
@@ -74,6 +73,8 @@ export default function Photos() {
       refetch();
     }, []);
 
+    // Note: Removed useFocusEffect to prevent infinite API calls
+    // Users can pull to refresh to get updated data after album deletion
 
     // Auto-show create gallery modal if no gallery exists
     // This ensures the modal appears every time user comes back to photos tab without a gallery
@@ -536,20 +537,17 @@ export default function Photos() {
             </View>
             
             {(apiAlbums && apiAlbums.length > 0) ? (
-              <FlatList
-                style={styles.albumsFlatList}
-                data={apiAlbums}
+              <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                keyExtractor={(item) => item._id}
                 contentContainerStyle={styles.albumsList}
-                nestedScrollEnabled={true}
-                scrollEventThrottle={16}
                 decelerationRate="fast"
                 snapToInterval={176}
                 snapToAlignment="start"
-                renderItem={({ item }) => (
+              >
+                {apiAlbums.map((item) => (
                   <TouchableOpacity 
+                    key={item._id}
                     style={styles.albumCard}
                     onPress={() => {
                       console.log('Album pressed:', item.name);
@@ -573,8 +571,8 @@ export default function Photos() {
                       </Text>
                     </View>
                   </TouchableOpacity>
-                )}
-              />
+                ))}
+              </ScrollView>
             ) : (
               <View style={styles.emptyState}>
                 <FolderPlus size={48} color="#9CA3AF" />
@@ -607,15 +605,10 @@ export default function Photos() {
             </View>
             
             {getFilteredPhotos().length > 0 ? (
-              <FlatList
-                data={getFilteredPhotos()}
-                numColumns={3}
-                keyExtractor={(item) => item._id}
-                contentContainerStyle={styles.photosGrid}
-                nestedScrollEnabled={true}
-                scrollEventThrottle={16}
-                renderItem={({ item }) => (
+              <View style={styles.photosGrid}>
+                {getFilteredPhotos().map((item) => (
                   <TouchableOpacity 
+                    key={item._id}
                     style={styles.photoCard}
                     onPress={() => handlePhotoPreview(item)}
                     activeOpacity={0.8}
@@ -635,8 +628,8 @@ export default function Photos() {
                       </View>
                     )}
                   </TouchableOpacity>
-                )}
-              />
+                ))}
+              </View>
             ) : (
               <View style={styles.emptyState}>
                 <Camera size={48} color="#9CA3AF" />
