@@ -176,7 +176,7 @@ export const uploadImage = async (uri: string, fileName: string, bucket: string 
 };
 
 // Helper function to delete image from Supabase Storage
-export const deleteImage = async (imageUrl: string, bucket: string = 'profile-images') => {
+export const deleteImage = async (imageUrl: string, bucket: string = 'albums') => {
   try {
     console.log('Starting deletion for URL:', imageUrl);
     
@@ -186,16 +186,51 @@ export const deleteImage = async (imageUrl: string, bucket: string = 'profile-im
     }
 
     // Extract the file path from the URL
-    // Supabase URLs typically look like: https://xxx.supabase.co/storage/v1/object/public/bucket-name/path/to/file
+    // Supabase URLs can have different formats:
+    // 1. https://xxx.supabase.co/storage/v1/object/public/bucket-name/path/to/file
+    // 2. https://xxx.supabase.co/storage/v1/object/sign/bucket-name/path/to/file
+    // 3. https://xxx.supabase.co/storage/v1/object/private/bucket-name/path/to/file
+    
+    console.log('Parsing URL:', imageUrl);
+    console.log('Looking for bucket:', bucket);
+    
     const urlParts = imageUrl.split('/');
+    console.log('URL parts:', urlParts);
+    
+    // Find the bucket name in the URL
     const bucketIndex = urlParts.findIndex(part => part === bucket);
+    console.log('Bucket index:', bucketIndex);
+    
+    let filePath: string;
     
     if (bucketIndex === -1) {
-      throw new Error('Could not extract file path from URL');
+      // Try alternative parsing - look for the bucket name in different positions
+      const possibleBucketIndices = [];
+      urlParts.forEach((part, index) => {
+        if (part === bucket) {
+          possibleBucketIndices.push(index);
+        }
+      });
+      
+      console.log('Possible bucket indices:', possibleBucketIndices);
+      
+      if (possibleBucketIndices.length === 0) {
+        console.error('Could not find bucket in URL parts:', urlParts);
+        throw new Error(`Could not find bucket '${bucket}' in URL: ${imageUrl}`);
+      }
+      
+      // Use the first occurrence of the bucket name
+      filePath = urlParts.slice(possibleBucketIndices[0] + 1).join('/');
+      console.log('Extracted file path (alternative):', filePath);
+    } else {
+      // Get the file path (everything after the bucket name)
+      filePath = urlParts.slice(bucketIndex + 1).join('/');
+      console.log('Extracted file path:', filePath);
     }
     
-    // Get the file path (everything after the bucket name)
-    const filePath = urlParts.slice(bucketIndex + 1).join('/');
+    if (!filePath) {
+      throw new Error(`Could not extract file path from URL: ${imageUrl}`);
+    }
     
     console.log('Deleting from Supabase:', {
       bucket,

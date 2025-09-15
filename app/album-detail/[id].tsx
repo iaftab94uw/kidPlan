@@ -295,11 +295,20 @@ export default function AlbumDetail() {
             try {
               const success = await deleteMedia(photo._id, photo.url);
               if (success) {
-                Alert.alert('Success', 'Photo deleted successfully!');
-                // Refresh album data to update the UI
-                if (albumId) {
-                  fetchAlbumDetail();
-                }
+                Alert.alert('Success', 'Photo deleted successfully!', [
+                  {
+                    text: 'OK',
+                    onPress: () => {
+                      // Close the photo preview modal
+                      setShowPhotoPreviewModal(false);
+                      setSelectedPhoto(null);
+                      // Refresh album data to update the UI
+                      if (albumId) {
+                        fetchAlbumDetail();
+                      }
+                    }
+                  }
+                ]);
               } else {
                 Alert.alert('Error', 'Failed to delete photo. Please try again.');
               }

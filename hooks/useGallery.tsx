@@ -307,7 +307,7 @@ export const useGallery = (token: string): UseGalleryReturn => {
         console.log('=== DELETING FROM SUPABASE STORAGE ===');
         console.log('Media URL:', mediaUrl);
         
-        const storageResult = await deleteImage(mediaUrl, 'profile-images');
+        const storageResult = await deleteImage(mediaUrl, 'albums');
         
         if (!storageResult.success) {
           console.warn('Failed to delete from storage, but continuing with database deletion:', storageResult.error);
