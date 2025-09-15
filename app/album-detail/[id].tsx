@@ -15,6 +15,7 @@ import {
   Modal
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Grid2x2 as Grid, List, Plus, Camera, Upload, X } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { useGallery } from '@/hooks/useGallery';
@@ -30,6 +31,7 @@ export default function AlbumDetail() {
   const { token } = useAuth();
   const { gallery, albums: apiAlbums, media: apiMedia, loading: galleryLoading, error: galleryError, addMedia, isAddingMedia, refetch } = useGallery(token || '');
   const { uploadProgress, selectAndUploadImage, resetUpload } = useImageUpload();
+  const insets = useSafeAreaInsets();
   
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [refreshing, setRefreshing] = useState(false);
@@ -532,7 +534,7 @@ export default function AlbumDetail() {
         presentationStyle="overFullScreen"
         statusBarTranslucent={true}
       >
-        <View style={styles.photoPreviewContainer}>
+        <View style={[styles.photoPreviewContainer, { paddingTop: insets.top }]}>
           {/* Header */}
           <View style={styles.photoPreviewHeader}>
             <TouchableOpacity 
