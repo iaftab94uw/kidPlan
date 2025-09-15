@@ -22,6 +22,9 @@ import { useGallery } from '@/hooks/useGallery';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import { API_CONFIG, getApiUrl, getAuthHeaders } from '@/config/api';
 import { AlbumDetailResponse, AlbumDetailData } from '@/types/gallery';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Sharing from 'expo-sharing';
+import * as MediaLibrary from 'expo-media-library';
 
 const { width } = Dimensions.get('window');
 
@@ -50,6 +53,75 @@ export default function AlbumDetail() {
   const handlePhotoPreview = (photo: any) => {
     setSelectedPhoto(photo);
     setShowPhotoPreviewModal(true);
+  };
+
+  // Handle photo download
+  const handleDownloadPhoto = async (photo: any) => {
+    try {
+      Alert.alert('Downloading', 'Please wait while the photo is being downloaded...');
+      
+      // Request media library permissions
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Please grant permission to save photos to your gallery.');
+        return;
+      }
+      
+      const filename = `photo_${photo._id}_${Date.now()}.jpg`;
+      const fileUri = FileSystem.documentDirectory + filename;
+      
+      // Download the photo
+      const downloadResult = await FileSystem.downloadAsync(photo.url, fileUri);
+      
+      if (downloadResult.status === 200) {
+        // Save to Photos gallery
+        const asset = await MediaLibrary.createAssetAsync(downloadResult.uri);
+        
+        Alert.alert('Success', 'Photo saved to your Photos gallery!', [
+          { text: 'OK', style: 'default' }
+        ]);
+        
+        // Clean up temporary file
+        await FileSystem.deleteAsync(fileUri, { idempotent: true });
+      } else {
+        Alert.alert('Error', 'Failed to download photo. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error downloading photo:', error);
+      Alert.alert('Error', 'Failed to download photo. Please try again.');
+    }
+  };
+
+  // Handle photo share
+  const handleSharePhoto = async (photo: any) => {
+    try {
+      const isAvailable = await Sharing.isAvailableAsync();
+      
+      if (!isAvailable) {
+        Alert.alert('Error', 'Sharing is not available on this device.');
+        return;
+      }
+
+      Alert.alert('Sharing', 'Preparing photo for sharing...');
+      
+      const filename = `photo_${photo._id}_${Date.now()}.jpg`;
+      const fileUri = FileSystem.documentDirectory + filename;
+      
+      const downloadResult = await FileSystem.downloadAsync(photo.url, fileUri);
+      
+      if (downloadResult.status === 200) {
+        await Sharing.shareAsync(downloadResult.uri, {
+          mimeType: 'image/jpeg',
+          dialogTitle: 'Share Photo',
+          UTI: 'public.jpeg'
+        });
+      } else {
+        Alert.alert('Error', 'Failed to prepare photo for sharing. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error sharing photo:', error);
+      Alert.alert('Error', 'Failed to share photo. Please try again.');
+    }
   };
 
   // Find the current album
@@ -556,19 +628,13 @@ export default function AlbumDetail() {
             <View style={styles.photoPreviewActions}>
               <TouchableOpacity 
                 style={styles.photoPreviewActionButton}
-                onPress={() => {
-                  // TODO: Add download functionality
-                  console.log('Download photo');
-                }}
+                onPress={() => selectedPhoto && handleDownloadPhoto(selectedPhoto)}
               >
                 <Text style={styles.photoPreviewActionText}>Download</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={styles.photoPreviewActionButton}
-                onPress={() => {
-                  // TODO: Add share functionality
-                  console.log('Share photo');
-                }}
+                onPress={() => selectedPhoto && handleSharePhoto(selectedPhoto)}
               >
                 <Text style={styles.photoPreviewActionText}>Share</Text>
               </TouchableOpacity>
