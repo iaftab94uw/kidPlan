@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Grid2x2 as Grid, List, Plus, Camera, Upload, X } from 'lucide-react-native';
+import { ArrowLeft, Grid2x2 as Grid, List, Plus, Camera, Upload, X, Edit3 } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { useGallery } from '@/hooks/useGallery';
 import { useImageUpload } from '@/hooks/useImageUpload';
@@ -49,11 +49,115 @@ export default function AlbumDetail() {
   const [albumError, setAlbumError] = useState<string | null>(null);
   const [showPhotoPreviewModal, setShowPhotoPreviewModal] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<any>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    description: '',
+    coverImage: ''
+  });
+  const [editCoverImage, setEditCoverImage] = useState<string>('');
+  const [editUploadProgress, setEditUploadProgress] = useState({
+    isUploading: false,
+    progress: 0,
+    error: null as string | null
+  });
 
   // Handle photo preview
   const handlePhotoPreview = (photo: any) => {
     setSelectedPhoto(photo);
     setShowPhotoPreviewModal(true);
+  };
+
+  // Handle cover image selection for edit modal
+  const handleSelectCoverImage = async () => {
+    try {
+      setEditUploadProgress({ isUploading: true, progress: 0, error: null });
+      
+      const imageUrl = await selectAndUploadImage();
+      if (imageUrl) {
+        setEditCoverImage(imageUrl);
+        setEditForm(prev => ({ ...prev, coverImage: imageUrl }));
+      }
+      
+      setEditUploadProgress({ isUploading: false, progress: 0, error: null });
+    } catch (error) {
+      console.error('Error selecting cover image:', error);
+      setEditUploadProgress({ 
+        isUploading: false, 
+        progress: 0, 
+        error: 'Failed to select image. Please try again.' 
+      });
+    }
+  };
+
+  // Handle album update
+  const handleUpdateAlbum = async () => {
+    if (!token || !albumId) {
+      Alert.alert('Error', 'No authentication token or album ID available');
+      return;
+    }
+
+    if (!editForm.name.trim()) {
+      Alert.alert('Error', 'Album name is required');
+      return;
+    }
+
+    try {
+      const url = getApiUrl(`${API_CONFIG.ENDPOINTS.UPDATE_ALBUM}/${albumId}`);
+      const headers = getAuthHeaders(token);
+      
+      const updateData = {
+        name: editForm.name.trim(),
+        description: editForm.description.trim(),
+        coverImage: editForm.coverImage.trim()
+      };
+
+      console.log('=== UPDATING ALBUM ===');
+      console.log('URL:', url);
+      console.log('Data:', updateData);
+
+      const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updateData),
+      });
+
+      const data = await response.json();
+      console.log('Update response:', data);
+
+      if (response.ok && data.success) {
+        setShowEditModal(false);
+        setEditForm({ name: '', description: '', coverImage: '' });
+        
+        // Update local albumDetail state immediately for instant UI feedback
+        if (albumDetail) {
+          setAlbumDetail({
+            ...albumDetail,
+            album: {
+              ...albumDetail.album,
+              name: editForm.name.trim(),
+              description: editForm.description.trim(),
+              coverImage: editForm.coverImage.trim(),
+              updatedAt: new Date().toISOString()
+            }
+          });
+        }
+        
+        // Refresh album data from server to ensure consistency
+        await refetch();
+        await fetchAlbumDetail();
+        
+        Alert.alert('Success', 'Album updated successfully!');
+      } else {
+        Alert.alert('Error', data.error || 'Failed to update album');
+      }
+    } catch (error) {
+      console.error('Error updating album:', error);
+      Alert.alert('Error', 'Failed to update album. Please try again.');
+    }
   };
 
   // Handle photo download
@@ -459,6 +563,22 @@ export default function AlbumDetail() {
             {viewMode === 'grid' ? <List size={20} color="#6B7280" /> : <Grid size={20} color="#6B7280" />}
           </TouchableOpacity>
           <TouchableOpacity 
+            style={styles.editButton}
+            onPress={() => {
+              const currentCoverImage = albumInfo?.coverImage || 'https://dummyjson.com/image/150';
+              setEditForm({
+                name: albumInfo?.name || '',
+                description: albumInfo?.description || '',
+                coverImage: currentCoverImage
+              });
+              setEditCoverImage(currentCoverImage);
+              setEditUploadProgress({ isUploading: false, progress: 0, error: null });
+              setShowEditModal(true);
+            }}
+          >
+            <Edit3 size={20} color="#6B7280" />
+          </TouchableOpacity>
+          <TouchableOpacity 
             style={styles.addButton}
             onPress={() => {
               console.log('=== OPENING UPLOAD MODAL ===');
@@ -533,7 +653,7 @@ export default function AlbumDetail() {
                 onPress={() => setShowUploadModal(false)}
                 style={styles.closeButton}
               >
-                <Text style={styles.closeButtonText}>✕</Text>
+                <X size={20} color="#6B7280" />
               </TouchableOpacity>
             </View>
 
@@ -678,6 +798,195 @@ export default function AlbumDetail() {
               />
             )}
           </View>
+        </View>
+      </Modal>
+
+      {/* Edit Album Modal */}
+      <Modal
+        visible={showEditModal}
+        animationType="slide"
+        presentationStyle="formSheet"
+        statusBarTranslucent={false}
+      >
+        <View style={[styles.modalContainer, { paddingTop: insets.top }]}>
+          {/* Modern Header */}
+          <View style={styles.modalHeader}>
+            <View style={styles.modalHeaderContent}>
+              <TouchableOpacity 
+                onPress={() => setShowEditModal(false)}
+                style={styles.closeButton}
+              >
+                <X size={24} color="#6B7280" />
+              </TouchableOpacity>
+              <View style={styles.modalTitleContainer}>
+                <Text style={styles.modalTitle}>Edit Album</Text>
+                <Text style={styles.modalSubtitle}>Update your album details</Text>
+              </View>
+              <TouchableOpacity 
+                style={[
+                  styles.createButton,
+                  (editUploadProgress.isUploading || !editForm.name.trim()) && styles.createButtonDisabled
+                ]}
+                onPress={handleUpdateAlbum}
+                disabled={editUploadProgress.isUploading || !editForm.name.trim()}
+              >
+                {editUploadProgress.isUploading ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.createButtonText}>Save</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+            <View style={styles.formContainer}>
+              {/* Cover Image Section */}
+              <View style={styles.coverImageSection}>
+                <Text style={styles.sectionTitle}>Cover Photo</Text>
+                
+                {editCoverImage && editCoverImage.trim() !== '' && !editUploadProgress.isUploading ? (
+                  <View style={styles.imagePreviewContainer}>
+                    <Image 
+                      source={{ uri: editCoverImage }} 
+                      style={styles.coverImagePreview}
+                      resizeMode="cover"
+                    />
+                    <TouchableOpacity 
+                      style={styles.floatingChangeButton}
+                      onPress={handleSelectCoverImage}
+                      activeOpacity={0.8}
+                    >
+                      <Camera size={20} color="#FFFFFF" />
+                    </TouchableOpacity>
+                    <View style={styles.changePhotoHint}>
+                      <Text style={styles.changePhotoHintText}>Tap to change photo</Text>
+                    </View>
+                  </View>
+                ) : (
+                  <TouchableOpacity 
+                    style={styles.selectPhotoCard}
+                    onPress={handleSelectCoverImage}
+                    disabled={editUploadProgress.isUploading}
+                  >
+                    <View style={styles.selectPhotoIconContainer}>
+                      <Camera size={32} color="#0e3c67" />
+                    </View>
+                    <Text style={styles.selectPhotoTitle}>
+                      {editUploadProgress.isUploading ? 'Uploading...' : 'Add Cover Photo'}
+                    </Text>
+                    <Text style={styles.selectPhotoSubtitle}>
+                      Tap to select from gallery
+                    </Text>
+                  </TouchableOpacity>
+                )}
+
+                {/* Upload Progress */}
+                {editUploadProgress.isUploading && (
+                  <View style={styles.uploadProgressCard}>
+                    <View style={styles.progressHeader}>
+                      <Text style={styles.progressTitle}>Uploading Photo</Text>
+                      <Text style={styles.progressPercentage}>{Math.round(editUploadProgress.progress)}%</Text>
+                    </View>
+                    <View style={styles.progressBarContainer}>
+                      <View 
+                        style={[
+                          styles.progressBarFill, 
+                          { width: `${editUploadProgress.progress}%` }
+                        ]} 
+                      />
+                    </View>
+                  </View>
+                )}
+
+                {/* Upload Error */}
+                {editUploadProgress.error && (
+                  <View style={styles.uploadErrorCard}>
+                    <Text style={styles.uploadErrorTitle}>Upload Failed</Text>
+                    <Text style={styles.uploadErrorText}>{editUploadProgress.error}</Text>
+                    <TouchableOpacity 
+                      style={styles.retryButton}
+                      onPress={handleSelectCoverImage}
+                    >
+                      <Text style={styles.retryButtonText}>Try Again</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+
+              {/* Album Details Section */}
+              <View style={styles.detailsSection}>
+                <Text style={styles.sectionTitle}>Album Details</Text>
+                
+                {/* Album Name */}
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Album Name *</Text>
+                  <View style={styles.inputContainer}>
+                    <TextInput
+                      style={styles.modernTextInput}
+                      value={editForm.name}
+                      onChangeText={(text) => setEditForm(prev => ({ ...prev, name: text }))}
+                      placeholder="Enter album name"
+                      placeholderTextColor="#9CA3AF"
+                      maxLength={50}
+                    />
+                    <Text style={styles.characterCount}>{editForm.name.length}/50</Text>
+                  </View>
+                </View>
+
+                {/* Description */}
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Description</Text>
+                  <View style={styles.textAreaContainer}>
+                    <TextInput
+                      style={styles.modernTextArea}
+                      value={editForm.description}
+                      onChangeText={(text) => setEditForm(prev => ({ ...prev, description: text }))}
+                      placeholder="Tell the story behind this album..."
+                      placeholderTextColor="#9CA3AF"
+                      multiline
+                      numberOfLines={4}
+                      maxLength={200}
+                    />
+                    <Text style={styles.characterCount}>{editForm.description.length}/200</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Album Stats Section */}
+              <View style={styles.statsSection}>
+                <Text style={styles.sectionTitle}>Album Statistics</Text>
+                <View style={styles.statsGrid}>
+                  <View style={styles.statCard}>
+                    <Text style={styles.statNumber}>{albumMedia.length}</Text>
+                    <Text style={styles.statLabel}>Photos</Text>
+                  </View>
+                  <View style={styles.statCard}>
+                    <Text style={styles.statNumber}>
+                      {albumInfo?.createdAt ? new Date(albumInfo.createdAt).toLocaleDateString('en-GB') : 'N/A'}
+                    </Text>
+                    <Text style={styles.statLabel}>Created</Text>
+                  </View>
+                  <View style={styles.statCard}>
+                    <Text style={styles.statNumber}>
+                      {albumInfo?.updatedAt ? new Date(albumInfo.updatedAt).toLocaleDateString('en-GB') : 'N/A'}
+                    </Text>
+                    <Text style={styles.statLabel}>Updated</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Tips Section */}
+              <View style={styles.tipsSection}>
+                <Text style={styles.tipsTitle}>💡 Tips</Text>
+                <View style={styles.tipsList}>
+                  <Text style={styles.tipItem}>• Choose a meaningful cover photo</Text>
+                  <Text style={styles.tipItem}>• Use descriptive names for easy finding</Text>
+                  <Text style={styles.tipItem}>• Add details to remember special moments</Text>
+                </View>
+              </View>
+            </View>
+          </ScrollView>
         </View>
       </Modal>
     </SafeAreaView>
@@ -948,38 +1257,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    width: '90%',
-    maxHeight: '80%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 8,
+    flex: 1,
+    backgroundColor: '#F8FAFC',
   },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    backgroundColor: '#FFFFFF',
+    paddingTop: 8,
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#111827',
   },
   closeButton: {
-    padding: 4,
-  },
-  closeButtonText: {
-    fontSize: 20,
-    color: '#6B7280',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   modalContent: {
-    padding: 20,
+    flex: 1,
+    backgroundColor: '#F9FAFB',
   },
   photoSelectionSection: {
     marginBottom: 24,
@@ -1005,34 +1305,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  selectPhotoCard: {
-    backgroundColor: '#F9FAFB',
-    borderRadius: 12,
-    padding: 32,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#E5E7EB',
-    borderStyle: 'dashed',
-  },
-  selectPhotoTitle: {
-    fontSize: 16,
-    color: '#6B7280',
-    marginTop: 12,
-    fontWeight: '500',
-  },
-  uploadProgressCard: {
-    backgroundColor: '#F0F9FF',
-    borderRadius: 8,
-    padding: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  progressText: {
-    fontSize: 14,
-    color: '#0e3c67',
-    marginLeft: 8,
-  },
   captionSection: {
     marginBottom: 24,
   },
@@ -1045,12 +1317,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E5E7EB',
     marginTop: 8,
-  },
-  characterCount: {
-    fontSize: 12,
-    color: '#9CA3AF',
-    textAlign: 'right',
-    marginTop: 4,
   },
   actionButtons: {
     flexDirection: 'row',
@@ -1157,5 +1423,295 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  
+  // Edit Modal Styles
+  editButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  
+  // Modern Modal Styles (matching create album modal)
+  modalHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+  },
+  modalTitleContainer: {
+    flex: 1,
+    alignItems: 'center',
+    marginHorizontal: 16,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#64748B',
+    fontWeight: '500',
+  },
+  createButton: {
+    backgroundColor: '#0e3c67',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 80,
+  },
+  createButtonDisabled: {
+    backgroundColor: '#94A3B8',
+  },
+  createButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  
+  // Form Container
+  formContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  
+  // Cover Image Section
+  coverImageSection: {
+    marginBottom: 32,
+  },
+  selectPhotoCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 32,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#E2E8F0',
+    borderStyle: 'dashed',
+  },
+  selectPhotoIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#F0F9FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  selectPhotoTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1E293B',
+    marginBottom: 8,
+  },
+  selectPhotoSubtitle: {
+    fontSize: 14,
+    color: '#64748B',
+  },
+  coverImagePreview: {
+    width: '100%',
+    height: 200,
+    borderRadius: 16,
+  },
+  floatingChangeButton: {
+    position: 'absolute',
+    bottom: 12,
+    right: 12,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#0e3c67',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  changePhotoHint: {
+    position: 'absolute',
+    bottom: 12,
+    left: 12,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  changePhotoHintText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  
+  // Upload Progress
+  uploadProgressCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    marginTop: 16,
+  },
+  progressText: {
+    fontSize: 14,
+    color: '#0e3c67',
+    marginLeft: 8,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  progressTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1E293B',
+  },
+  progressPercentage: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#0e3c67',
+  },
+  progressBarContainer: {
+    height: 6,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#0e3c67',
+    borderRadius: 3,
+  },
+  
+  // Upload Error
+  uploadErrorCard: {
+    backgroundColor: '#FEF2F2',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    marginTop: 16,
+  },
+  uploadErrorTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#DC2626',
+    marginBottom: 8,
+  },
+  uploadErrorText: {
+    fontSize: 14,
+    color: '#DC2626',
+    marginBottom: 12,
+  },
+  
+  // Details Section
+  detailsSection: {
+    marginBottom: 32,
+  },
+  inputGroup: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1E293B',
+    marginBottom: 8,
+  },
+  inputContainer: {
+    position: 'relative',
+  },
+  modernTextInput: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+    color: '#1E293B',
+  },
+  textAreaContainer: {
+    position: 'relative',
+  },
+  modernTextArea: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+    color: '#1E293B',
+    minHeight: 100,
+    textAlignVertical: 'top',
+  },
+  characterCount: {
+    position: 'absolute',
+    bottom: 8,
+    right: 12,
+    fontSize: 12,
+    color: '#94A3B8',
+  },
+  
+  // Stats Section
+  statsSection: {
+    marginBottom: 32,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  statNumber: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  
+  // Tips Section
+  tipsSection: {
+    backgroundColor: '#F0F9FF',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#BAE6FD',
+  },
+  tipsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0369A1',
+    marginBottom: 12,
+  },
+  tipsList: {
+    gap: 6,
+  },
+  tipItem: {
+    fontSize: 14,
+    color: '#0369A1',
+    lineHeight: 20,
   },
 });
