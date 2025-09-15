@@ -12,6 +12,7 @@ export const API_CONFIG = {
     USER_PROFILE: '/users/profile',
     UPDATE_PROFILE: '/users/updateUserProfile',
     FAMILY_DETAILS: '/family/getDetails',
+    UPDATE_FAMILY: '/family/update',
     ADD_FAMILY_MEMBER: '/family/addMember',
     UPDATE_FAMILY_MEMBER: '/family/updateMember',
     DELETE_FAMILY_MEMBER: '/family/deleteMember',

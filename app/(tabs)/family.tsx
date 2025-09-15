@@ -59,6 +59,7 @@ export default function Family() {
   const [scheduleFilter, setScheduleFilter] = useState('all'); // 'all', 'primary', 'secondary'
   const [familyName, setFamilyName] = useState('');
   const [isCreatingFamily, setIsCreatingFamily] = useState(false);
+  const [isEditingFamilyName, setIsEditingFamilyName] = useState(false);
   const [familyData, setFamilyData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [missingData, setMissingData] = useState<string[]>([]);
@@ -322,6 +323,63 @@ export default function Family() {
     }
   };
 
+  const updateFamilyName = async () => {
+    if (!familyName.trim()) {
+      Alert.alert('Error', 'Please enter a family name');
+      return;
+    }
+
+    if (!token || !familyData?._id) {
+      Alert.alert('Error', 'Authentication or family data required');
+      return;
+    }
+
+    try {
+      setIsCreatingFamily(true);
+      
+      const url = `${API_CONFIG.BASE_URL}${API_CONFIG.PREFIX}${API_CONFIG.ENDPOINTS.UPDATE_FAMILY}`;
+      const headers = getAuthHeaders(token);
+      const body = {
+        familyId: familyData._id,
+        familyName: familyName.trim()
+      };
+      
+      console.log('=== UPDATE FAMILY API ===');
+      console.log('URL:', url);
+      console.log('Method: POST');
+      console.log('Headers:', headers);
+      console.log('Body:', body);
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(body),
+      });
+
+      const data = await response.json();
+      
+      console.log('Response:', data);
+      console.log('=== END UPDATE FAMILY API ===');
+      
+      if (data.success) {
+        setFamilyData(data.data);
+        setShowFamilyNameModal(false);
+        setIsEditingFamilyName(false);
+        setFamilyName(''); // Clear the input
+        Alert.alert('Success', 'Family name updated successfully!');
+        // Refresh family details to get updated data
+        fetchFamilyDetails();
+      } else {
+        throw new Error(data.message || 'Failed to update family name');
+      }
+    } catch (error) {
+      console.error('Update family name error:', error);
+      Alert.alert('Error', 'Failed to update family name. Please try again.');
+    } finally {
+      setIsCreatingFamily(false);
+    }
+  };
+
   const [coParents, setCoParents] = useState([
     {
       id: 1,
@@ -566,7 +624,7 @@ export default function Family() {
       const avatarUri = newMember.avatar;
       if (avatarUri && typeof avatarUri === 'string' && !avatarUri.startsWith('http')) {
         try {
-          const uploadResult = await uploadImage(avatarUri!, 'family_member_photo.jpg');
+          const uploadResult = await uploadImage(avatarUri, 'family_member_photo.jpg');
           
           if (uploadResult.success && uploadResult.url) {
             finalImageUrl = uploadResult.url;
@@ -679,7 +737,7 @@ export default function Family() {
       const avatarUri = editingMember.profilePhoto;
       if (avatarUri && typeof avatarUri === 'string' && !avatarUri.startsWith('http')) {
         try {
-          const uploadResult = await uploadImage(avatarUri!, 'family_member_photo.jpg');
+          const uploadResult = await uploadImage(avatarUri, 'family_member_photo.jpg');
           
           if (uploadResult.success && uploadResult.url) {
             finalImageUrl = uploadResult.url;
@@ -1080,7 +1138,11 @@ export default function Family() {
               <Text style={styles.overviewTitle}>
                 {familyData.familyName}
               </Text>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={() => {
+                setFamilyName(familyData.familyName || '');
+                setIsEditingFamilyName(true);
+                setShowFamilyNameModal(true);
+              }}>
                 <Settings size={20} color="#6B7280" />
               </TouchableOpacity>
             </View>
@@ -1862,14 +1924,22 @@ export default function Family() {
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderContent}>
                 <TouchableOpacity 
-                  onPress={() => setShowFamilyNameModal(false)}
+                  onPress={() => {
+                    setShowFamilyNameModal(false);
+                    setIsEditingFamilyName(false);
+                    setFamilyName('');
+                  }}
                   style={styles.closeButton}
                 >
                   <X size={20} color="#6B7280" />
                 </TouchableOpacity>
                 <View style={styles.modalTitleContainer}>
-                  <Text style={styles.modalTitle}>Welcome to Your Family</Text>
-                  <Text style={styles.modalSubtitle}>Let's set up your family name</Text>
+                  <Text style={styles.modalTitle}>
+                    {isEditingFamilyName ? 'Edit Family Name' : 'Welcome to Your Family'}
+                  </Text>
+                  <Text style={styles.modalSubtitle}>
+                    {isEditingFamilyName ? 'Update your family name' : 'Let\'s set up your family name'}
+                  </Text>
                 </View>
                 <View style={styles.placeholderView} />
               </View>
@@ -1904,14 +1974,14 @@ export default function Family() {
                     styles.createFamilyButton,
                     (!familyName.trim() || isCreatingFamily) && styles.createFamilyButtonDisabled
                   ]}
-                  onPress={createFamily}
+                  onPress={isEditingFamilyName ? updateFamilyName : createFamily}
                   disabled={!familyName.trim() || isCreatingFamily}
                 >
                   <Text style={[
                     styles.createFamilyButtonText,
                     (!familyName.trim() || isCreatingFamily) && styles.createFamilyButtonTextDisabled
                   ]}>
-                    {isCreatingFamily ? 'Creating...' : 'Create Family'}
+                    {isCreatingFamily ? (isEditingFamilyName ? 'Updating...' : 'Creating...') : (isEditingFamilyName ? 'Update Family' : 'Create Family')}
                   </Text>
                 </TouchableOpacity>
               </View>
