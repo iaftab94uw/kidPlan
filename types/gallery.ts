@@ -16,6 +16,7 @@ export interface Album {
   createdBy?: string;
   createdAt: string;
   updatedAt: string;
+  mediaCount?: number;
   __v?: number;
 }
 
