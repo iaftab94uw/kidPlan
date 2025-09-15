@@ -1191,12 +1191,23 @@ export default function Photos() {
                             style={photosViewMode === 'grid' ? styles.viewAllPhotoImage : styles.viewAllPhotoImageList}
                             resizeMode="cover"
                           />
-                          {photo.caption && (
-                            <View style={styles.viewAllPhotoOverlay}>
-                              <Text style={styles.viewAllPhotoCaption} numberOfLines={1}>
-                                {photo.caption}
+                          {photosViewMode === 'list' ? (
+                            <View style={styles.viewAllPhotoListContent}>
+                              <Text style={styles.viewAllPhotoListTitle} numberOfLines={2}>
+                                {photo.caption || 'Untitled Photo'}
+                              </Text>
+                              <Text style={styles.viewAllPhotoListDate}>
+                                {new Date(photo.createdAt).toLocaleDateString('en-GB')}
                               </Text>
                             </View>
+                          ) : (
+                            photo.caption && (
+                              <View style={styles.viewAllPhotoOverlay}>
+                                <Text style={styles.viewAllPhotoCaption} numberOfLines={1}>
+                                  {photo.caption}
+                                </Text>
+                              </View>
+                            )
                           )}
                         </TouchableOpacity>
                       ))}
@@ -2251,9 +2262,34 @@ export default function Photos() {
       shadowRadius: 4,
       elevation: 2,
       alignItems: 'center',
+      minHeight: 100,
+      marginBottom: 8,
     },
     viewAllPhotoImageList: {
       width: 80,
       height: 80,
+      borderRadius: 8,
+    },
+    viewAllPhotoListContent: {
+      flex: 1,
+      padding: 12,
+      justifyContent: 'center',
+    },
+    viewAllPhotoListTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: '#1F2937',
+      marginBottom: 4,
+    },
+    viewAllPhotoListDate: {
+      fontSize: 14,
+      color: '#6B7280',
+      fontWeight: '500',
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: '#1F2937',
+      marginBottom: 12,
     },
   });
