@@ -12,7 +12,8 @@ import {
   ActivityIndicator,
   Alert,
   TextInput,
-  Modal
+  Modal,
+  FlatList
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -257,6 +258,11 @@ export default function AlbumDetail() {
         setShowUploadModal(false);
         setNewMedia({ caption: '', imageUrl: '' });
         resetUpload();
+        
+        // Refresh album data to show the new photo immediately
+        await refetch();
+        await fetchAlbumDetail();
+        
         Alert.alert('Success', 'Photo uploaded to album successfully!');
       } else {
         Alert.alert('Error', 'Failed to upload photo. Please try again.');
@@ -268,7 +274,10 @@ export default function AlbumDetail() {
   };
 
   const renderPhotoGrid = () => {
-    const photoSize = (width - 60) / 3;
+    // Calculate photo size: screen width - horizontal padding, divided by 3
+    // justifyContent: 'space-between' will handle spacing automatically
+    const horizontalPadding = 40; // 20px padding on each side
+    const photoSize = (width - horizontalPadding) / 3;
 
     if (albumMedia.length === 0) {
       return (
@@ -290,21 +299,39 @@ export default function AlbumDetail() {
       );
     }
 
+    // Always use 3-column grid for consistent sizing regardless of photo count
+
     return (
-      <View style={styles.photoGrid}>
-        {albumMedia.map((media) => (
+      <FlatList
+        data={albumMedia}
+        numColumns={3}
+        keyExtractor={(item) => item._id}
+        contentContainerStyle={styles.photosGrid}
+        nestedScrollEnabled={true}
+        scrollEventThrottle={16}
+        renderItem={({ item }: { item: any }) => (
           <TouchableOpacity 
-            key={media._id} 
-            style={[styles.photoGridItem, { width: photoSize, height: photoSize }]}
-            onPress={() => handlePhotoPreview(media)}
+            style={styles.photoCard}
+            onPress={() => handlePhotoPreview(item)}
+            activeOpacity={0.8}
+            delayPressIn={0}
+            delayPressOut={0}
           >
-            <Image source={{ uri: media.url }} style={styles.photoGridImage} />
-            <View style={styles.photoOverlay}>
-              <Text style={styles.photoTitle}>{media.caption || 'Photo'}</Text>
-            </View>
+            <Image 
+              source={{ uri: item.url }} 
+              style={styles.photoImage}
+              resizeMode="cover"
+            />
+            {item.caption && (
+              <View style={styles.photoOverlay}>
+                <Text style={styles.photoCaption} numberOfLines={1}>
+                  {item.caption}
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
-        ))}
-      </View>
+        )}
+      />
     );
   };
 
@@ -800,22 +827,24 @@ const styles = StyleSheet.create({
     marginLeft: 4,
     fontWeight: '500',
   },
-  photoGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+  photosGrid: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
   },
-  photoGridItem: {
-    marginBottom: 8,
+  photoCard: {
+    flex: 1,
+    aspectRatio: 1,
+    margin: 2,
     borderRadius: 8,
     overflow: 'hidden',
+    backgroundColor: '#FFFFFF',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
   },
-  photoGridImage: {
+  photoImage: {
     width: '100%',
     height: '100%',
   },
@@ -826,6 +855,11 @@ const styles = StyleSheet.create({
     right: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
     padding: 8,
+  },
+  photoCaption: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '500',
   },
   photoTitle: {
     color: '#FFFFFF',
@@ -1106,5 +1140,22 @@ const styles = StyleSheet.create({
   photoPreviewImage: {
     width: '100%',
     height: '100%',
+  },
+  retryButton: {
+    backgroundColor: '#DC2626',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  backButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
