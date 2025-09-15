@@ -46,6 +46,8 @@ export default function Photos() {
   const [showViewAllPhotosModal, setShowViewAllPhotosModal] = useState(false);
   const [albumsViewMode, setAlbumsViewMode] = useState<'grid' | 'list'>('grid');
   const [photosViewMode, setPhotosViewMode] = useState<'grid' | 'list'>('grid');
+  const [showPhotoPreviewModal, setShowPhotoPreviewModal] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState<Media | null>(null);
 
 
 
@@ -169,6 +171,12 @@ export default function Photos() {
         console.error('Error creating gallery:', error);
         Alert.alert('Error', 'Failed to create gallery. Please try again.');
       }
+    };
+
+    // Handle photo preview
+    const handlePhotoPreview = (photo: Media) => {
+      setSelectedPhoto(photo);
+      setShowPhotoPreviewModal(true);
     };
 
     const handleCreateAlbum = () => {
@@ -514,11 +522,7 @@ export default function Photos() {
                 renderItem={({ item }) => (
                   <TouchableOpacity 
                     style={styles.photoCard}
-                    onPress={() => {
-                      console.log('Photo pressed:', item.caption || 'Untitled');
-                      // Navigate to photo detail or gallery view
-                      router.push(`/gallery`);
-                    }}
+                    onPress={() => handlePhotoPreview(item)}
                     activeOpacity={0.8}
                     delayPressIn={0}
                     delayPressOut={0}
@@ -1182,7 +1186,7 @@ export default function Photos() {
                           style={photosViewMode === 'grid' ? styles.viewAllPhotoCard : styles.viewAllPhotoCardList}
                           onPress={() => {
                             setShowViewAllPhotosModal(false);
-                            router.push(`/gallery`);
+                            handlePhotoPreview(photo);
                           }}
                           activeOpacity={0.8}
                         >
@@ -1222,6 +1226,67 @@ export default function Photos() {
                   </View>
                 )}
               </ScrollView>
+            </View>
+          </Modal>
+
+          {/* Photo Preview Modal */}
+          <Modal
+            visible={showPhotoPreviewModal}
+            animationType="fade"
+            presentationStyle="overFullScreen"
+            statusBarTranslucent={true}
+          >
+            <View style={[styles.photoPreviewContainer, { paddingTop: insets.top }]}>
+              {/* Header */}
+              <View style={styles.photoPreviewHeader}>
+                <TouchableOpacity 
+                  onPress={() => setShowPhotoPreviewModal(false)}
+                  style={styles.photoPreviewCloseButton}
+                >
+                  <X size={24} color="#FFFFFF" />
+                </TouchableOpacity>
+                {selectedPhoto && (
+                  <View style={styles.photoPreviewInfo}>
+                    <Text style={styles.photoPreviewTitle} numberOfLines={1}>
+                      {selectedPhoto.caption || 'Untitled Photo'}
+                    </Text>
+                    <Text style={styles.photoPreviewDate}>
+                      {new Date(selectedPhoto.createdAt).toLocaleDateString('en-GB')}
+                    </Text>
+                  </View>
+                )}
+                <View style={styles.photoPreviewActions}>
+                  <TouchableOpacity 
+                    style={styles.photoPreviewActionButton}
+                    onPress={() => {
+                      // TODO: Add download functionality
+                      console.log('Download photo');
+                    }}
+                  >
+                    <Text style={styles.photoPreviewActionText}>Download</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={styles.photoPreviewActionButton}
+                    onPress={() => {
+                      // TODO: Add share functionality
+                      console.log('Share photo');
+                    }}
+                  >
+                    <Text style={styles.photoPreviewActionText}>Share</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Photo Content */}
+              <View style={styles.photoPreviewContent}>
+                {selectedPhoto && (
+                  <Image 
+                    source={{ uri: selectedPhoto.url }} 
+                    style={styles.photoPreviewImage}
+                    resizeMode="contain"
+                  />
+                )}
+              </View>
             </View>
           </Modal>
         </ScrollView>
@@ -2291,5 +2356,62 @@ export default function Photos() {
       fontWeight: '600',
       color: '#1F2937',
       marginBottom: 12,
+    },
+    
+    // Photo Preview Modal Styles
+    photoPreviewContainer: {
+      flex: 1,
+      backgroundColor: '#000000',
+    },
+    photoPreviewHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    },
+    photoPreviewCloseButton: {
+      padding: 8,
+    },
+    photoPreviewInfo: {
+      flex: 1,
+      alignItems: 'center',
+      marginHorizontal: 16,
+    },
+    photoPreviewTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: '#FFFFFF',
+      textAlign: 'center',
+    },
+    photoPreviewDate: {
+      fontSize: 14,
+      color: '#9CA3AF',
+      marginTop: 2,
+    },
+    photoPreviewActions: {
+      flexDirection: 'row',
+      gap: 12,
+    },
+    photoPreviewActionButton: {
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+      borderRadius: 20,
+    },
+    photoPreviewActionText: {
+      fontSize: 14,
+      fontWeight: '500',
+      color: '#FFFFFF',
+    },
+    photoPreviewContent: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    photoPreviewImage: {
+      width: '100%',
+      height: '100%',
     },
   });
