@@ -32,7 +32,7 @@ export default function Photos() {
   const router = useRouter();
   const { token } = useAuth();
   const insets = useSafeAreaInsets();
-  const { gallery, albums: apiAlbums, media: apiMedia, loading: galleryLoading, error: galleryError, createGallery, isCreatingGallery, createAlbum, isCreatingAlbum, addMedia, isAddingMedia, refetch } = useGallery(token || '');
+  const { gallery, albums: apiAlbums, media: apiMedia, loading: galleryLoading, error: galleryError, createGallery, isCreatingGallery, createAlbum, isCreatingAlbum, addMedia, isAddingMedia, refetch, needsGalleryCreation } = useGallery(token || '');
   
   const { uploadProgress, selectAndUploadImage, resetUpload } = useImageUpload();
   
@@ -51,6 +51,9 @@ export default function Photos() {
   const [photosViewMode, setPhotosViewMode] = useState<'grid' | 'list'>('grid');
   const [showPhotoPreviewModal, setShowPhotoPreviewModal] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<Media | null>(null);
+
+  // Note: We don't automatically show create gallery modal here
+  // It will be shown when user tries to create album or upload photo
 
 
 
@@ -254,11 +257,12 @@ export default function Photos() {
     const handleCreateAlbum = () => {
       console.log('Create Album button pressed');
       console.log('Gallery exists:', !!gallery);
+      console.log('Needs gallery creation:', needsGalleryCreation);
       console.log('Current modal state:', showCreateAlbumModal);
       
-      // Check if gallery exists first
-      if (!gallery) {
-        console.log('No gallery found, showing create gallery modal');
+      // Check if gallery exists or needs to be created
+      if (!gallery || needsGalleryCreation) {
+        console.log('No gallery found or needs creation, showing create gallery modal');
         setShowCreateGalleryModal(true);
         return;
       }
@@ -273,6 +277,7 @@ export default function Photos() {
       setShowCreateAlbumModal(true);
       console.log('Modal state set to true');
     };
+
 
     const handleSelectCoverPhoto = async () => {
       try {
@@ -517,18 +522,20 @@ export default function Photos() {
           </View>
 
           {/* Albums Section */}
-          {(apiAlbums && apiAlbums.length > 0) && (
-            <View style={styles.albumsSection}>
-              <View style={styles.albumsHeader}>
-                <Text style={styles.albumsTitle}>Albums</Text>
+          <View style={styles.albumsSection}>
+            <View style={styles.albumsHeader}>
+              <Text style={styles.albumsTitle}>Albums</Text>
+              {(apiAlbums && apiAlbums.length > 0) && (
                 <TouchableOpacity 
                   style={styles.viewAllButton}
                   onPress={() => setShowViewAllAlbumsModal(true)}
                 >
                   <Text style={styles.viewAllText}>View All</Text>
                 </TouchableOpacity>
-              </View>
-              
+              )}
+            </View>
+            
+            {(apiAlbums && apiAlbums.length > 0) ? (
               <FlatList
                 style={styles.albumsFlatList}
                 data={apiAlbums}
@@ -568,22 +575,38 @@ export default function Photos() {
                   </TouchableOpacity>
                 )}
               />
-            </View>
-          )}
+            ) : (
+              <View style={styles.emptyState}>
+                <FolderPlus size={48} color="#9CA3AF" />
+                <Text style={styles.emptyStateTitle}>No Albums Yet</Text>
+                <Text style={styles.emptyStateSubtitle}>
+                  Create your first album to organize your photos
+                </Text>
+                <TouchableOpacity 
+                  style={styles.emptyStateButton}
+                  onPress={handleCreateAlbum}
+                >
+                  <Text style={styles.emptyStateButtonText}>Create Album</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
 
           {/* Photos Section */}
-          {getFilteredPhotos().length > 0 && (
-            <View style={styles.photosSection}>
-              <View style={styles.photosHeader}>
-                <Text style={styles.photosTitle}>All Photos</Text>
+          <View style={styles.photosSection}>
+            <View style={styles.photosHeader}>
+              <Text style={styles.photosTitle}>All Photos</Text>
+              {getFilteredPhotos().length > 0 && (
                 <TouchableOpacity 
                   style={styles.viewAllButton}
                   onPress={() => setShowViewAllPhotosModal(true)}
                 >
                   <Text style={styles.viewAllText}>View All</Text>
                 </TouchableOpacity>
-              </View>
-              
+              )}
+            </View>
+            
+            {getFilteredPhotos().length > 0 ? (
               <FlatList
                 data={getFilteredPhotos()}
                 numColumns={3}
@@ -614,8 +637,22 @@ export default function Photos() {
                   </TouchableOpacity>
                 )}
               />
-            </View>
-          )}
+            ) : (
+              <View style={styles.emptyState}>
+                <Camera size={48} color="#9CA3AF" />
+                <Text style={styles.emptyStateTitle}>No Photos Yet</Text>
+                <Text style={styles.emptyStateSubtitle}>
+                  Upload your first photo to get started
+                </Text>
+                <TouchableOpacity 
+                  style={styles.emptyStateButton}
+                  onPress={handleUploadPhoto}
+                >
+                  <Text style={styles.emptyStateButtonText}>Upload Photo</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
 
 
           {/* Filter Modal */}
@@ -2479,5 +2516,40 @@ export default function Photos() {
     photoPreviewImage: {
       width: '100%',
       height: '100%',
+      resizeMode: 'contain',
+    },
+    
+    // Empty State Styles
+    emptyState: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 40,
+      paddingHorizontal: 20,
+    },
+    emptyStateTitle: {
+      fontSize: 20,
+      fontWeight: '600',
+      color: '#1F2937',
+      marginTop: 16,
+      marginBottom: 8,
+      textAlign: 'center',
+    },
+    emptyStateSubtitle: {
+      fontSize: 16,
+      color: '#6B7280',
+      textAlign: 'center',
+      marginBottom: 24,
+      lineHeight: 24,
+    },
+    emptyStateButton: {
+      backgroundColor: '#0e3c67',
+      paddingHorizontal: 24,
+      paddingVertical: 12,
+      borderRadius: 8,
+    },
+    emptyStateButtonText: {
+      color: '#FFFFFF',
+      fontSize: 16,
+      fontWeight: '600',
     },
   });

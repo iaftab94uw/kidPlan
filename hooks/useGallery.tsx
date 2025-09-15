@@ -24,6 +24,7 @@ interface UseGalleryReturn {
   isCreatingAlbum: boolean;
   addMedia: (mediaData: AddMediaRequest) => Promise<boolean>;
   isAddingMedia: boolean;
+  needsGalleryCreation: boolean;
 }
 
 export const useGallery = (token: string): UseGalleryReturn => {
@@ -35,8 +36,9 @@ export const useGallery = (token: string): UseGalleryReturn => {
   const [isCreatingGallery, setIsCreatingGallery] = useState(false);
   const [isCreatingAlbum, setIsCreatingAlbum] = useState(false);
   const [isAddingMedia, setIsAddingMedia] = useState(false);
+  const [needsGalleryCreation, setNeedsGalleryCreation] = useState(false);
 
-  const fetchGallery = useCallback(async () => {
+  const fetchGallery = useCallback(async (skipAutoCreate = false) => {
     if (!token) {
       setError('No authentication token available');
       return;
@@ -59,10 +61,6 @@ export const useGallery = (token: string): UseGalleryReturn => {
         headers: headers,
       });
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch gallery: ${response.status}`);
-      }
-
       const data = await response.json();
       
       console.log('Response:', data);
@@ -72,13 +70,18 @@ export const useGallery = (token: string): UseGalleryReturn => {
         setGallery(data.data.gallery);
         setAlbums(data.data.albums || []);
         setMedia(data.data.media || []);
-      } else if (data.error === 'Gallery not found' || data.error?.includes('404')) {
-        // Gallery not found is expected for new users
-        console.log('Gallery not found - this is expected for new users');
+        setError(null);
+        setNeedsGalleryCreation(false);
+      } else if (!response.ok && (data.error === 'Gallery not found' || response.status === 404)) {
+        // Gallery not found is expected for new users - show create gallery modal
+        console.log('Gallery not found - user needs to create gallery');
         setGallery(null);
         setAlbums([]);
         setMedia([]);
         setError(null);
+        setNeedsGalleryCreation(true);
+      } else if (!response.ok) {
+        throw new Error(`Failed to fetch gallery: ${response.status}`);
       } else {
         throw new Error(data.error || 'Failed to fetch gallery');
       }
@@ -141,6 +144,7 @@ export const useGallery = (token: string): UseGalleryReturn => {
 
       if (data.success && data.data) {
         setGallery(data.data);
+        setNeedsGalleryCreation(false);
         return true;
       } else {
         throw new Error(data.error || 'Failed to create gallery');
@@ -307,5 +311,6 @@ export const useGallery = (token: string): UseGalleryReturn => {
     isCreatingAlbum,
     addMedia,
     isAddingMedia,
+    needsGalleryCreation,
   };
 };
