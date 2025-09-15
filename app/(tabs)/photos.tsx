@@ -1,18 +1,19 @@
-  import React, { useState, useEffect } from 'react';
-  import { 
-    View, 
-    Text, 
-    StyleSheet, 
-    ScrollView, 
-    TouchableOpacity,
-    Image,
-    Dimensions,
-    Modal,
-    TextInput,
-    Alert,
-    ActivityIndicator,
-    RefreshControl
-  } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  ScrollView, 
+  TouchableOpacity,
+  Image,
+  Dimensions,
+  Modal,
+  TextInput,
+  Alert,
+  ActivityIndicator,
+  RefreshControl,
+  FlatList
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
   import { Plus, Camera, Search, Filter, MoveVertical as MoreVertical, FolderPlus, X, Check, Grid3X3, List } from 'lucide-react-native';
@@ -605,11 +606,14 @@ export default function Photos() {
             </View>
             
             {getFilteredPhotos().length > 0 ? (
-              <View style={styles.photosGrid}>
-                {getFilteredPhotos().map((item) => (
+              <FlatList
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                data={getFilteredPhotos()}
+                keyExtractor={(item) => item._id}
+                renderItem={({ item }) => (
                   <TouchableOpacity 
-                    key={item._id}
-                    style={styles.photoCard}
+                    style={styles.horizontalPhotoCard}
                     onPress={() => handlePhotoPreview(item)}
                     activeOpacity={0.8}
                     delayPressIn={0}
@@ -617,19 +621,23 @@ export default function Photos() {
                   >
                     <Image 
                       source={{ uri: item.url }} 
-                      style={styles.photoImage}
+                      style={styles.horizontalPhotoImage}
                       resizeMode="cover"
                     />
                     {item.caption && (
-                      <View style={styles.photoOverlay}>
-                        <Text style={styles.photoCaption} numberOfLines={1}>
+                      <View style={styles.horizontalPhotoOverlay}>
+                        <Text style={styles.horizontalPhotoCaption} numberOfLines={1}>
                           {item.caption}
                         </Text>
                       </View>
                     )}
                   </TouchableOpacity>
-                ))}
-              </View>
+                )}
+                contentContainerStyle={styles.horizontalPhotosList}
+                decelerationRate="fast"
+                snapToInterval={120}
+                snapToAlignment="start"
+              />
             ) : (
               <View style={styles.emptyState}>
                 <Camera size={48} color="#9CA3AF" />
@@ -2255,6 +2263,42 @@ export default function Photos() {
     },
     photoCaption: {
       fontSize: 12,
+      color: '#FFFFFF',
+      fontWeight: '500',
+    },
+    
+    // Horizontal Photos Styles
+    horizontalPhotosList: {
+      paddingRight: 20,
+    },
+    horizontalPhotoCard: {
+      width: 108,
+      height: 130,
+      marginRight: 12,
+      borderRadius: 12,
+      overflow: 'hidden',
+      backgroundColor: '#FFFFFF',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+    horizontalPhotoImage: {
+      width: '100%',
+      height: '100%',
+    },
+    horizontalPhotoOverlay: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+      paddingHorizontal: 6,
+      paddingVertical: 4,
+    },
+    horizontalPhotoCaption: {
+      fontSize: 10,
       color: '#FFFFFF',
       fontWeight: '500',
     },
