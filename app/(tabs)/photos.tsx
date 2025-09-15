@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-  import { Plus, Camera, Search, Filter, MoveVertical as MoreVertical, FolderPlus, X, Check, Grid3X3, List } from 'lucide-react-native';
+  import { Plus, Camera, Search, Filter, MoveVertical as MoreVertical, FolderPlus, X, Check, Grid3X3, List, Trash2 } from 'lucide-react-native';
   import { useAuth } from '@/hooks/useAuth';
   import { useGallery } from '@/hooks/useGallery';
   import { useImageUpload } from '@/hooks/useImageUpload';
@@ -32,7 +32,7 @@ export default function Photos() {
   const router = useRouter();
   const { token } = useAuth();
   const insets = useSafeAreaInsets();
-  const { gallery, albums: apiAlbums, media: apiMedia, loading: galleryLoading, error: galleryError, createGallery, isCreatingGallery, createAlbum, isCreatingAlbum, addMedia, isAddingMedia, refetch, needsGalleryCreation } = useGallery(token || '');
+  const { gallery, albums: apiAlbums, media: apiMedia, loading: galleryLoading, error: galleryError, createGallery, isCreatingGallery, createAlbum, isCreatingAlbum, addMedia, isAddingMedia, deleteMedia, isDeletingMedia, refetch, needsGalleryCreation } = useGallery(token || '');
   
   const { uploadProgress, selectAndUploadImage, resetUpload } = useImageUpload();
   
@@ -254,6 +254,39 @@ export default function Photos() {
         console.error('Error sharing photo:', error);
         Alert.alert('Error', 'Failed to share photo. Please try again.');
       }
+    };
+
+    // Handle photo delete
+    const handleDeletePhoto = async (photo: Media) => {
+      Alert.alert(
+        'Delete Photo',
+        'Are you sure you want to delete this photo? This action cannot be undone.',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                const success = await deleteMedia(photo._id, photo.url);
+                if (success) {
+                  Alert.alert('Success', 'Photo deleted successfully!');
+                  setShowPhotoPreviewModal(false);
+                  setSelectedPhoto(null);
+                } else {
+                  Alert.alert('Error', 'Failed to delete photo. Please try again.');
+                }
+              } catch (error) {
+                console.error('Error deleting photo:', error);
+                Alert.alert('Error', 'Failed to delete photo. Please try again.');
+              }
+            },
+          },
+        ]
+      );
     };
 
     const handleCreateAlbum = () => {
@@ -1377,6 +1410,17 @@ export default function Photos() {
                     onPress={() => selectedPhoto && handleSharePhoto(selectedPhoto)}
                   >
                     <Text style={styles.photoPreviewActionText}>Share</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={styles.photoPreviewDeleteButton}
+                    onPress={() => selectedPhoto && handleDeletePhoto(selectedPhoto)}
+                    disabled={isDeletingMedia}
+                  >
+                    {isDeletingMedia ? (
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                    ) : (
+                      <Trash2 size={20} color="#FFFFFF" />
+                    )}
                   </TouchableOpacity>
                 </View>
               </View>
@@ -2544,6 +2588,15 @@ export default function Photos() {
       fontSize: 14,
       fontWeight: '500',
       color: '#FFFFFF',
+    },
+    photoPreviewDeleteButton: {
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      backgroundColor: 'rgba(239, 68, 68, 0.8)',
+      borderRadius: 20,
+      minWidth: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     photoPreviewContent: {
       flex: 1,

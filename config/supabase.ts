@@ -174,3 +174,90 @@ export const uploadImage = async (uri: string, fileName: string, bucket: string 
     };
   }
 };
+
+// Helper function to delete image from Supabase Storage
+export const deleteImage = async (imageUrl: string, bucket: string = 'profile-images') => {
+  try {
+    console.log('Starting deletion for URL:', imageUrl);
+    
+    // Check if Supabase is properly configured
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error('Supabase configuration is missing. Please check your environment variables.');
+    }
+
+    // Extract the file path from the URL
+    // Supabase URLs typically look like: https://xxx.supabase.co/storage/v1/object/public/bucket-name/path/to/file
+    const urlParts = imageUrl.split('/');
+    const bucketIndex = urlParts.findIndex(part => part === bucket);
+    
+    if (bucketIndex === -1) {
+      throw new Error('Could not extract file path from URL');
+    }
+    
+    // Get the file path (everything after the bucket name)
+    const filePath = urlParts.slice(bucketIndex + 1).join('/');
+    
+    console.log('Deleting from Supabase:', {
+      bucket,
+      filePath,
+      originalUrl: imageUrl
+    });
+
+    // Delete from Supabase Storage with timeout
+    const deletePromise = supabase.storage
+      .from(bucket)
+      .remove([filePath]);
+
+    // Add timeout to prevent hanging
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Delete timeout - please check your internet connection')), 15000);
+    });
+
+    const { data, error } = await Promise.race([deletePromise, timeoutPromise]) as any;
+
+    if (error) {
+      console.error('Supabase delete error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        statusCode: error.statusCode,
+        error: error.error
+      });
+      
+      // Provide more specific error messages
+      if (error.message?.includes('Network request failed')) {
+        throw new Error('Network connection failed. Please check your internet connection and try again.');
+      } else if (error.message?.includes('timeout')) {
+        throw new Error('Delete timed out. Please check your internet connection and try again.');
+      } else {
+        throw new Error(error.message || 'Delete failed. Please try again.');
+      }
+    }
+
+    console.log('Delete successful, data:', data);
+
+    return {
+      success: true,
+      data: data
+    };
+  } catch (error: any) {
+    console.error('Image delete error:', error);
+    
+    // Provide user-friendly error messages
+    let errorMessage = 'Failed to delete image';
+    
+    if (error.message?.includes('Network request failed')) {
+      errorMessage = 'Network connection failed. Please check your internet connection and try again.';
+    } else if (error.message?.includes('timeout')) {
+      errorMessage = 'Delete timed out. Please check your internet connection and try again.';
+    } else if (error.message?.includes('Supabase configuration')) {
+      errorMessage = 'Delete service configuration error. Please contact support.';
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
+    return {
+      success: false,
+      error: errorMessage
+    };
+  }
+};

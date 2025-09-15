@@ -30,6 +30,7 @@ export const API_CONFIG = {
     UPDATE_ALBUM: '/gallery/updateAlbum',
     DELETE_ALBUM: '/gallery/deleteAlbum',
     ADD_MEDIA: '/gallery/addMedia',
+    DELETE_MEDIA: '/gallery/media/deleteMedia',
     FETCH_ALBUM_DETAIL: '/gallery/album',
   },
   HEADERS: {

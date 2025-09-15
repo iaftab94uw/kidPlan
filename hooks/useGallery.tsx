@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { API_CONFIG, getApiUrl, getAuthHeaders } from '@/config/api';
 import { Gallery, GalleryData, Album, Media, GalleryResponse, CreateGalleryResponse, CreateAlbumRequest, CreateAlbumResponse } from '@/types/gallery';
 import { useAuth } from '@/hooks/useAuth';
+import { deleteImage } from '@/config/supabase';
 
 interface AddMediaRequest {
   galleryId: string;
@@ -24,6 +25,8 @@ interface UseGalleryReturn {
   isCreatingAlbum: boolean;
   addMedia: (mediaData: AddMediaRequest) => Promise<boolean>;
   isAddingMedia: boolean;
+  deleteMedia: (mediaId: string, mediaUrl?: string) => Promise<boolean>;
+  isDeletingMedia: boolean;
   needsGalleryCreation: boolean;
 }
 
@@ -36,6 +39,7 @@ export const useGallery = (token: string): UseGalleryReturn => {
   const [isCreatingGallery, setIsCreatingGallery] = useState(false);
   const [isCreatingAlbum, setIsCreatingAlbum] = useState(false);
   const [isAddingMedia, setIsAddingMedia] = useState(false);
+  const [isDeletingMedia, setIsDeletingMedia] = useState(false);
   const [needsGalleryCreation, setNeedsGalleryCreation] = useState(false);
 
   const fetchGallery = useCallback(async (skipAutoCreate = false) => {
@@ -288,6 +292,82 @@ export const useGallery = (token: string): UseGalleryReturn => {
     }
   }, [token]);
 
+  const deleteMedia = useCallback(async (mediaId: string, mediaUrl?: string): Promise<boolean> => {
+    if (!token) {
+      setError('No authentication token available');
+      return false;
+    }
+
+    setIsDeletingMedia(true);
+    setError(null);
+
+    try {
+      // First, delete from Supabase storage if mediaUrl is provided
+      if (mediaUrl) {
+        console.log('=== DELETING FROM SUPABASE STORAGE ===');
+        console.log('Media URL:', mediaUrl);
+        
+        const storageResult = await deleteImage(mediaUrl, 'profile-images');
+        
+        if (!storageResult.success) {
+          console.warn('Failed to delete from storage, but continuing with database deletion:', storageResult.error);
+          // Don't throw error here - we'll still try to delete from database
+        } else {
+          console.log('Successfully deleted from Supabase storage');
+        }
+        console.log('=== END SUPABASE STORAGE DELETE ===');
+      }
+
+      // Then delete from database
+      const url = `${getApiUrl(API_CONFIG.ENDPOINTS.DELETE_MEDIA)}/${mediaId}`;
+      const headers = getAuthHeaders(token);
+      
+      console.log('=== DELETE MEDIA API ===');
+      console.log('URL:', url);
+      console.log('Method: DELETE');
+      console.log('Headers:', headers);
+      console.log('Media ID:', mediaId);
+      
+      const response = await fetch(url, {
+        method: 'DELETE',
+        headers: headers,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete media: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      console.log('Response:', data);
+      console.log('=== END DELETE MEDIA API ===');
+
+      if (data.success) {
+        // Remove the deleted media from the media list
+        setMedia(prev => prev.filter(media => media._id !== mediaId));
+        return true;
+      } else {
+        throw new Error(data.error || 'Failed to delete media');
+      }
+    } catch (err) {
+      let errorMessage = 'An unknown error occurred';
+      
+      if (err instanceof Error) {
+        if (err.message.includes('Failed to fetch') || err.message.includes('Network error')) {
+          errorMessage = 'Unable to connect to server. Please check your internet connection and try again.';
+        } else {
+          errorMessage = err.message;
+        }
+      }
+      
+      setError(errorMessage);
+      console.error('Error deleting media:', err);
+      return false;
+    } finally {
+      setIsDeletingMedia(false);
+    }
+  }, [token]);
+
   const refetch = useCallback(() => {
     fetchGallery();
   }, [fetchGallery]);
@@ -311,6 +391,8 @@ export const useGallery = (token: string): UseGalleryReturn => {
     isCreatingAlbum,
     addMedia,
     isAddingMedia,
+    deleteMedia,
+    isDeletingMedia,
     needsGalleryCreation,
   };
 };
