@@ -160,6 +160,55 @@ export default function AlbumDetail() {
     }
   };
 
+  // Handle album deletion
+  const handleDeleteAlbum = async () => {
+    if (!token || !albumId) {
+      Alert.alert('Error', 'No authentication token or album ID available');
+      return;
+    }
+
+    try {
+      const url = getApiUrl(`${API_CONFIG.ENDPOINTS.DELETE_ALBUM}/${albumId}`);
+      const headers = getAuthHeaders(token);
+      
+      console.log('=== DELETING ALBUM ===');
+      console.log('URL:', url);
+      console.log('Album ID:', albumId);
+
+      const response = await fetch(url, {
+        method: 'DELETE',
+        headers: headers,
+      });
+
+      const data = await response.json();
+      console.log('Delete response:', data);
+
+      if (response.ok && data.success) {
+        // Close the edit modal
+        setShowEditModal(false);
+        
+        // Show success message
+        Alert.alert('Success', 'Album deleted successfully!', [
+          { 
+            text: 'OK', 
+            onPress: () => {
+              // Navigate back to photos tab after successful deletion
+              router.back();
+            }
+          }
+        ]);
+        
+        // Refresh gallery data to remove the deleted album
+        await refetch();
+      } else {
+        Alert.alert('Error', data.error || 'Failed to delete album');
+      }
+    } catch (error) {
+      console.error('Error deleting album:', error);
+      Alert.alert('Error', 'Failed to delete album. Please try again.');
+    }
+  };
+
   // Handle photo download
   const handleDownloadPhoto = async (photo: any) => {
     try {
@@ -985,6 +1034,26 @@ export default function AlbumDetail() {
                   <Text style={styles.tipItem}>• Add details to remember special moments</Text>
                 </View>
               </View>
+
+              {/* Album Actions Section */}
+              <View style={styles.albumActionsSection}>
+                <Text style={styles.sectionTitle}>Album Actions</Text>
+                <TouchableOpacity 
+                  style={styles.deleteAlbumButton}
+                  onPress={() => {
+                    Alert.alert(
+                      'Delete Album',
+                      `Are you sure you want to delete "${albumInfo?.name}"? This will permanently delete the album and all ${albumMedia.length} photos in it. This action cannot be undone.`,
+                      [
+                        { text: 'Cancel', style: 'cancel' },
+                        { text: 'Delete', style: 'destructive', onPress: handleDeleteAlbum }
+                      ]
+                    );
+                  }}
+                >
+                  <Text style={styles.deleteAlbumButtonText}>Delete Album</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </ScrollView>
         </View>
@@ -1713,5 +1782,27 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#0369A1',
     lineHeight: 20,
+  },
+  
+  // Album Actions Section
+  albumActionsSection: {
+    marginBottom: 32,
+  },
+  deleteAlbumButton: {
+    backgroundColor: '#DC2626',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#DC2626',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  deleteAlbumButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 });
