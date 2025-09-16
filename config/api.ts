@@ -33,6 +33,8 @@ export const API_CONFIG = {
     ADD_MEDIA: '/gallery/addMedia',
     DELETE_MEDIA: '/gallery/media/deleteMedia',
     FETCH_ALBUM_DETAIL: '/gallery/album',
+    // Schools endpoints
+    GET_SCHOOLS_LISTING: '/school/getListing',
   },
   HEADERS: {
     'Content-Type': 'application/json',

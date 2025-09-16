@@ -62,13 +62,18 @@ export default function Schools() {
 
   // Search functionality
   const handleSearch = async () => {
+    if (!searchQuery.trim() && !searchPostcode.trim()) {
+      Alert.alert('Search Required', 'Please enter a school name or postcode to search');
+      return;
+    }
+    
     setIsSearching(true);
     try {
       await fetchSchools({
         page: 1,
         limit: 20,
-        search: searchQuery.trim() || undefined,
-        postcode: searchPostcode.trim() || undefined
+        search: searchQuery.trim(),
+        postcode: searchPostcode.trim()
       });
     } catch (error) {
       console.error('Search error:', error);
@@ -76,56 +81,6 @@ export default function Schools() {
       setIsSearching(false);
     }
   };
-
-  // Reset search functionality
-  const resetSearch = () => {
-    setSearchQuery('');
-    setSearchPostcode('');
-  };
-
-  // Show all schools functionality
-  const handleShowAll = async () => {
-    setIsSearching(true);
-    try {
-      await fetchSchools({
-        page: 1,
-        limit: 20,
-        search: undefined,
-        postcode: undefined
-      });
-    } catch (error) {
-      console.error('Show all error:', error);
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  // Clear search and show all schools
-  const clearAndShowAll = async () => {
-    setSearchQuery('');
-    setSearchPostcode('');
-    setIsSearching(true);
-    try {
-      await fetchSchools({
-        page: 1,
-        limit: 20,
-        search: "",
-        postcode: ""
-      });
-    } catch (error) {
-      console.error('Clear and show all error:', error);
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  // Load schools on component mount
-  useEffect(() => {
-    if (token) {
-      handleShowAll();
-    }
-  }, [token]);
-
 
   // Filter schools based on current filters
   const getFilteredSchools = () => {
@@ -416,23 +371,9 @@ export default function Schools() {
             style={styles.searchInput}
             placeholder="Search by school name..."
             value={searchQuery}
-            onChangeText={(text) => {
-              setSearchQuery(text);
-              // Auto-search when field is cleared
-              if (text.trim() === '') {
-                clearAndShowAll();
-              }
-            }}
+            onChangeText={setSearchQuery}
             placeholderTextColor="#9CA3AF"
           />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity 
-              style={styles.clearButton}
-              onPress={clearAndShowAll}
-            >
-              <X size={16} color="#6B7280" />
-            </TouchableOpacity>
-          )}
         </View>
         
         <View style={styles.postcodeContainer}>
@@ -441,55 +382,26 @@ export default function Schools() {
             style={styles.postcodeInput}
             placeholder="Postcode (e.g., NP20 6WJ)"
             value={searchPostcode}
-            onChangeText={(text) => {
-              setSearchPostcode(text);
-              // Auto-search when field is cleared
-              if (text.trim() === '') {
-                clearAndShowAll();
-              }
-            }}
+            onChangeText={setSearchPostcode}
             placeholderTextColor="#9CA3AF"
             autoCapitalize="characters"
           />
-          {searchPostcode.length > 0 && (
-            <TouchableOpacity 
-              style={styles.clearButton}
-              onPress={clearAndShowAll}
-            >
-              <X size={16} color="#6B7280" />
-            </TouchableOpacity>
-          )}
         </View>
         
-        <View style={styles.searchActions}>
-          <TouchableOpacity 
-            style={styles.searchButton}
-            onPress={handleSearch}
-            disabled={isSearching}
-          >
-            {isSearching ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : (
+        <TouchableOpacity 
+          style={styles.searchButton}
+          onPress={handleSearch}
+          disabled={isSearching}
+        >
+          {isSearching ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <>
               <Search size={16} color="#FFFFFF" />
-            )}
-            <Text style={styles.searchButtonText}>
-              {isSearching 
-                ? 'Searching...' 
-                : (searchQuery.trim() || searchPostcode.trim() ? 'Search' : 'Show Schools')
-              }
-            </Text>
-          </TouchableOpacity>
-          
-          {(searchQuery.trim() || searchPostcode.trim()) && (
-            <TouchableOpacity 
-              style={styles.resetButton}
-              onPress={clearAndShowAll}
-            >
-              <X size={16} color="#6B7280" />
-              <Text style={styles.resetButtonText}>Reset</Text>
-            </TouchableOpacity>
+              <Text style={styles.searchButtonText}>Search</Text>
+            </>
           )}
-        </View>
+        </TouchableOpacity>
       </View>
 
       {/* Results Section */}
@@ -498,23 +410,12 @@ export default function Schools() {
           <Text style={styles.resultsTitle}>
             {loading ? 'Searching...' : `${pagination.total} Schools Found`}
           </Text>
-          <View style={styles.resultsActions}>
-            {(searchQuery.trim() || searchPostcode.trim()) && schools.length > 0 && (
-              <TouchableOpacity 
-                style={styles.showAllButton}
-                onPress={handleShowAll}
-              >
-                <School size={16} color="#0e3c67" />
-                <Text style={styles.showAllButtonText}>Show All</Text>
-              </TouchableOpacity>
-            )}
-            {schools.length > 0 && (
-              <TouchableOpacity style={styles.syncButton}>
-                <Sync size={16} color="#0e3c67" />
-                <Text style={styles.syncButtonText}>Sync All</Text>
-              </TouchableOpacity>
-            )}
-          </View>
+          {schools.length > 0 && (
+            <TouchableOpacity style={styles.syncButton}>
+              <Sync size={16} color="#0e3c67" />
+              <Text style={styles.syncButtonText}>Sync All</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {error && (
@@ -560,16 +461,11 @@ export default function Schools() {
             <School size={64} color="#9CA3AF" />
             <Text style={styles.emptyStateTitle}>No Schools Found</Text>
             <Text style={styles.emptyStateSubtitle}>
-              {searchQuery.trim() || searchPostcode.trim() 
-                ? 'Try searching with a different postcode or school name'
-                : 'Click "Show Schools" to load all available schools'
-              }
+              Try searching with a different postcode or school name
             </Text>
             <TouchableOpacity style={styles.emptyStateButton} onPress={handleSearch}>
               <Search size={16} color="#FFFFFF" />
-              <Text style={styles.emptyStateButtonText}>
-                {searchQuery.trim() || searchPostcode.trim() ? 'Search Again' : 'Show Schools'}
-              </Text>
+              <Text style={styles.emptyStateButtonText}>Search Again</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -658,10 +554,6 @@ const styles = StyleSheet.create({
     color: '#111827',
     marginLeft: 12,
   },
-  clearButton: {
-    padding: 4,
-    marginLeft: 8,
-  },
   postcodeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -677,47 +569,24 @@ const styles = StyleSheet.create({
     color: '#111827',
     marginLeft: 12,
   },
-  searchActions: {
-    flexDirection: 'row',
-    gap: 12,
-  },
   searchButton: {
     backgroundColor: '#0e3c67',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 16,
-    paddingHorizontal: 20,
     borderRadius: 12,
-    flex: 1,
     shadowColor: '#0e3c67',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 4,
   },
-  resetButton: {
-    backgroundColor: '#F3F4F6',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-  },
   searchButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,
-  },
-  resetButtonText: {
-    color: '#6B7280',
-    fontSize: 16,
-    fontWeight: '500',
-    marginLeft: 4,
   },
   resultsSection: {
     flex: 1,
@@ -728,11 +597,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 16,
-  },
-  resultsActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
   },
   resultsTitle: {
     fontSize: 18,
@@ -748,20 +612,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   syncButtonText: {
-    color: '#0e3c67',
-    fontSize: 14,
-    fontWeight: '500',
-    marginLeft: 4,
-  },
-  showAllButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E6F3FF',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  showAllButtonText: {
     color: '#0e3c67',
     fontSize: 14,
     fontWeight: '500',
