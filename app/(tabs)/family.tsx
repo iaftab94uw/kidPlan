@@ -13,7 +13,8 @@ import {
   Alert,
   Dimensions,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  RefreshControl
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -80,6 +81,7 @@ export default function Family() {
   const [isEditingSchedule, setIsEditingSchedule] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<any>(null);
   const [showEditScheduleModal, setShowEditScheduleModal] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   
   // Helper function to convert color name to hex
   const getColorFromName = (colorName: string) => {
@@ -252,6 +254,27 @@ export default function Family() {
       console.error('Error fetching family schedules:', error);
     } finally {
       setSchedulesLoading(false);
+    }
+  };
+
+  // Pull to refresh handler
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      // Refresh family details
+      await fetchFamilyDetails();
+      
+      // Refresh schedules if family data is available
+      if (familyData?._id) {
+        await fetchFamilySchedules(1, currentScheduleFilter);
+      }
+      
+      // Trigger refresh event for other screens
+      triggerRefresh('family');
+    } catch (error) {
+      console.error('Refresh error:', error);
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -1105,7 +1128,16 @@ export default function Family() {
           <Text style={styles.loadingText}>Loading family details...</Text>
         </View>
       ) : (
-        <ScrollView>
+        <ScrollView
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#0e3c67"
+              colors={['#0e3c67']}
+            />
+          }
+        >
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Family</Text>

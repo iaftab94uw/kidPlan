@@ -49,3 +49,5 @@ export interface SchoolsListingParams {
   search?: string;
   postcode?: string;
 }
+
+

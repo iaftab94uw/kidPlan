@@ -13,7 +13,7 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "Camera access is required to take photos for your or family profile",
-        "NSPhotoLibraryUsageDescription": "This access is required to take photos for your or family profile.",
+        "NSPhotoLibraryUsageDescription": "This access is required to take photos for your or family profile."
       }
     },
     "web": {
@@ -30,6 +30,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "b299fc80-69ab-46ec-b719-1d0bfb83d7b3"
+      }
+    },
+    "owner": "kidplan"
   }
 }

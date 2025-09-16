@@ -12,7 +12,8 @@ import {
   TextInput,
   Alert,
   Platform,
-  FlatList
+  FlatList,
+  RefreshControl
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { 
@@ -58,6 +59,7 @@ export default function Calendar() {
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [isUpdatingEvent, setIsUpdatingEvent] = useState(false);
   const [isDeletingEvent, setIsDeletingEvent] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   
   // Schedule editing state
   const [showEditScheduleModal, setShowEditScheduleModal] = useState(false);
@@ -150,6 +152,25 @@ export default function Calendar() {
       return event.startTime;
     }
     return 'All Day';
+  };
+
+  // Pull to refresh handler
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      // Refresh calendar events
+      await refetchEvents();
+      
+      // Refresh family data
+      await getAllFamilyMembers();
+      
+      // Trigger refresh event for home screen
+      triggerRefresh('events');
+    } catch (error) {
+      console.error('Refresh error:', error);
+    } finally {
+      setRefreshing(false);
+    }
   };
   const [newEvent, setNewEvent] = useState({
     title: '',
@@ -871,7 +892,16 @@ export default function Calendar() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView>
+      <ScrollView
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#0e3c67"
+            colors={['#0e3c67']}
+          />
+        }
+      >
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Calendar</Text>

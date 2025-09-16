@@ -601,7 +601,7 @@ export default function Photos() {
                         {item.name}
                       </Text>
                       <Text style={styles.albumCount}>
-                        {item?.mediaCount} photos
+                        {item?.mediaCount ?? 0} photos
                       </Text>
                     </View>
                   </TouchableOpacity>
