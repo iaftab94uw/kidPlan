@@ -9,9 +9,11 @@ import {
   Switch,
   Image
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { User, Bell, Shield, Smartphone, CircleHelp as HelpCircle, LogOut, ChevronRight, Moon, Globe, Calendar, Users, Camera, Zap, CreditCard } from 'lucide-react-native';
 
 export default function Settings() {
+  const router = useRouter();
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [darkModeEnabled, setDarkModeEnabled] = React.useState(false);
   const [locationEnabled, setLocationEnabled] = React.useState(true);
@@ -50,9 +52,8 @@ export default function Settings() {
           icon: Bell,
           title: "Notifications",
           subtitle: "Control push notifications",
-          action: "toggle",
-          value: notificationsEnabled,
-          onToggle: setNotificationsEnabled,
+          action: "navigate",
+          route: "/notification-settings",
           color: "#0e3c67"
         },
         {
@@ -130,8 +131,14 @@ export default function Settings() {
   ];
 
   const renderSettingItem = (item: any) => {
+    const handlePress = () => {
+      if (item.action === 'navigate' && item.route) {
+        router.push(item.route);
+      }
+    };
+
     return (
-      <TouchableOpacity key={item.title} style={styles.settingItem}>
+      <TouchableOpacity key={item.title} style={styles.settingItem} onPress={handlePress}>
         <View style={[styles.settingIcon, { backgroundColor: `${item.color}20` }]}>
           <item.icon size={20} color={item.color} />
         </View>

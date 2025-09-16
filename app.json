@@ -10,11 +10,27 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.kidplan.boltexponativewind",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "Camera access is required to take photos for your or family profile",
-        "NSPhotoLibraryUsageDescription": "This access is required to take photos for your or family profile."
+        "NSPhotoLibraryUsageDescription": "This access is required to take photos for your or family profile.",
+        "UIBackgroundModes": ["background-fetch", "remote-notification"]
+      },
+      "entitlements": {
+        "aps-environment": "development"
       }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#0e3c67"
+      },
+      "permissions": [
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE",
+        "android.permission.WAKE_LOCK"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -26,7 +42,15 @@
       "expo-font",
       "expo-web-browser",
       "expo-camera",
-      "expo-image-picker"
+      "expo-image-picker",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#0e3c67",
+          "defaultChannel": "default"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
