@@ -22,6 +22,7 @@ export const API_CONFIG = {
     DELETE_SCHEDULE: '/schedules/deleteSchedule',
     GET_CALENDAR_EVENTS: '/events/getCalendarEvents',
     CREATE_EVENT: '/events/create',
+    CREATE_SCHOOL_EVENT: '/events/create',
     UPDATE_EVENT: '/events/update',
     DELETE_EVENT: '/events/delete',
     // Gallery endpoints

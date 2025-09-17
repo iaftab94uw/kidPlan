@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -11,13 +11,23 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   const { registerForPushNotifications, isLoading, error, isRegistered } = useNotifications();
   const [retryCount, setRetryCount] = useState(0);
   const [lastAttempt, setLastAttempt] = useState<number>(0);
+  const hasAttemptedRegistration = useRef(false);
 
   const MAX_RETRIES = 3;
   const RETRY_DELAY = 5000; // 5 seconds
 
+  // Reset registration attempt when user changes
+  useEffect(() => {
+    if (user && token) {
+      hasAttemptedRegistration.current = false;
+      setRetryCount(0);
+      setLastAttempt(0);
+    }
+  }, [user, token]);
+
   useEffect(() => {
     // Register for push notifications when user is authenticated
-    if (user && token && !isLoading && !isRegistered) {
+    if (user && token && !isLoading && !isRegistered && !hasAttemptedRegistration.current) {
       const now = Date.now();
       
       // Prevent too frequent retries
@@ -25,6 +35,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         return;
       }
 
+      hasAttemptedRegistration.current = true;
       setLastAttempt(now);
       
       registerForPushNotifications(token)
@@ -43,6 +54,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
           if (retryCount < MAX_RETRIES) {
             console.log(`Retrying push notification registration (${retryCount + 1}/${MAX_RETRIES})`);
             setRetryCount(prev => prev + 1);
+            hasAttemptedRegistration.current = false; // Allow retry
             
             // Retry after delay
             setTimeout(() => {
@@ -53,7 +65,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
           }
         });
     }
-  }, [user, token, isLoading, isRegistered, retryCount, lastAttempt, registerForPushNotifications]);
+  }, [user, token, isLoading, isRegistered, retryCount, lastAttempt]);
 
   // Log any notification errors
   useEffect(() => {

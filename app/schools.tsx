@@ -305,23 +305,17 @@ export default function Schools() {
             </View>
             
             <TouchableOpacity 
-              style={[styles.connectSchoolButton, connectedSchools.includes(selectedSchool._id) && styles.connectedSchoolButton]}
+              style={styles.createEventButton}
               onPress={() => {
-                handleConnectSchool(selectedSchool._id);
                 setShowSchoolDetail(false);
+                router.push({
+                  pathname: '/create-school-event',
+                  params: { schoolId: selectedSchool._id, schoolName: selectedSchool.name }
+                });
               }}
             >
-              {connectedSchools.includes(selectedSchool._id) ? (
-                <>
-                  <Check size={20} color="#FFFFFF" />
-                  <Text style={styles.connectSchoolButtonText}>Connected</Text>
-                </>
-              ) : (
-                <>
-                  <Plus size={20} color="#FFFFFF" />
-                  <Text style={styles.connectSchoolButtonText}>Connect School</Text>
-                </>
-              )}
+              <Calendar size={20} color="#FFFFFF" />
+              <Text style={styles.createEventButtonText}>Create School Event</Text>
             </TouchableOpacity>
           </ScrollView>
         </SafeAreaView>
@@ -986,24 +980,21 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     lineHeight: 24,
   },
-  connectSchoolButton: {
-    backgroundColor: '#0e3c67',
+  createEventButton: {
+    backgroundColor: '#3B82F6',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 16,
     borderRadius: 12,
-    marginVertical: 20,
-    shadowColor: '#0e3c67',
+    marginVertical: 10,
+    shadowColor: '#3B82F6',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 4,
   },
-  connectedSchoolButton: {
-    backgroundColor: '#22C55E',
-  },
-  connectSchoolButtonText: {
+  createEventButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',

@@ -1,6 +1,6 @@
 // Calendar Events Types
 
-export type EventType = 'Personal' | 'School' | 'Activity' | 'Holiday' | 'Medical' | 'Schedule';
+export type EventType = 'Personal' | 'School' | 'School_Holiday' | 'Activity' | 'Holiday' | 'Medical' | 'Schedule';
 
 export interface CalendarEvent {
   _id: string;
