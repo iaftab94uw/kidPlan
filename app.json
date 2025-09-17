@@ -15,10 +15,10 @@
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "Camera access is required to take photos for your or family profile",
         "NSPhotoLibraryUsageDescription": "This access is required to take photos for your or family profile.",
-        "UIBackgroundModes": ["background-fetch", "remote-notification"]
+        "UIBackgroundModes": ["remote-notification"]
       },
       "entitlements": {
-        "aps-environment": "development"
+        "aps-environment": "production"
       }
     },
     "android": {
