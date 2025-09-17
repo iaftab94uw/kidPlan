@@ -21,7 +21,12 @@
       "autoIncrement": true,
       "ios": {
         "simulator": false
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjeWd6eGppeHdlaW51c2hubGxpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY0MjI4NjcsImV4cCI6MjA3MTk5ODg2N30.S_cS5oOwMngxxHW5L2c-V_OtasZ0eV0uYeSL5He2xos",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://rcygzxjixweinushnlli.supabase.co"      
       }
+
     }
   },
   "submit": {
