@@ -36,6 +36,7 @@ export const API_CONFIG = {
     FETCH_ALBUM_DETAIL: '/gallery/album',
     // Schools endpoints
     GET_SCHOOLS_LISTING: '/school/getListing',
+    GET_SCHOOL_EVENTS: '/events/getSchoolEvents',
     // Push notification endpoints
     REGISTER_PUSH_TOKEN: '/pushNotification/registerPushToken',
   },

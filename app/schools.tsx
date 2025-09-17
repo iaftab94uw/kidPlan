@@ -18,6 +18,7 @@ import { Search, MapPin, Calendar, Clock, Phone, Globe, ChevronRight, X, Check, 
 import { router } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 import { useSchools } from '@/hooks/useSchools';
+import { useSchoolEvents } from '@/hooks/useSchoolEvents';
 import { School as SchoolType } from '@/types/schools';
 
 const { width } = Dimensions.get('window');
@@ -50,6 +51,16 @@ export default function Schools() {
     search: searchQuery,
     postcode: searchPostcode
   });
+
+  // Use the school events hook
+  const { schoolDetails, events, loading: eventsLoading, error: eventsError, fetchSchoolEvents } = useSchoolEvents();
+
+  // Auto-fetch events when school is selected
+  useEffect(() => {
+    if (selectedSchool && token && showSchoolDetail) {
+      handleViewSchoolEvents(selectedSchool);
+    }
+  }, [selectedSchool, showSchoolDetail, token]);
 
   const schoolTypes = ['all', 'Primary', 'Secondary', 'Independent', 'Special'];
   const regions = ['all', 'England', 'Scotland', 'Wales'];
@@ -178,6 +189,15 @@ export default function Schools() {
     });
   };
 
+  const handleViewSchoolEvents = async (school: SchoolType) => {
+    if (!token) {
+      Alert.alert('Error', 'Authentication token not available');
+      return;
+    }
+    
+    await fetchSchoolEvents(school._id, token);
+  };
+
   const formatAddress = (address: SchoolType['address']) => {
     const parts = [
       address.street,
@@ -208,7 +228,7 @@ export default function Schools() {
             <Text style={styles.schoolAddress}>{formatAddress(school.address)}</Text>
           </View>
           <View style={styles.schoolActions}>
-            <TouchableOpacity 
+            {/* <TouchableOpacity 
               style={[styles.connectButton, isConnected && styles.connectedButton]}
               onPress={() => handleConnectSchool(school._id)}
             >
@@ -217,7 +237,7 @@ export default function Schools() {
               ) : (
                 <Plus size={16} color="#FFFFFF" />
               )}
-            </TouchableOpacity>
+            </TouchableOpacity> */}
             <ChevronRight size={20} color="#6B7280" />
           </View>
         </View>
@@ -262,7 +282,18 @@ export default function Schools() {
               <X size={24} color="#FFFFFF" />
             </TouchableOpacity>
             <Text style={styles.modalTitle}>School Details</Text>
-            <View style={styles.modalHeaderSpacer} />
+            <TouchableOpacity 
+              style={styles.modalAddButton}
+              onPress={() => {
+                setShowSchoolDetail(false);
+                router.push({
+                  pathname: '/create-school-event',
+                  params: { schoolId: selectedSchool._id, schoolName: selectedSchool.name }
+                });
+              }}
+            >
+              <Plus size={24} color="#FFFFFF" />
+            </TouchableOpacity>
           </View>
           
           <ScrollView style={styles.modalContent}>
@@ -304,19 +335,75 @@ export default function Schools() {
               )}
             </View>
             
-            <TouchableOpacity 
-              style={styles.createEventButton}
-              onPress={() => {
-                setShowSchoolDetail(false);
-                router.push({
-                  pathname: '/create-school-event',
-                  params: { schoolId: selectedSchool._id, schoolName: selectedSchool.name }
-                });
-              }}
-            >
-              <Calendar size={20} color="#FFFFFF" />
-              <Text style={styles.createEventButtonText}>Create School Event</Text>
-            </TouchableOpacity>
+            {/* School Events Section */}
+            <View style={styles.eventsSection}>
+              <Text style={styles.eventsSectionTitle}>School Events</Text>
+              
+              {eventsLoading ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="small" color="#0e3c67" />
+                  <Text style={styles.loadingText}>Loading events...</Text>
+                </View>
+              ) : eventsError ? (
+                <View style={styles.eventsErrorContainer}>
+                  <Text style={styles.eventsErrorTitle}>Error loading events</Text>
+                  <Text style={styles.eventsErrorText}>{eventsError}</Text>
+                </View>
+              ) : events.length > 0 ? (
+                <View style={styles.eventsContainer}>
+                  <Text style={styles.eventsCount}>({events.length} events)</Text>
+                  {events.map((event) => (
+                    <View key={event._id} style={styles.eventCard}>
+                      <View style={styles.eventHeader}>
+                        <Text style={styles.eventTitle}>{event.title}</Text>
+                        <View style={[styles.eventTypeBadge, { backgroundColor: event.color }]}>
+                          <Text style={styles.eventTypeText}>{event.eventType}</Text>
+                        </View>
+                      </View>
+                      
+                      <View style={styles.eventDetails}>
+                        <View style={styles.eventDetailRow}>
+                          <Calendar size={16} color="#6B7280" />
+                          <Text style={styles.eventDetailText}>
+                            {new Date(event.eventDate).toLocaleDateString('en-GB', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric'
+                            })}
+                          </Text>
+                        </View>
+                        
+                        <View style={styles.eventDetailRow}>
+                          <Clock size={16} color="#6B7280" />
+                          <Text style={styles.eventDetailText}>
+                            {event.startTime} - {event.endTime}
+                          </Text>
+                        </View>
+                        
+                        {event.location && (
+                          <View style={styles.eventDetailRow}>
+                            <MapPin size={16} color="#6B7280" />
+                            <Text style={styles.eventDetailText}>{event.location}</Text>
+                          </View>
+                        )}
+                        
+                        {event.description && (
+                          <Text style={styles.eventDescription}>{event.description}</Text>
+                        )}
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <View style={styles.noEventsContainer}>
+                  <Calendar size={32} color="#9CA3AF" />
+                  <Text style={styles.noEventsTitle}>No Events Found</Text>
+                  <Text style={styles.noEventsText}>
+                    This school doesn't have any events yet.
+                  </Text>
+                </View>
+              )}
+            </View>
           </ScrollView>
         </SafeAreaView>
       </Modal>
@@ -500,12 +587,6 @@ export default function Schools() {
               >
                 <School size={16} color="#0e3c67" />
                 <Text style={styles.showAllButtonText}>Show All</Text>
-              </TouchableOpacity>
-            )}
-            {schools.length > 0 && (
-              <TouchableOpacity style={styles.syncButton}>
-                <Sync size={16} color="#0e3c67" />
-                <Text style={styles.syncButtonText}>Sync All</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -733,20 +814,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#111827',
   },
-  syncButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E6F3FF',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  syncButtonText: {
-    color: '#0e3c67',
-    fontSize: 14,
-    fontWeight: '500',
-    marginLeft: 4,
-  },
   showAllButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -929,6 +996,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  modalAddButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   modalTitle: {
     fontSize: 20,
     fontWeight: '700',
@@ -980,25 +1055,113 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     lineHeight: 24,
   },
-  createEventButton: {
-    backgroundColor: '#3B82F6',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    borderRadius: 12,
-    marginVertical: 10,
-    shadowColor: '#3B82F6',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+  // School events section styles
+  eventsSection: {
+    marginTop: 20,
+    marginBottom: 20,
   },
-  createEventButtonText: {
-    color: '#FFFFFF',
+  eventsSectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 12,
+  },
+  eventsCount: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginBottom: 12,
+  },
+  // School events modal styles
+  eventsContainer: {
+    paddingVertical: 16,
+  },
+  eventsTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 16,
+  },
+  eventCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  eventHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  eventTitle: {
     fontSize: 16,
     fontWeight: '600',
-    marginLeft: 8,
+    color: '#111827',
+    flex: 1,
+  },
+  eventTypeBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  eventTypeText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  eventDetails: {
+    gap: 8,
+  },
+  eventDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  eventDetailText: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  eventDescription: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginTop: 8,
+    lineHeight: 20,
+  },
+  noEventsContainer: {
+    alignItems: 'center',
+    paddingVertical: 48,
+  },
+  noEventsTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#111827',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  noEventsText: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+  },
+  eventsErrorContainer: {
+    alignItems: 'center',
+    paddingVertical: 48,
+  },
+  eventsErrorTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#DC2626',
+    marginBottom: 8,
+  },
+  eventsErrorText: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
   },
   // Filter modal styles
   filterModalOverlay: {
