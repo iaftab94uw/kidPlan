@@ -23,6 +23,11 @@ export interface CalendarEvent {
   responsibleParent?: string;
   activities?: string;
   notes?: string;
+  // School-specific fields
+  school?: {
+    _id: string;
+    name: string;
+  };
 }
 
 export interface CalendarEventsResponse {

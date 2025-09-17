@@ -30,7 +30,8 @@ import {
   Edit,
   Trash2,
   Calendar as CalendarIcon,
-  Settings
+  Settings,
+  School
 } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
@@ -572,7 +573,8 @@ export default function Calendar() {
         endTime: formatTimeDisplay(newEvent.endTime),
         location: newEvent.location || '',
         familyMembers: familyMembers,
-        description: newEvent.description || ''
+        description: newEvent.description || '',
+        ...(editingEvent.school && { schoolId: editingEvent.school._id })
       };
 
       const url = getApiUrl(API_CONFIG.ENDPOINTS.UPDATE_EVENT);
@@ -1016,7 +1018,9 @@ export default function Calendar() {
                 <View style={styles.eventContent}>
                   <View style={styles.eventHeader}>
                     <View style={styles.eventTitleContainer}>
-                      <Text style={styles.eventTypeIcon}>{getEventTypeIcon(event.eventType)}</Text>
+                      <View style={styles.eventIconContainer}>
+                        <Text style={styles.eventTypeIcon}>{getEventTypeIcon(event.eventType)}</Text>
+                      </View>
                       <View style={styles.eventTitleContent}>
                         <Text style={styles.eventTitle}>{event.title}</Text>
                         <Text style={styles.eventDateRange}>{formatEventDateRange(event)}</Text>
@@ -1049,6 +1053,12 @@ export default function Calendar() {
                       <View style={styles.eventMetaItem}>
                         <MapPin size={16} color="#6B7280" />
                         <Text style={styles.eventMetaText}>{event.location}</Text>
+                      </View>
+                    )}
+                    {(event.eventType === 'School' || event.eventType === 'School_Holiday') && event.school && (
+                      <View style={styles.eventMetaItem}>
+                        <School size={16} color="#6B7280" />
+                        <Text style={styles.eventMetaText}>{event.school.name}</Text>
                       </View>
                     )}
                     {event.responsibleParent && (
@@ -2125,25 +2135,34 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: 0,
   },
   eventTitleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
   },
+  eventIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(14, 60, 103, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
   eventTitleContent: {
     flex: 1,
+    justifyContent: 'center',
   },
   eventTypeIcon: {
-    fontSize: 16,
-    marginRight: 8,
+    fontSize: 18,
+    color: '#0e3c67',
   },
   eventTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: '#111827',
-    flex: 1,
   },
   eventDateRange: {
     fontSize: 12,

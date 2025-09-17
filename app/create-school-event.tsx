@@ -451,6 +451,7 @@ export default function CreateSchoolEvent() {
         </View>
 
         {/* Location */}
+        <View style={{marginTop:24}}></View>
         <View style={styles.fieldGroup}>
           <Text style={styles.fieldLabel}>Location</Text>
           <TextInput
