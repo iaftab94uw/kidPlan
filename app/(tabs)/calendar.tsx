@@ -1224,8 +1224,22 @@ export default function Calendar() {
                 <Text style={styles.fieldLabel}>Family Member</Text>
                 {familyLoading ? (
                   <Text style={styles.loadingText}>Loading family members...</Text>
-                ) : familyError ? (
-                  <Text style={styles.errorText}>Error loading family members: {familyError}</Text>
+                ) : getFamilyMembers().length ?? 0 === 0 ? (
+                  <View style={styles.noFamilyContainer}>
+                    <Text style={styles.noFamilyTitle}>No Family Found</Text>
+                    <Text style={styles.noFamilyMessage}>
+                      You need to create a family first before creating events.
+                    </Text>
+                    <TouchableOpacity 
+                      style={styles.createFamilyButton}
+                      onPress={() => {
+                        setShowAddEventModal(false);
+                        router.push('/family');
+                      }}
+                    >
+                      <Text style={styles.createFamilyButtonText}>Go to Family</Text>
+                    </TouchableOpacity>
+                  </View>
                 ) : (
                   <ScrollView 
                     horizontal 
@@ -1501,8 +1515,22 @@ export default function Calendar() {
                 <Text style={styles.fieldLabel}>Family Member</Text>
                 {familyLoading ? (
                   <Text style={styles.loadingText}>Loading family members...</Text>
-                ) : familyError ? (
-                  <Text style={styles.errorText}>Error loading family members: {familyError}</Text>
+                ) : getFamilyMembers().length === 0 ? (
+                  <View style={styles.noFamilyContainer}>
+                    <Text style={styles.noFamilyTitle}>No Family Found</Text>
+                    <Text style={styles.noFamilyMessage}>
+                      You need to create a family first before creating events.
+                    </Text>
+                    <TouchableOpacity 
+                      style={styles.createFamilyButton}
+                      onPress={() => {
+                        setShowEditEventModal(false);
+                        router.push('/family');
+                      }}
+                    >
+                      <Text style={styles.createFamilyButtonText}>Go to Family</Text>
+                    </TouchableOpacity>
+                  </View>
                 ) : (
                   <ScrollView 
                     horizontal 
@@ -2635,6 +2663,39 @@ const styles = StyleSheet.create({
   },
   timeSlotTextSelected: {
     color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  // No Family Styles
+  noFamilyContainer: {
+    backgroundColor: '#FEF2F2',
+    borderRadius: 12,
+    padding: 20,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  noFamilyTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#DC2626',
+    marginBottom: 8,
+  },
+  noFamilyMessage: {
+    fontSize: 14,
+    color: '#991B1B',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  createFamilyButton: {
+    backgroundColor: '#DC2626',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  createFamilyButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
     fontWeight: '600',
   },
 });

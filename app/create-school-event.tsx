@@ -130,6 +130,12 @@ export default function CreateSchoolEvent() {
 
   const getFamilyMembers = useCallback(() => {
     const allMembers = getAllFamilyMembers();
+    
+    // If no family data is available, return empty array
+    if (!familyData || allMembers.length === 0) {
+      return [];
+    }
+    
     const familyMembers = [
       { id: 'all', label: 'All Family Members' }
     ];
@@ -142,7 +148,7 @@ export default function CreateSchoolEvent() {
     });
     
     return familyMembers;
-  }, [getAllFamilyMembers]);
+  }, [getAllFamilyMembers, familyData]);
 
   const handleTimeChange = (time: Date, type: 'start' | 'end') => {
     const hours = time.getHours().toString().padStart(2, '0');
@@ -211,6 +217,14 @@ export default function CreateSchoolEvent() {
 
     if (!token) {
       Alert.alert('Error', 'No authentication token available');
+      return;
+    }
+
+    if (!familyData?._id) {
+      Alert.alert('Error', 'No family found. Please create a family first.', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Go to Family', onPress: () => router.push('/family') }
+      ]);
       return;
     }
 
@@ -466,30 +480,45 @@ export default function CreateSchoolEvent() {
         {/* Family Members */}
         <View style={styles.fieldGroup}>
           <Text style={styles.fieldLabel}>Family Members</Text>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            style={styles.memberScrollView}
-            contentContainerStyle={styles.memberScrollContent}
-          >
-            {getFamilyMembers().map((member) => (
-              <TouchableOpacity
-                key={member.id}
-                style={[
-                  styles.memberOption,
-                  formData.familyMembers.includes(member.id) && styles.memberOptionSelected
-                ]}
-                onPress={() => toggleFamilyMember(member.id)}
+          {getFamilyMembers().length === 0 ? (
+            <View style={styles.noFamilyContainer}>
+              <Text style={styles.noFamilyTitle}>No Family Found</Text>
+              <Text style={styles.noFamilyMessage}>
+                You need to create a family first before creating school events.
+              </Text>
+              <TouchableOpacity 
+                style={styles.createFamilyButton}
+                onPress={() => router.push('/family')}
               >
-                <Text style={[
-                  styles.memberLabel,
-                  formData.familyMembers.includes(member.id) && styles.memberLabelSelected
-                ]}>
-                  {member.label}
-                </Text>
+                <Text style={styles.createFamilyButtonText}>Go to Family</Text>
               </TouchableOpacity>
-            ))}
-          </ScrollView>
+            </View>
+          ) : (
+            <ScrollView
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              style={styles.memberScrollView}
+              contentContainerStyle={styles.memberScrollContent}
+            >
+              {getFamilyMembers().map((member) => (
+                <TouchableOpacity
+                  key={member.id}
+                  style={[
+                    styles.memberOption,
+                    formData.familyMembers.includes(member.id) && styles.memberOptionSelected
+                  ]}
+                  onPress={() => toggleFamilyMember(member.id)}
+                >
+                  <Text style={[
+                    styles.memberLabel,
+                    formData.familyMembers.includes(member.id) && styles.memberLabelSelected
+                  ]}>
+                    {member.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
         </View>
 
         {/* Description */}
@@ -943,6 +972,39 @@ const styles = StyleSheet.create({
   },
   timeSlotTextSelected: {
     color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  // No Family Error Styles
+  noFamilyContainer: {
+    backgroundColor: '#FEF2F2',
+    borderRadius: 12,
+    padding: 20,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  noFamilyTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#DC2626',
+    marginBottom: 8,
+  },
+  noFamilyMessage: {
+    fontSize: 14,
+    color: '#991B1B',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  createFamilyButton: {
+    backgroundColor: '#DC2626',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  createFamilyButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
     fontWeight: '600',
   },
 });

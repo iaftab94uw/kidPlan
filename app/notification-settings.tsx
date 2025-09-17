@@ -4,37 +4,39 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   SafeAreaView,
   Switch,
   Alert,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
-import { ArrowLeft, Bell, BellOff, Volume2, VolumeX, Vibrate, Settings } from 'lucide-react-native';
+import { ArrowLeft, Bell, BellOff } from 'lucide-react-native';
 import { useNotifications } from '@/hooks/useNotifications';
-import { NotificationSettings as NotificationSettingsType } from '@/types/notifications';
-import { IOSNotificationTest } from '@/components/IOSNotificationTest';
 
 export default function NotificationSettings() {
   const router = useRouter();
   const {
     settings,
     updateSettings,
-    openSettings,
-    pushToken,
     isRegistered,
     isLoading,
-    scheduledNotifications,
-    cancelAllNotifications,
   } = useNotifications();
 
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const handleToggleSetting = async (key: keyof NotificationSettingsType, value: boolean) => {
+  const handleToggleNotifications = async (value: boolean) => {
     setIsUpdating(true);
     try {
-      await updateSettings({ [key]: value });
+      await updateSettings({ 
+        pushNotifications: value,
+        eventReminders: value,
+        familyUpdates: value,
+        photoUpdates: value,
+        scheduleReminders: value,
+        soundEnabled: value,
+        vibrationEnabled: value
+      });
     } catch (error) {
       console.error('Error updating notification setting:', error);
       Alert.alert('Error', 'Failed to update notification setting');
@@ -42,77 +44,6 @@ export default function NotificationSettings() {
       setIsUpdating(false);
     }
   };
-
-  const handleOpenSystemSettings = async () => {
-    try {
-      await openSettings();
-    } catch (error) {
-      console.error('Error opening system settings:', error);
-      Alert.alert('Error', 'Failed to open system settings');
-    }
-  };
-
-  const handleClearAllNotifications = () => {
-    Alert.alert(
-      'Clear All Notifications',
-      'Are you sure you want to cancel all scheduled notifications?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Clear All',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await cancelAllNotifications();
-              Alert.alert('Success', 'All notifications have been cleared');
-            } catch (error) {
-              console.error('Error clearing notifications:', error);
-              Alert.alert('Error', 'Failed to clear notifications');
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  const SettingRow = ({
-    title,
-    description,
-    value,
-    onValueChange,
-    icon: Icon,
-    disabled = false,
-  }: {
-    title: string;
-    description: string;
-    value: boolean;
-    onValueChange: (value: boolean) => void;
-    icon: any;
-    disabled?: boolean;
-  }) => (
-    <View style={styles.settingRow}>
-      <View style={styles.settingLeft}>
-        <View style={[styles.iconContainer, disabled && styles.iconContainerDisabled]}>
-          <Icon size={20} color={disabled ? '#9CA3AF' : '#0e3c67'} />
-        </View>
-        <View style={styles.settingText}>
-          <Text style={[styles.settingTitle, disabled && styles.settingTitleDisabled]}>
-            {title}
-          </Text>
-          <Text style={[styles.settingDescription, disabled && styles.settingDescriptionDisabled]}>
-            {description}
-          </Text>
-        </View>
-      </View>
-      <Switch
-        value={value}
-        onValueChange={onValueChange}
-        disabled={disabled || isUpdating}
-        trackColor={{ false: '#E5E7EB', true: '#0e3c67' }}
-        thumbColor={value ? '#FFFFFF' : '#FFFFFF'}
-      />
-    </View>
-  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -128,136 +59,127 @@ export default function NotificationSettings() {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView style={styles.content}>
-        {/* Status Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Status</Text>
-          <View style={styles.statusCard}>
-            <View style={styles.statusRow}>
-              <Text style={styles.statusLabel}>Push Notifications</Text>
-              <View style={styles.statusValue}>
-                {isLoading ? (
-                  <ActivityIndicator size="small" color="#0e3c67" />
-                ) : isRegistered ? (
-                  <View style={styles.statusIndicator}>
-                    <Bell size={16} color="#10B981" />
-                    <Text style={styles.statusTextActive}>Enabled</Text>
-                  </View>
-                ) : (
-                  <View style={styles.statusIndicator}>
-                    <BellOff size={16} color="#EF4444" />
-                    <Text style={styles.statusTextInactive}>Disabled</Text>
-                  </View>
-                )}
-              </View>
-            </View>
-            {pushToken && (
-              <View style={styles.tokenContainer}>
-                <Text style={styles.tokenLabel}>Push Token:</Text>
-                <Text style={styles.tokenValue} numberOfLines={2}>
-                  {pushToken}
-                </Text>
-              </View>
+      {/* Main Content */}
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Hero Section */}
+        <View style={styles.heroSection}>
+          <View style={styles.heroIconContainer}>
+            {settings.pushNotifications ? (
+              <Bell size={32} color="#FFFFFF" />
+            ) : (
+              <BellOff size={32} color="#FFFFFF" />
             )}
-            <TouchableOpacity
-              style={styles.systemSettingsButton}
-              onPress={handleOpenSystemSettings}
-            >
-              <Settings size={16} color="#0e3c67" />
-              <Text style={styles.systemSettingsText}>Open System Settings</Text>
-            </TouchableOpacity>
           </View>
+          <Text style={styles.heroTitle}>
+            {settings.pushNotifications ? 'Notifications On' : 'Notifications Off'}
+          </Text>
+          <Text style={styles.heroSubtitle}>
+            {settings.pushNotifications 
+              ? 'Stay updated with important family events and reminders' 
+              : 'You won\'t receive any notifications from the app'
+            }
+          </Text>
         </View>
 
-        {/* Notification Types */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Notification Types</Text>
-          <View style={styles.settingsCard}>
-            <SettingRow
-              title="Push Notifications"
-              description="Receive push notifications from the app"
-              value={settings.pushNotifications}
-              onValueChange={(value) => handleToggleSetting('pushNotifications', value)}
-              icon={Bell}
-            />
-            <SettingRow
-              title="Event Reminders"
-              description="Get reminded about upcoming events"
-              value={settings.eventReminders}
-              onValueChange={(value) => handleToggleSetting('eventReminders', value)}
-              icon={Bell}
-              disabled={!settings.pushNotifications}
-            />
-            <SettingRow
-              title="Family Updates"
-              description="Notifications about family member changes"
-              value={settings.familyUpdates}
-              onValueChange={(value) => handleToggleSetting('familyUpdates', value)}
-              icon={Bell}
-              disabled={!settings.pushNotifications}
-            />
-            <SettingRow
-              title="Photo Updates"
-              description="Notifications when new photos are uploaded"
-              value={settings.photoUpdates}
-              onValueChange={(value) => handleToggleSetting('photoUpdates', value)}
-              icon={Bell}
-              disabled={!settings.pushNotifications}
-            />
-            <SettingRow
-              title="Schedule Reminders"
-              description="Reminders about upcoming schedules"
-              value={settings.scheduleReminders}
-              onValueChange={(value) => handleToggleSetting('scheduleReminders', value)}
-              icon={Bell}
-              disabled={!settings.pushNotifications}
-            />
-          </View>
-        </View>
-
-        {/* Sound & Vibration */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Sound & Vibration</Text>
-          <View style={styles.settingsCard}>
-            <SettingRow
-              title="Sound"
-              description="Play sound for notifications"
-              value={settings.soundEnabled}
-              onValueChange={(value) => handleToggleSetting('soundEnabled', value)}
-              icon={settings.soundEnabled ? Volume2 : VolumeX}
-            />
-            <SettingRow
-              title="Vibration"
-              description="Vibrate for notifications"
-              value={settings.vibrationEnabled}
-              onValueChange={(value) => handleToggleSetting('vibrationEnabled', value)}
-              icon={Vibrate}
-            />
-          </View>
-        </View>
-
-        {/* Scheduled Notifications */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Scheduled Notifications</Text>
-          <View style={styles.settingsCard}>
-            <View style={styles.scheduledInfo}>
-              <Text style={styles.scheduledCount}>
-                {scheduledNotifications.length} notification{scheduledNotifications.length !== 1 ? 's' : ''} scheduled
-              </Text>
-              {scheduledNotifications.length > 0 && (
-                <TouchableOpacity
-                  style={styles.clearButton}
-                  onPress={handleClearAllNotifications}
-                >
-                  <Text style={styles.clearButtonText}>Clear All</Text>
-                </TouchableOpacity>
+        {/* Main Control Card */}
+        <View style={styles.controlCard}>
+          <View style={styles.controlHeader}>
+            <View style={styles.controlIconContainer}>
+              {settings.pushNotifications ? (
+                <Bell size={20} color="#0e3c67" />
+              ) : (
+                <BellOff size={20} color="#9CA3AF" />
               )}
             </View>
+            <View style={styles.controlText}>
+              <Text style={styles.controlTitle}>Push Notifications</Text>
+              <Text style={styles.controlDescription}>
+                {settings.pushNotifications 
+                  ? 'Receive notifications from the app' 
+                  : 'Notifications are currently disabled'
+                }
+              </Text>
+            </View>
+          </View>
+          
+          <View style={styles.switchContainer}>
+            {isUpdating ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color="#0e3c67" />
+                <Text style={styles.loadingText}>Updating...</Text>
+              </View>
+            ) : (
+              <Switch
+                value={settings.pushNotifications}
+                onValueChange={handleToggleNotifications}
+                trackColor={{ false: '#E5E7EB', true: '#0e3c67' }}
+                thumbColor={settings.pushNotifications ? '#FFFFFF' : '#FFFFFF'}
+                style={styles.switch}
+              />
+            )}
           </View>
         </View>
 
-        {/* iOS Notification Test */}
-        <IOSNotificationTest />
+        {/* Status Card */}
+        <View style={styles.statusCard}>
+          <View style={styles.statusHeader}>
+            <View style={[
+              styles.statusIndicator, 
+              { backgroundColor: isLoading ? '#F59E0B' : isRegistered ? '#10B981' : '#EF4444' }
+            ]}>
+              <Text style={styles.statusIndicatorText}>
+                {isLoading ? '⏳' : isRegistered ? '✓' : '⚠️'}
+              </Text>
+            </View>
+            <Text style={styles.statusTitle}>Status</Text>
+          </View>
+          <Text style={styles.statusText}>
+            {isLoading ? (
+              'Checking notification status...'
+            ) : isRegistered ? (
+              'Notifications are properly configured and ready to receive updates'
+            ) : (
+              'Notification permissions may need to be enabled in your device settings'
+            )}
+          </Text>
+        </View>
+
+        {/* Benefits Section */}
+        {settings.pushNotifications && (
+          <View style={styles.benefitsCard}>
+            <Text style={styles.benefitsTitle}>What you'll receive:</Text>
+            <View style={styles.benefitsList}>
+              <View style={styles.benefitItem}>
+                <View style={styles.benefitIcon}>
+                  <Text style={styles.benefitIconText}>📅</Text>
+                </View>
+                <Text style={styles.benefitText}>Event reminders and updates</Text>
+              </View>
+              <View style={styles.benefitItem}>
+                <View style={styles.benefitIcon}>
+                  <Text style={styles.benefitIconText}>👨‍👩‍👧‍👦</Text>
+                </View>
+                <Text style={styles.benefitText}>Family member notifications</Text>
+              </View>
+              <View style={styles.benefitItem}>
+                <View style={styles.benefitIcon}>
+                  <Text style={styles.benefitIconText}>📸</Text>
+                </View>
+                <Text style={styles.benefitText}>Photo sharing updates</Text>
+              </View>
+              <View style={styles.benefitItem}>
+                <View style={styles.benefitIcon}>
+                  <Text style={styles.benefitIconText}>⏰</Text>
+                </View>
+                <Text style={styles.benefitText}>Schedule reminders</Text>
+              </View>
+            </View>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -266,16 +188,23 @@ export default function NotificationSettings() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#F8FAFC',
   },
   header: {
+    backgroundColor: '#0e3c67',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    paddingTop: 60,
-    backgroundColor: '#0e3c67',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   backButton: {
     width: 40,
@@ -286,170 +215,212 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 18,
+    fontWeight: '600',
     color: '#FFFFFF',
+    flex: 1,
+    textAlign: 'center',
+    marginHorizontal: 16,
   },
   headerSpacer: {
     width: 40,
   },
-  content: {
+  scrollView: {
     flex: 1,
-    padding: 20,
   },
-  section: {
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 40,
+  },
+  // Hero Section
+  heroSection: {
+    alignItems: 'center',
+    paddingVertical: 32,
+    paddingHorizontal: 20,
     marginBottom: 24,
   },
-  sectionTitle: {
+  heroIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#0e3c67',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    shadowColor: '#0e3c67',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  heroTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  heroSubtitle: {
+    fontSize: 16,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 24,
+    maxWidth: 280,
+  },
+  // Control Card
+  controlCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 24,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  controlHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  controlIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#F0F7FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  controlText: {
+    flex: 1,
+  },
+  controlTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: '#111827',
-    marginBottom: 12,
-  },
-  statusCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  statusRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  statusLabel: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#111827',
-  },
-  statusValue: {
-    alignItems: 'flex-end',
-  },
-  statusIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  statusTextActive: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#10B981',
-  },
-  statusTextInactive: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#EF4444',
-  },
-  tokenContainer: {
-    marginTop: 12,
-    padding: 12,
-    backgroundColor: '#F9FAFB',
-    borderRadius: 8,
-  },
-  tokenLabel: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#6B7280',
     marginBottom: 4,
   },
-  tokenValue: {
-    fontSize: 12,
-    color: '#374151',
-    fontFamily: 'monospace',
+  controlDescription: {
+    fontSize: 15,
+    color: '#6B7280',
+    lineHeight: 22,
   },
-  systemSettingsButton: {
+  switchContainer: {
+    alignItems: 'center',
+  },
+  loadingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 12,
-    padding: 12,
-    backgroundColor: '#F0F7FF',
-    borderRadius: 8,
     gap: 8,
   },
-  systemSettingsText: {
+  loadingText: {
     fontSize: 14,
-    fontWeight: '500',
     color: '#0e3c67',
+    fontWeight: '500',
   },
-  settingsCard: {
+  switch: {
+    transform: [{ scaleX: 1.2 }, { scaleY: 1.2 }],
+  },
+  // Status Card
+  statusCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
     shadowOpacity: 0.05,
-    shadowRadius: 4,
+    shadowRadius: 8,
     elevation: 2,
   },
-  settingRow: {
+  statusHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    marginBottom: 12,
   },
-  settingLeft: {
+  statusIndicator: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  statusIndicatorText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  statusTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  statusText: {
+    fontSize: 14,
+    color: '#6B7280',
+    lineHeight: 20,
+  },
+  // Benefits Card
+  benefitsCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  benefitsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 16,
+  },
+  benefitsList: {
+    gap: 12,
+  },
+  benefitItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
   },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  benefitIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: '#F0F7FF',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
   },
-  iconContainerDisabled: {
-    backgroundColor: '#F3F4F6',
+  benefitIconText: {
+    fontSize: 16,
   },
-  settingText: {
+  benefitText: {
+    fontSize: 14,
+    color: '#374151',
+    fontWeight: '500',
     flex: 1,
-  },
-  settingTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#111827',
-    marginBottom: 2,
-  },
-  settingTitleDisabled: {
-    color: '#9CA3AF',
-  },
-  settingDescription: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  settingDescriptionDisabled: {
-    color: '#D1D5DB',
-  },
-  scheduledInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-  },
-  scheduledCount: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#111827',
-  },
-  clearButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: '#FEE2E2',
-    borderRadius: 6,
-  },
-  clearButtonText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#DC2626',
   },
 });

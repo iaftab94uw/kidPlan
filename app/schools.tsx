@@ -481,12 +481,7 @@ export default function Schools() {
           <ArrowLeft size={24} color="#FFFFFF" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Schools</Text>
-        <TouchableOpacity 
-          style={styles.filterButton}
-          onPress={() => setShowFilterModal(true)}
-        >
-          <Filter size={24} color="#FFFFFF" />
-        </TouchableOpacity>
+        <View style={styles.filterButtonPlaceholder} />
       </View>
 
       {/* Search Section */}
@@ -710,6 +705,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  filterButtonPlaceholder: {
+    width: 40,
+    height: 40,
   },
   searchSection: {
     backgroundColor: '#FFFFFF',

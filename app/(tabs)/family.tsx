@@ -635,7 +635,15 @@ export default function Family() {
     }
 
     if (!familyData?._id) {
-      Alert.alert('Error', 'Family not found. Please try again.');
+      Alert.alert('Error', 'No family found. Please create a family first before adding members.', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Create Family', onPress: () => {
+          // Close the modal first
+          setShowAddMemberModal(false);
+          // Navigate to family creation or show family creation modal
+          // You can add navigation logic here if needed
+        }}
+      ]);
       return;
     }
 
@@ -747,8 +755,21 @@ export default function Family() {
       return;
     }
 
-    if (!familyData?._id || !editingMember._id) {
-      Alert.alert('Error', 'Family or member not found. Please try again.');
+    if (!familyData?._id) {
+      Alert.alert('Error', 'No family found. Please create a family first before updating members.', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Create Family', onPress: () => {
+          // Close the modal first
+          setShowEditMemberModal(false);
+          // Navigate to family creation or show family creation modal
+          // You can add navigation logic here if needed
+        }}
+      ]);
+      return;
+    }
+
+    if (!editingMember._id) {
+      Alert.alert('Error', 'Member not found. Please try again.');
       return;
     }
 
@@ -1050,7 +1071,15 @@ export default function Family() {
     }
 
     if (!familyData?._id) {
-      Alert.alert('Error', 'Family not found. Please try again.');
+      Alert.alert('Error', 'No family found. Please create a family first before creating schedules.', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Create Family', onPress: () => {
+          // Close the modal first
+          setShowAddScheduleModal(false);
+          // Navigate to family creation or show family creation modal
+          // You can add navigation logic here if needed
+        }}
+      ]);
       return;
     }
 
@@ -1232,9 +1261,10 @@ export default function Family() {
 
 
         {/* Children */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Children</Text>
-          {familyData?.children && familyData.children.length > 0 ? (
+        {familyData && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Children</Text>
+            {familyData?.children && familyData.children.length > 0 ? (
             familyData.children.map((child: any) => (
               <View key={child._id} style={styles.memberCard}>
                 <Image 
@@ -1281,12 +1311,14 @@ export default function Family() {
               </TouchableOpacity>
             </View>
           )}
-        </View>
+          </View>
+        )}
 
         {/* Co-Parents */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Co-Parents</Text>
-          {familyData?.coParents && familyData.coParents.length > 0 ? (
+        {familyData && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Co-Parents</Text>
+            {familyData?.coParents && familyData.coParents.length > 0 ? (
             familyData.coParents.map((coParent: any) => (
               <View key={coParent._id} style={styles.parentCard}>
                 <Image 
@@ -1333,7 +1365,8 @@ export default function Family() {
               </TouchableOpacity>
             </View>
           )}
-        </View>
+          </View>
+        )}
 
         {/* Others */}
         {familyData?.others && familyData.others.length > 0 && (
@@ -1371,16 +1404,17 @@ export default function Family() {
         )}
 
         {/* Co-Parenting Schedule */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Co-Parenting Schedule</Text>
-            <TouchableOpacity 
-              style={styles.addScheduleButton}
-              onPress={() => setShowAddScheduleModal(true)}
-            >
-              <Plus size={16} color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
+        {familyData && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Co-Parenting Schedule</Text>
+              <TouchableOpacity 
+                style={styles.addScheduleButton}
+                onPress={() => setShowAddScheduleModal(true)}
+              >
+                <Plus size={16} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
           
           {/* Filter Options */}
           <View style={styles.filterContainer}>
@@ -1507,7 +1541,8 @@ export default function Family() {
               </TouchableOpacity>
             </View>
           )}
-        </View>
+          </View>
+        )}
 
         {/* Add Family Member Modal */}
         <Modal
