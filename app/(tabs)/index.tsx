@@ -532,10 +532,9 @@ export default function Dashboard() {
               return (
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.membersScroll}>
                   {familyMembers.map((member, index) => (
-                    <TouchableOpacity 
+                    <View 
                       key={`${member._id}-${index}`}
                       style={styles.memberCard}
-                      onPress={() => router.push(`/member-detail/${member._id}`)}
                     >
                       <Image 
                         source={{ 
@@ -545,7 +544,7 @@ export default function Dashboard() {
                       />
                       <Text style={styles.memberName}>{member.name}</Text>
                       <Text style={styles.memberAge}>{member.age || 'Family Member'}</Text>
-                    </TouchableOpacity>
+                    </View>
                   ))}
                   <TouchableOpacity 
                     style={styles.addMemberCard}
