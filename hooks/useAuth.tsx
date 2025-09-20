@@ -141,7 +141,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         router.replace('/(tabs)');
         return true;
       } else {
-        throw new Error(data.message || 'Signup failed');
+        throw new Error(data.error || data.message || 'Signup failed');
       }
     } catch (error) {
       console.error('Signup error:', error);

@@ -8,7 +8,8 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
-  ScrollView
+  ScrollView,
+  Alert
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Eye, EyeOff, ArrowLeft, CircleCheck as CheckCircle } from 'lucide-react-native';
@@ -110,7 +111,11 @@ export default function SignUp() {
 
   const handleSignUp = async () => {
     if (!validateForm()) {
-      showBanner('error', 'Please fix the errors below');
+      Alert.alert(
+        'Validation Error',
+        'Please fix the errors below',
+        [{ text: 'OK' }]
+      );
       return;
     }
 
@@ -121,7 +126,13 @@ export default function SignUp() {
       await signup(fullName, email, password);
       showBanner('success', 'Account created successfully! Welcome to KidPlan!');
     } catch (error: any) {
-      showBanner('error', error.message || 'Signup failed. Please try again.');
+      console.log('Signup error caught:', error);
+      console.log('Error message:', error.message);
+      Alert.alert(
+        'Signup Failed',
+        error.message || 'Signup failed. Please try again.',
+        [{ text: 'OK' }]
+      );
     } finally {
       setIsLoading(false);
     }
@@ -349,9 +360,6 @@ const styles = StyleSheet.create({
   },
   bannerClose: {
     padding: 4,
-  },
-  errorText: {
-    color: '#DC2626',
   },
   successText: {
     color: '#059669',

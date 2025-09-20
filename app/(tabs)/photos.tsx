@@ -12,7 +12,9 @@ import {
   Alert,
   ActivityIndicator,
   RefreshControl,
-  FlatList
+  FlatList,
+  Platform,
+  KeyboardAvoidingView
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -900,38 +902,42 @@ export default function Photos() {
             presentationStyle="formSheet"
             statusBarTranslucent={false}
           >
-            <View style={[styles.modalContainer, { paddingTop: insets.top }]}>
-              {/* Modern Header */}
-              <View style={styles.modalHeader}>
-                <View style={styles.modalHeaderContent}>
-                  <TouchableOpacity 
-                    onPress={() => setShowCreateAlbumModal(false)}
-                    style={styles.closeButton}
-                  >
-                    <X size={24} color="#6B7280" />
-                  </TouchableOpacity>
-                  <View style={styles.modalTitleContainer}>
-                    <Text style={styles.modalTitle}>Create New Album</Text>
-                    <Text style={styles.modalSubtitle}>Organize your memories</Text>
+            <KeyboardAvoidingView 
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              style={styles.keyboardAvoidingView}
+            >
+              <View style={[styles.modalContainer, { paddingTop: insets.top }]}>
+                {/* Modern Header */}
+                <View style={styles.modalHeader}>
+                  <View style={styles.modalHeaderContent}>
+                    <TouchableOpacity 
+                      onPress={() => setShowCreateAlbumModal(false)}
+                      style={styles.closeButton}
+                    >
+                      <X size={24} color="#6B7280" />
+                    </TouchableOpacity>
+                    <View style={styles.modalTitleContainer}>
+                      <Text style={styles.modalTitle}>Create New Album</Text>
+                      <Text style={styles.modalSubtitle}>Organize your memories</Text>
+                    </View>
+                    <TouchableOpacity 
+                      style={[
+                        styles.createButton,
+                        (isCreatingAlbum || uploadProgress.isUploading || !newAlbum.name.trim()) && styles.createButtonDisabled
+                      ]}
+                      onPress={handleSaveAlbum}
+                      disabled={isCreatingAlbum || uploadProgress.isUploading || !newAlbum.name.trim()}
+                    >
+                      {(isCreatingAlbum || uploadProgress.isUploading) ? (
+                        <ActivityIndicator size="small" color="#FFFFFF" />
+                      ) : (
+                        <Text style={styles.createButtonText}>Create</Text>
+                      )}
+                    </TouchableOpacity>
                   </View>
-                  <TouchableOpacity 
-                    style={[
-                      styles.createButton,
-                      (isCreatingAlbum || uploadProgress.isUploading || !newAlbum.name.trim()) && styles.createButtonDisabled
-                    ]}
-                    onPress={handleSaveAlbum}
-                    disabled={isCreatingAlbum || uploadProgress.isUploading || !newAlbum.name.trim()}
-                  >
-                    {(isCreatingAlbum || uploadProgress.isUploading) ? (
-                      <ActivityIndicator size="small" color="#FFFFFF" />
-                    ) : (
-                      <Text style={styles.createButtonText}>Create</Text>
-                    )}
-                  </TouchableOpacity>
                 </View>
-              </View>
 
-              <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+                <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
                 <View style={styles.formContainer}>
                   {/* Cover Image Section */}
                   <View style={styles.coverImageSection}>
@@ -1057,6 +1063,7 @@ export default function Photos() {
                 </View>
               </ScrollView>
             </View>
+            </KeyboardAvoidingView>
           </Modal>
 
           {/* Upload Media Modal */}
@@ -1446,6 +1453,9 @@ export default function Photos() {
     container: {
       flex: 1,
       backgroundColor: '#F9FAFB',
+    },
+    keyboardAvoidingView: {
+      flex: 1,
     },
     header: {
       flexDirection: 'row',
