@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { 
   View, 
   Text, 
@@ -48,6 +49,8 @@ export default function Calendar() {
   const searchParams = useLocalSearchParams();
   const { user, token } = useAuth();
   const { triggerRefresh } = useAppEvents();
+  const hasFetchedFamilyData = useRef(false);
+  const lastFamilyFetchTime = useRef(0);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showAddEventModal, setShowAddEventModal] = useState(false);
@@ -85,6 +88,7 @@ export default function Calendar() {
     familyData, 
     loading: familyLoading, 
     error: familyError, 
+    refetch: refetchFamily,
     getAllFamilyMembers 
   } = useFamilyDetails(token || '');
 
@@ -164,7 +168,7 @@ export default function Calendar() {
       await refetchEvents();
       
       // Refresh family data
-      await getAllFamilyMembers();
+      await refetchFamily();
       
       // Trigger refresh event for home screen
       triggerRefresh('events');
@@ -174,6 +178,32 @@ export default function Calendar() {
       setRefreshing(false);
     }
   };
+
+  // Reset family data fetch flag when token changes (new login)
+  useEffect(() => {
+    if (token) {
+      hasFetchedFamilyData.current = false;
+    }
+  }, [token]);
+
+  // Refresh family data when calendar screen becomes active (with debounce)
+  useFocusEffect(
+    React.useCallback(() => {
+      if (token) {
+        const now = Date.now();
+        const timeSinceLastFetch = now - lastFamilyFetchTime.current;
+        
+        // Only fetch if more than 5 seconds have passed since last fetch
+        if (timeSinceLastFetch > 5000) {
+          console.log('Calendar screen focused - refreshing family data (debounced)');
+          lastFamilyFetchTime.current = now;
+          refetchFamily();
+        } else {
+          console.log('Calendar screen focused - skipping family data fetch (too recent)');
+        }
+      }
+    }, [token, refetchFamily])
+  );
   const [newEvent, setNewEvent] = useState({
     title: '',
     type: 'Personal',
@@ -231,6 +261,11 @@ export default function Calendar() {
     });
     
     return familyMembers;
+  };
+
+  const hasActualFamilyMembers = () => {
+    const allMembers = getAllFamilyMembers();
+    return allMembers && allMembers.length > 0;
   };
 
   const formatTime = (date: Date) => {
@@ -1229,7 +1264,7 @@ export default function Calendar() {
                 <Text style={styles.fieldLabel}>Family Member</Text>
                 {familyLoading ? (
                   <Text style={styles.loadingText}>Loading family members...</Text>
-                ) : (getFamilyMembers().length ?? 0) === 0 ? (
+                ) : !hasActualFamilyMembers() ? (
                   <View style={styles.noFamilyContainer}>
                     <Text style={styles.noFamilyTitle}>No Family Found</Text>
                     <Text style={styles.noFamilyMessage}>
@@ -1525,7 +1560,7 @@ export default function Calendar() {
                 <Text style={styles.fieldLabel}>Family Member</Text>
                 {familyLoading ? (
                   <Text style={styles.loadingText}>Loading family members...</Text>
-                ) : getFamilyMembers().length === 0 ? (
+                ) : !hasActualFamilyMembers() ? (
                   <View style={styles.noFamilyContainer}>
                     <Text style={styles.noFamilyTitle}>No Family Found</Text>
                     <Text style={styles.noFamilyMessage}>

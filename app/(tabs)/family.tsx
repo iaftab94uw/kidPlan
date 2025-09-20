@@ -1550,7 +1550,11 @@ export default function Family() {
           animationType="slide"
           presentationStyle="formSheet"
         >
-          <SafeAreaView style={styles.modalContainer}>
+          <KeyboardAvoidingView 
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.keyboardAvoidingView}
+          >
+            <SafeAreaView style={styles.modalContainer}>
             {/* Enhanced Modal Header */}
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderContent}>
@@ -1682,8 +1686,12 @@ export default function Family() {
                   ))}
                 </View>
               </View>
+              
+              {/* Bottom spacing for Android native buttons */}
+              <View style={styles.bottomSpacing} />
             </ScrollView>
           </SafeAreaView>
+          </KeyboardAvoidingView>
         </Modal>
 
         {/* Add Schedule Modal */}
@@ -2556,6 +2564,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F9FAFB',
   },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
+  bottomSpacing: {
+    height: Platform.OS === 'android' ? 60 : 20,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -3177,9 +3191,6 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   // Schedule Modal Styles
-  keyboardAvoidingView: {
-    flex: 1,
-  },
   dateRangeContainer: {
     gap: 12,
   },
