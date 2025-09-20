@@ -416,6 +416,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 32,
+    paddingBottom: Platform.OS === 'android' ? 60 : 32,
   },
   footerText: {
     fontSize: 14,

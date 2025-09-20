@@ -314,7 +314,7 @@ export default function TodaySchedule() {
                 <TouchableOpacity 
                   key={event._id} 
                   style={styles.eventCard}
-                  onPress={() => router.push(`/event-detail/${event._id}`)}
+                  // onPress={() => router.push(`/event-detail/${event._id}`)}
                 >
                   <View style={[styles.eventColorBar, { backgroundColor: event.color || '#0e3c67' }]} />
                   <View style={styles.eventAvatar}>

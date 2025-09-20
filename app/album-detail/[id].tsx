@@ -13,7 +13,9 @@ import {
   Alert,
   TextInput,
   Modal,
-  FlatList
+  FlatList,
+  Platform,
+  KeyboardAvoidingView
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -636,8 +638,12 @@ export default function AlbumDetail() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
+      >
+        {/* Header */}
+        <View style={styles.header}>
         <TouchableOpacity 
           style={styles.backButton}
           onPress={() => router.back()}
@@ -734,9 +740,9 @@ export default function AlbumDetail() {
           
           {viewMode === 'grid' ? renderPhotoGrid() : renderPhotoList()}
         </View>
-      </ScrollView>
+        </ScrollView>
 
-      {/* Upload Modal */}
+        {/* Upload Modal */}
       <Modal
         visible={showUploadModal}
         animationType="slide"
@@ -1156,6 +1162,7 @@ export default function AlbumDetail() {
           </ScrollView>
         </View>
       </Modal>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -1164,6 +1171,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F9FAFB',
+  },
+  keyboardView: {
+    flex: 1,
   },
   loadingContainer: {
     flex: 1,

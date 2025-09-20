@@ -453,7 +453,7 @@ export default function Dashboard() {
               <TouchableOpacity 
                 key={schedule._id} 
                 style={styles.eventCard}
-                onPress={() => router.push(`/schedule-detail/${schedule._id}`)}
+                // onPress={() => router.push(`/schedule-detail/${schedule._id}`)}
               >
                 <View style={styles.eventAvatar}>
                   <Calendar size={20} color="#8B5CF6" />
@@ -587,7 +587,7 @@ export default function Dashboard() {
               <TouchableOpacity 
                 key={schedule._id}
                 style={styles.scheduleCard}
-                onPress={() => router.push(`/schedule-detail/${schedule._id}`)}
+                // onPress={() => router.push(`/schedule-detail/${schedule._id}`)}
               >
                 <View style={styles.scheduleHeader}>
                   <View style={styles.scheduleInfo}>

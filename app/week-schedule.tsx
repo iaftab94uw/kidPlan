@@ -357,7 +357,7 @@ export default function WeekSchedule() {
                 <TouchableOpacity 
                   key={event._id} 
                   style={styles.scheduleCard}
-                  onPress={() => router.push(`/event-detail/${event._id}`)}
+                  // onPress={() => router.push(`/event-detail/${event._id}`)}
                 >
                   <View style={[styles.scheduleColorBar, { backgroundColor: event.color || '#0e3c67' }]} />
                   <View style={styles.scheduleAvatar}>

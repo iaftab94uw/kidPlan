@@ -12,7 +12,8 @@ import {
   Platform,
   Modal,
   ActivityIndicator,
-  FlatList
+  FlatList,
+  KeyboardAvoidingView
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { 
@@ -322,7 +323,11 @@ export default function CreateSchoolEvent() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content}>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
+      >
+        <ScrollView style={styles.content}>
         {/* Event Title */}
         <View style={styles.fieldGroup}>
           <Text style={styles.fieldLabel}>Event Title</Text>
@@ -534,7 +539,11 @@ export default function CreateSchoolEvent() {
             numberOfLines={3}
           />
         </View>
-      </ScrollView>
+
+        {/* Bottom Spacing for Android */}
+        <View style={styles.bottomSpacing} />
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* Date Picker Modal */}
       {showDatePicker && (
@@ -676,6 +685,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F9FAFB',
+  },
+  keyboardView: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
@@ -1006,5 +1018,8 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '600',
+  },
+  bottomSpacing: {
+    height: Platform.OS === 'android' ? 60 : 20,
   },
 });

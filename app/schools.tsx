@@ -207,7 +207,10 @@ export default function Schools() {
       address.county
     ].filter(part => part && part.trim() !== '');
     
-    return parts.join(', ') + (address.postcode ? ` ${address.postcode}` : '');
+    const addressString = parts.join(', ');
+    const postcodeString = address.postcode && address.postcode.trim() ? ` ${address.postcode}` : '';
+    
+    return addressString + postcodeString || 'Address not available';
   };
 
   const renderSchoolCard = ({ item: school }: { item: SchoolType }) => {
@@ -243,17 +246,19 @@ export default function Schools() {
         </View>
         
         <View style={styles.schoolDetails}>
-          <View style={styles.schoolDetailItem}>
-            <MapPin size={14} color="#6B7280" />
-            <Text style={styles.schoolDetailText}>{school.la}</Text>
-          </View>
-          {school.contact.tel && (
+          {school.la && school.la.trim() && (
+            <View style={styles.schoolDetailItem}>
+              <MapPin size={14} color="#6B7280" />
+              <Text style={styles.schoolDetailText}>{school.la}</Text>
+            </View>
+          )}
+          {school.contact.tel && school.contact.tel.trim() && (
             <View style={styles.schoolDetailItem}>
               <Phone size={14} color="#6B7280" />
               <Text style={styles.schoolDetailText}>{school.contact.tel}</Text>
             </View>
           )}
-          {school.contact.web && (
+          {school.contact.web && school.contact.web.trim() && (
             <View style={styles.schoolDetailItem}>
               <Globe size={14} color="#6B7280" />
               <Text style={styles.schoolDetailText}>{school.contact.web}</Text>
@@ -306,30 +311,33 @@ export default function Schools() {
                 <Text style={styles.schoolDetailSectionText}>{formatAddress(selectedSchool.address)}</Text>
               </View>
               
-              <View style={styles.schoolDetailSection}>
-                <Text style={styles.schoolDetailSectionTitle}>Local Authority</Text>
-                <Text style={styles.schoolDetailSectionText}>{selectedSchool.la}</Text>
-              </View>
+              {selectedSchool.la && selectedSchool.la.trim() && (
+                <View style={styles.schoolDetailSection}>
+                  <Text style={styles.schoolDetailSectionTitle}>Local Authority</Text>
+                  <Text style={styles.schoolDetailSectionText}>{selectedSchool.la}</Text>
+                </View>
+              )}
               
-              {selectedSchool.contact.tel && (
+              {selectedSchool.contact.tel && selectedSchool.contact.tel.trim() && (
                 <View style={styles.schoolDetailSection}>
                   <Text style={styles.schoolDetailSectionTitle}>Phone</Text>
                   <Text style={styles.schoolDetailSectionText}>{selectedSchool.contact.tel}</Text>
                 </View>
               )}
               
-              {selectedSchool.contact.web && (
+              {selectedSchool.contact.web && selectedSchool.contact.web.trim() && (
                 <View style={styles.schoolDetailSection}>
                   <Text style={styles.schoolDetailSectionTitle}>Website</Text>
                   <Text style={styles.schoolDetailSectionText}>{selectedSchool.contact.web}</Text>
                 </View>
               )}
               
-              {selectedSchool.contact.head.firstName && (
+              {selectedSchool.contact.head.firstName && selectedSchool.contact.head.firstName.trim() && (
                 <View style={styles.schoolDetailSection}>
                   <Text style={styles.schoolDetailSectionTitle}>Head Teacher</Text>
                   <Text style={styles.schoolDetailSectionText}>
-                    {selectedSchool.contact.head.title} {selectedSchool.contact.head.firstName} {selectedSchool.contact.head.lastName}
+                    {selectedSchool.contact.head.title && selectedSchool.contact.head.title.trim() ? `${selectedSchool.contact.head.title} ` : ''}
+                    {selectedSchool.contact.head.firstName} {selectedSchool.contact.head.lastName}
                   </Text>
                 </View>
               )}
@@ -574,17 +582,6 @@ export default function Schools() {
           <Text style={styles.resultsTitle}>
             {loading ? 'Searching...' : `${pagination.total} Schools Found`}
           </Text>
-          <View style={styles.resultsActions}>
-            {(searchQuery.trim() || searchPostcode.trim()) && schools.length > 0 && (
-              <TouchableOpacity 
-                style={styles.showAllButton}
-                onPress={handleShowAll}
-              >
-                <School size={16} color="#0e3c67" />
-                <Text style={styles.showAllButtonText}>Show All</Text>
-              </TouchableOpacity>
-            )}
-          </View>
         </View>
 
         {error && (

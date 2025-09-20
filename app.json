@@ -15,7 +15,9 @@
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "Camera access is required to take photos for your or family profile",
         "NSPhotoLibraryUsageDescription": "This access is required to take photos for your or family profile.",
-        "UIBackgroundModes": ["remote-notification"]
+        "UIBackgroundModes": [
+          "remote-notification"
+        ]
       },
       "entitlements": {
         "aps-environment": "production"
@@ -30,7 +32,8 @@
         "android.permission.RECEIVE_BOOT_COMPLETED",
         "android.permission.VIBRATE",
         "android.permission.WAKE_LOCK"
-      ]
+      ],
+      "package": "com.kidplan.boltexponativewind"
     },
     "web": {
       "bundler": "metro",

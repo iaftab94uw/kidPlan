@@ -7,7 +7,8 @@ import {
   SafeAreaView,
   Image,
   ScrollView,
-  Dimensions
+  Dimensions,
+  Platform
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Calendar, Users, Camera, Shield } from 'lucide-react-native';
@@ -168,7 +169,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   buttonSection: {
-    paddingBottom: 20,
+    paddingBottom: Platform.OS === 'android' ? 60 : 20,
   },
   primaryButton: {
     backgroundColor: '#0e3c67',
