@@ -1229,7 +1229,7 @@ export default function Calendar() {
                 <Text style={styles.fieldLabel}>Family Member</Text>
                 {familyLoading ? (
                   <Text style={styles.loadingText}>Loading family members...</Text>
-                ) : getFamilyMembers().length ?? 0 === 0 ? (
+                ) : (getFamilyMembers().length ?? 0) === 0 ? (
                   <View style={styles.noFamilyContainer}>
                     <Text style={styles.noFamilyTitle}>No Family Found</Text>
                     <Text style={styles.noFamilyMessage}>
