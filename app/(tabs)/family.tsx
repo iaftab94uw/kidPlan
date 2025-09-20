@@ -1896,7 +1896,8 @@ export default function Family() {
               </ScrollView>
 
               {/* Date Pickers */}
-              {showStartDatePicker && (
+              {/* Start Date Picker - iOS Only */}
+              {showStartDatePicker && Platform.OS === 'ios' && (
                 <Modal
                   visible={showStartDatePicker}
                   animationType="slide"
@@ -1939,7 +1940,29 @@ export default function Family() {
                 </Modal>
               )}
 
-              {showEndDatePicker && (
+              {/* Android Native Start Date Picker */}
+              {showStartDatePicker && Platform.OS === 'android' && (
+                <DateTimePicker
+                  value={newSchedule.startDate}
+                  mode="date"
+                  display="default"
+                  minimumDate={new Date()}
+                  onChange={(event, selectedDate) => {
+                    setShowStartDatePicker(false);
+                    if (selectedDate) {
+                      setNewSchedule(prev => ({ 
+                        ...prev, 
+                        startDate: selectedDate,
+                        // Auto-adjust end date if it's before start date
+                        endDate: selectedDate > prev.endDate ? new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000) : prev.endDate
+                      }));
+                    }
+                  }}
+                />
+              )}
+
+              {/* End Date Picker - iOS Only */}
+              {showEndDatePicker && Platform.OS === 'ios' && (
                 <Modal
                   visible={showEndDatePicker}
                   animationType="slide"
@@ -1975,6 +1998,22 @@ export default function Family() {
                     </SafeAreaView>
                   </View>
                 </Modal>
+              )}
+
+              {/* Android Native End Date Picker */}
+              {showEndDatePicker && Platform.OS === 'android' && (
+                <DateTimePicker
+                  value={newSchedule.endDate}
+                  mode="date"
+                  display="default"
+                  minimumDate={new Date()}
+                  onChange={(event, selectedDate) => {
+                    setShowEndDatePicker(false);
+                    if (selectedDate) {
+                      setNewSchedule(prev => ({ ...prev, endDate: selectedDate }));
+                    }
+                  }}
+                />
               )}
             </SafeAreaView>
           </KeyboardAvoidingView>
