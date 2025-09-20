@@ -13,7 +13,8 @@ import {
   Alert,
   Platform,
   FlatList,
-  RefreshControl
+  RefreshControl,
+  KeyboardAvoidingView
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { 
@@ -1093,7 +1094,11 @@ export default function Calendar() {
           animationType="slide"
           presentationStyle="formSheet"
         >
-          <SafeAreaView style={styles.modalContainer}>
+          <KeyboardAvoidingView 
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.keyboardAvoidingView}
+          >
+            <SafeAreaView style={styles.modalContainer}>
             {/* Modal Header */}
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderContent}>
@@ -1380,6 +1385,7 @@ export default function Calendar() {
               </SafeAreaView>
             </Modal>
           )}
+          </KeyboardAvoidingView>
         </Modal>
 
         {/* Edit Event Modal */}
@@ -1388,7 +1394,11 @@ export default function Calendar() {
           animationType="slide"
           presentationStyle="formSheet"
         >
-          <SafeAreaView style={styles.modalContainer}>
+          <KeyboardAvoidingView 
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.keyboardAvoidingView}
+          >
+            <SafeAreaView style={styles.modalContainer}>
             {/* Modal Header */}
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderContent}>
@@ -1671,6 +1681,7 @@ export default function Calendar() {
               </SafeAreaView>
             </Modal>
           )}
+          </KeyboardAvoidingView>
         </Modal>
 
         {/* Edit Schedule Modal */}
@@ -1679,7 +1690,11 @@ export default function Calendar() {
           animationType="slide"
           presentationStyle="formSheet"
         >
-          <SafeAreaView style={styles.modalContainer}>
+          <KeyboardAvoidingView 
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.keyboardAvoidingView}
+          >
+            <SafeAreaView style={styles.modalContainer}>
             {/* Modal Header */}
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderContent}>
@@ -1955,6 +1970,7 @@ export default function Calendar() {
               </View>
             </Modal>
           )}
+          </KeyboardAvoidingView>
         </Modal>
       </ScrollView>
     </SafeAreaView>
@@ -2396,6 +2412,9 @@ const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
     backgroundColor: '#FFFFFF',
+  },
+  keyboardAvoidingView: {
+    flex: 1,
   },
   modalHeader: {
     backgroundColor: '#FFFFFF',
