@@ -163,11 +163,22 @@ export default function CreateSchoolEvent() {
   };
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
-    if (selectedDate) {
-      setFormData(prev => ({
-        ...prev,
-        eventDate: selectedDate.toISOString().split('T')[0]
-      }));
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+      if (selectedDate) {
+        setFormData(prev => ({
+          ...prev,
+          eventDate: selectedDate.toISOString().split('T')[0]
+        }));
+      }
+    } else {
+      // iOS - just update the date, don't close modal yet
+      if (selectedDate) {
+        setFormData(prev => ({
+          ...prev,
+          eventDate: selectedDate.toISOString().split('T')[0]
+        }));
+      }
     }
   };
 
@@ -545,8 +556,8 @@ export default function CreateSchoolEvent() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* Date Picker Modal */}
-      {showDatePicker && (
+      {/* Date Picker Modal - iOS Only */}
+      {showDatePicker && Platform.OS === 'ios' && (
         <Modal
           visible={showDatePicker}
           animationType="slide"
@@ -578,6 +589,17 @@ export default function CreateSchoolEvent() {
             </SafeAreaView>
           </View>
         </Modal>
+      )}
+
+      {/* Android Native Date Picker */}
+      {showDatePicker && Platform.OS === 'android' && (
+        <DateTimePicker
+          value={new Date(formData.eventDate)}
+          mode="date"
+          display="default"
+          minimumDate={new Date()}
+          onChange={handleDateChange}
+        />
       )}
 
       {/* Start Time Picker Modal */}
