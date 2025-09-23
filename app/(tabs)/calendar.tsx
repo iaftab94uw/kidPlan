@@ -1064,20 +1064,23 @@ export default function Calendar() {
                     </View>
                     <View style={styles.eventHeaderRight}>
                       <Text style={styles.eventType}>{event.eventType}</Text>
-                      <View style={styles.eventActions}>
-                        <TouchableOpacity
-                          style={styles.eventActionButton}
-                          onPress={() => handleEditEvent(event)}
-                        >
-                          <Edit size={16} color="#6B7280" />
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={styles.eventActionButton}
-                          onPress={() => handleDeleteEvent(event)}
-                        >
-                          <Trash2 size={16} color="#DC2626" />
-                        </TouchableOpacity>
-                      </View>
+                      {/* Hide edit and delete buttons for school events */}
+                      {event.eventType !== 'School_Event' && event.eventType !== 'School_Holiday' && (
+                        <View style={styles.eventActions}>
+                          <TouchableOpacity
+                            style={styles.eventActionButton}
+                            onPress={() => handleEditEvent(event)}
+                          >
+                            <Edit size={16} color="#6B7280" />
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={styles.eventActionButton}
+                            onPress={() => handleDeleteEvent(event)}
+                          >
+                            <Trash2 size={16} color="#DC2626" />
+                          </TouchableOpacity>
+                        </View>
+                      )}
                     </View>
                   </View>
                   <View style={styles.eventMeta}>
