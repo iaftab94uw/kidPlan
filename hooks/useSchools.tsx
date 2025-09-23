@@ -17,6 +17,7 @@ interface UseSchoolsReturn {
   fetchSchools: (params?: SchoolsListingParams) => Promise<void>;
   loadMore: () => Promise<void>;
   hasMore: boolean;
+  toggleSchoolSync: (schoolId: string, userId?: string) => Promise<{ success: boolean; updatedSchool?: School }>;
 }
 
 export const useSchools = (token: string, initialParams?: SchoolsListingParams): UseSchoolsReturn => {
@@ -53,6 +54,7 @@ export const useSchools = (token: string, initialParams?: SchoolsListingParams):
       
       const searchParam = params?.search !== undefined ? params.search : currentParams.search;
       const postcodeParam = params?.postcode !== undefined ? params.postcode : currentParams.postcode;
+      const milesParam = params?.miles !== undefined ? params.miles : currentParams.miles;
       
       if (searchParam && searchParam.trim()) {
         queryParams.append('search', searchParam.trim());
@@ -60,6 +62,10 @@ export const useSchools = (token: string, initialParams?: SchoolsListingParams):
       
       if (postcodeParam && postcodeParam.trim()) {
         queryParams.append('postcode', postcodeParam.trim());
+      }
+      
+      if (milesParam !== undefined && milesParam !== null) {
+        queryParams.append('miles', milesParam.toString());
       }
 
       const url = `${getApiUrl(API_CONFIG.ENDPOINTS.GET_SCHOOLS_LISTING)}?${queryParams.toString()}`;
@@ -101,7 +107,8 @@ export const useSchools = (token: string, initialParams?: SchoolsListingParams):
           page: data.data.page,
           limit: data.data.limit,
           search: params?.search !== undefined ? params.search : currentParams.search,
-          postcode: params?.postcode !== undefined ? params.postcode : currentParams.postcode
+          postcode: params?.postcode !== undefined ? params.postcode : currentParams.postcode,
+          miles: params?.miles !== undefined ? params.miles : currentParams.miles
         });
       } else {
         throw new Error(data.message || 'Failed to fetch schools');
@@ -128,6 +135,88 @@ export const useSchools = (token: string, initialParams?: SchoolsListingParams):
     fetchSchools(currentParams);
   }, [fetchSchools, currentParams]);
 
+  const toggleSchoolSync = useCallback(async (schoolId: string, userId?: string): Promise<{ success: boolean; updatedSchool?: School }> => {
+    if (!token) {
+      setError('No authentication token available');
+      return { success: false };
+    }
+
+    try {
+      const url = `${getApiUrl(API_CONFIG.ENDPOINTS.TOGGLE_SCHOOL_SYNC)}/${schoolId}`;
+      
+      console.log('=== TOGGLE SCHOOL SYNC API ===');
+      console.log('URL:', url);
+      console.log('Method: POST');
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: getAuthHeaders(token),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to toggle school sync: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      console.log('Toggle Sync Response:', data);
+      console.log('=== END TOGGLE SCHOOL SYNC API ===');
+
+      if (data.success) {
+        let updatedSchool: School | undefined;
+        
+        // Update the local schools state to reflect the sync change
+        setSchools(prevSchools => {
+          const updatedSchools = prevSchools.map(school => {
+            if (school._id === schoolId) {
+              if (userId) {
+                // Check if user ID is currently in syncedToCalendar
+                const isCurrentlySynced = school.syncedToCalendar?.includes(userId) || false;
+                
+                let updatedSyncedToCalendar;
+                if (isCurrentlySynced) {
+                  // Remove user ID from syncedToCalendar
+                  updatedSyncedToCalendar = school.syncedToCalendar?.filter(id => id !== userId) || [];
+                } else {
+                  // Add user ID to syncedToCalendar
+                  updatedSyncedToCalendar = [...(school.syncedToCalendar || []), userId];
+                }
+                
+                console.log(`School ${schoolId} sync toggled:`, {
+                  userId: userId,
+                  wasSynced: isCurrentlySynced,
+                  nowSynced: !isCurrentlySynced,
+                  syncedToCalendar: updatedSyncedToCalendar
+                });
+                
+                updatedSchool = { ...school, syncedToCalendar: updatedSyncedToCalendar };
+                return updatedSchool;
+              } else {
+                // Fallback to API response if user ID not provided
+                const updatedSyncedToCalendar = data.data?.syncedToCalendar || school.syncedToCalendar;
+                console.log(`Updated school ${schoolId} syncedToCalendar from API:`, updatedSyncedToCalendar);
+                updatedSchool = { ...school, syncedToCalendar: updatedSyncedToCalendar };
+                return updatedSchool;
+              }
+            }
+            return school;
+          });
+          
+          return updatedSchools;
+        });
+        
+        return { success: true, updatedSchool };
+      } else {
+        throw new Error(data.message || 'Failed to toggle school sync');
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      setError(errorMessage);
+      console.error('Error toggling school sync:', err);
+      return { success: false };
+    }
+  }, [token]);
+
   const hasMore = pagination.page < pagination.totalPages;
 
   useEffect(() => {
@@ -145,5 +234,6 @@ export const useSchools = (token: string, initialParams?: SchoolsListingParams):
     fetchSchools,
     loadMore,
     hasMore,
+    toggleSchoolSync,
   };
 };

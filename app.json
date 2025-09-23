@@ -31,7 +31,11 @@
       "permissions": [
         "android.permission.RECEIVE_BOOT_COMPLETED",
         "android.permission.VIBRATE",
-        "android.permission.WAKE_LOCK"
+        "android.permission.WAKE_LOCK",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_MEDIA_IMAGES"
       ],
       "package": "com.kidplan.boltexponativewind"
     },
@@ -44,8 +48,18 @@
       "expo-router",
       "expo-font",
       "expo-web-browser",
-      "expo-camera",
-      "expo-image-picker",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "We need access to your camera to let you take photos for your profile and family members."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "We need access to your photos so you can select images from your gallery for profiles and albums."
+        }
+      ],
       [
         "expo-notifications",
         {

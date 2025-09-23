@@ -37,6 +37,7 @@ export const API_CONFIG = {
     // Schools endpoints
     GET_SCHOOLS_LISTING: '/school/getListing',
     GET_SCHOOL_EVENTS: '/events/getSchoolEvents',
+    TOGGLE_SCHOOL_SYNC: '/school/toggleSchoolSync',
     // Push notification endpoints
     REGISTER_PUSH_TOKEN: '/pushNotification/registerPushToken',
   },

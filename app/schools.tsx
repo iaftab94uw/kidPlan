@@ -12,21 +12,25 @@ import {
   Alert,
   Dimensions,
   ActivityIndicator,
-  RefreshControl
+  RefreshControl,
+  Platform
 } from 'react-native';
+import Slider from '@react-native-community/slider';
 import { Search, MapPin, Calendar, Clock, Phone, Globe, ChevronRight, X, Check, School, Users, Star, Navigation, Plus, FolderSync as Sync, Filter, ArrowLeft } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 import { useSchools } from '@/hooks/useSchools';
 import { useSchoolEvents } from '@/hooks/useSchoolEvents';
 import { School as SchoolType } from '@/types/schools';
+import { API_CONFIG, getApiUrl, getAuthHeaders } from '@/config/api';
 
 const { width } = Dimensions.get('window');
 
 export default function Schools() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [searchPostcode, setSearchPostcode] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [miles, setMiles] = useState(15); // Default to 15 miles
   const [isSearching, setIsSearching] = useState(false);
   const [showSchoolDetail, setShowSchoolDetail] = useState(false);
   const [selectedSchool, setSelectedSchool] = useState<SchoolType | null>(null);
@@ -34,6 +38,8 @@ export default function Schools() {
   const [schoolFilter, setSchoolFilter] = useState('all');
   const [regionFilter, setRegionFilter] = useState('all');
   const [connectedSchools, setConnectedSchools] = useState<string[]>([]);
+  const [syncingSchools, setSyncingSchools] = useState<string[]>([]);
+  const [modalSyncStatus, setModalSyncStatus] = useState<{[schoolId: string]: boolean}>({});
   
   // Use the schools hook
   const {
@@ -44,12 +50,14 @@ export default function Schools() {
     refetch,
     fetchSchools,
     loadMore,
-    hasMore
+    hasMore,
+    toggleSchoolSync
   } = useSchools(token || '', {
     page: 1,
     limit: 20,
     search: searchQuery,
-    postcode: searchPostcode
+    postcode: searchPostcode,
+    miles: miles
   });
 
   // Use the school events hook
@@ -79,7 +87,8 @@ export default function Schools() {
         page: 1,
         limit: 20,
         search: searchQuery.trim() || undefined,
-        postcode: searchPostcode.trim() || undefined
+        postcode: searchPostcode.trim() || undefined,
+        miles: miles
       });
     } catch (error) {
       console.error('Search error:', error);
@@ -92,6 +101,7 @@ export default function Schools() {
   const resetSearch = () => {
     setSearchQuery('');
     setSearchPostcode('');
+    setMiles(15); // Reset to default
   };
 
   // Show all schools functionality
@@ -115,13 +125,15 @@ export default function Schools() {
   const clearAndShowAll = async () => {
     setSearchQuery('');
     setSearchPostcode('');
+    setMiles(15); // Reset to default
     setIsSearching(true);
     try {
       await fetchSchools({
         page: 1,
         limit: 20,
         search: "",
-        postcode: ""
+        postcode: "",
+        miles: 15
       });
     } catch (error) {
       console.error('Clear and show all error:', error);
@@ -179,14 +191,53 @@ export default function Schools() {
     return filtered;
   };
 
-  const handleConnectSchool = (schoolId: string) => {
-    setConnectedSchools(prev => {
-      if (prev.includes(schoolId)) {
-        Alert.alert('Success', 'School calendar synced successfully! Term dates and holidays will appear in your family calendar.');
-        return prev;
+  const handleConnectSchool = async (schoolId: string) => {
+    if (!user?._id) {
+      Alert.alert('Error', 'Please log in to sync school events');
+      return;
+    }
+
+    // Check the current sync state BEFORE making the API call
+    const currentSchool = schools.find(school => school._id === schoolId) || selectedSchool;
+    const wasSyncedBefore = currentSchool?.syncedToCalendar?.includes(user._id) || false;
+
+    try {
+      const success = await toggleSchoolSync(schoolId, user._id);
+      if (success) {
+        // The toggleSchoolSync function already updates the schools state
+        // We just need to update the selectedSchool to match the updated school from the list
+        const updatedSchool = schools.find(school => school._id === schoolId);
+        if (updatedSchool && selectedSchool && selectedSchool._id === schoolId) {
+          setSelectedSchool(updatedSchool);
+        }
+        
+        // Update connected schools state for UI consistency
+        setConnectedSchools(prev => 
+          prev.includes(schoolId) 
+            ? prev.filter(id => id !== schoolId)
+            : [...prev, schoolId]
+        );
+        
+        // Update modal sync status state
+        setModalSyncStatus(prev => ({
+          ...prev,
+          [schoolId]: !wasSyncedBefore
+        }));
+
+        // Show appropriate success message based on the action performed
+        // If the school was synced before the action, it means we just unsynced it
+        if (wasSyncedBefore) {
+          Alert.alert('Success', 'School calendar unsynced successfully! School events have been removed from your calendar.');
+        } else {
+          Alert.alert('Success', 'School calendar synced successfully! All school events will appear in your calendar.');
+        }
+      } else {
+        Alert.alert('Error', 'Failed to sync school calendar. Please try again.');
       }
-      return [...prev, schoolId];
-    });
+    } catch (error) {
+      console.error('Error toggling school sync:', error);
+      Alert.alert('Error', 'Failed to sync/unsync school events. Please try again.');
+    }
   };
 
   const handleViewSchoolEvents = async (school: SchoolType) => {
@@ -214,33 +265,38 @@ export default function Schools() {
   };
 
   const renderSchoolCard = ({ item: school }: { item: SchoolType }) => {
-    const isConnected = connectedSchools.includes(school._id);
+    const isConnected = school.syncedToCalendar.includes(user?._id || '');
     
     return (
       <TouchableOpacity 
         style={styles.schoolCard}
         onPress={() => {
           setSelectedSchool(school);
+          // Initialize modal sync status for this school
+          setModalSyncStatus(prev => ({
+            ...prev,
+            [school._id]: school.syncedToCalendar?.includes(user?._id || '') || false
+          }));
           setShowSchoolDetail(true);
         }}
       >
         <View style={styles.schoolHeader}>
           <View style={styles.schoolInfo}>
             <Text style={styles.schoolName}>{school.name}</Text>
-            <Text style={styles.schoolType}>{school.type}</Text>
+            <Text style={styles.schoolType}>{school.type || 'School'}</Text>
             <Text style={styles.schoolAddress}>{formatAddress(school.address)}</Text>
           </View>
           <View style={styles.schoolActions}>
-            {/* <TouchableOpacity 
+            <TouchableOpacity 
               style={[styles.connectButton, isConnected && styles.connectedButton]}
               onPress={() => handleConnectSchool(school._id)}
             >
               {isConnected ? (
-                <Check size={16} color="#FFFFFF" />
+                <Sync size={16} color="#FFFFFF" />
               ) : (
-                <Plus size={16} color="#FFFFFF" />
+                <Sync size={16} color="#FFFFFF" />
               )}
-            </TouchableOpacity> */}
+            </TouchableOpacity>
             <ChevronRight size={20} color="#6B7280" />
           </View>
         </View>
@@ -265,6 +321,28 @@ export default function Schools() {
             </View>
           )}
         </View>
+
+        {/* Events and Holidays Summary */}
+        {(school.events.length > 0 || school.holidays.length > 0) && (
+          <View style={styles.schoolEventsSummary}>
+            {school.events.length > 0 && (
+              <View style={styles.eventSummaryItem}>
+                <Calendar size={12} color="#0e3c67" />
+                <Text style={styles.eventSummaryText}>
+                  {school.events.length} term{school.events.length !== 1 ? 's' : ''}
+                </Text>
+              </View>
+            )}
+            {school.holidays.length > 0 && (
+              <View style={styles.eventSummaryItem}>
+                <Star size={12} color="#F59E0B" />
+                <Text style={styles.eventSummaryText}>
+                  {school.holidays.length} holiday{school.holidays.length !== 1 ? 's' : ''}
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
       </TouchableOpacity>
     );
   };
@@ -287,21 +365,15 @@ export default function Schools() {
               <X size={24} color="#FFFFFF" />
             </TouchableOpacity>
             <Text style={styles.modalTitle}>School Details</Text>
-            <TouchableOpacity 
-              style={styles.modalAddButton}
-              onPress={() => {
-                setShowSchoolDetail(false);
-                router.push({
-                  pathname: '/create-school-event',
-                  params: { schoolId: selectedSchool._id, schoolName: selectedSchool.name }
-                });
-              }}
-            >
-              <Plus size={24} color="#FFFFFF" />
-            </TouchableOpacity>
+            <View style={styles.modalSpacer} />
           </View>
           
-          <ScrollView style={styles.modalContent}>
+          <ScrollView 
+            style={styles.modalContent}
+            contentContainerStyle={{
+              paddingBottom: Platform.OS === 'android' ? 60 : 20
+            }}
+          >
             <View style={styles.schoolDetailCard}>
               <Text style={styles.schoolDetailName}>{selectedSchool.name}</Text>
               <Text style={styles.schoolDetailType}>{selectedSchool.type}</Text>
@@ -341,23 +413,127 @@ export default function Schools() {
                   </Text>
                 </View>
               )}
+              
+              {/* Sync Button */}
+              <View style={styles.syncSection}>
+                <TouchableOpacity 
+                  style={[
+                    styles.syncButton, 
+                    (modalSyncStatus[selectedSchool._id] !== undefined 
+                      ? modalSyncStatus[selectedSchool._id] 
+                      : selectedSchool.syncedToCalendar?.includes(user?._id || '')) && styles.syncedButton
+                  ]}
+                  onPress={() => handleConnectSchool(selectedSchool._id)}
+                >
+                  <Sync size={20} color="#FFFFFF" />
+                  <Text style={styles.syncButtonText}>
+                    {(modalSyncStatus[selectedSchool._id] !== undefined 
+                      ? modalSyncStatus[selectedSchool._id] 
+                      : selectedSchool.syncedToCalendar?.includes(user?._id || '')) ? 'Unsync Calendar' : 'Sync Calendar'}
+                  </Text>
+                </TouchableOpacity>
+                
+                {/* Sync Banner */}
+                {(modalSyncStatus[selectedSchool._id] !== undefined 
+                  ? modalSyncStatus[selectedSchool._id] 
+                  : selectedSchool.syncedToCalendar?.includes(user?._id || '')) ? (
+                  <View style={styles.syncBanner}>
+                    <Calendar size={16} color="#0e3c67" />
+                    <Text style={styles.syncBannerText}>
+                      All school events are now synced to your calendar
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={styles.syncInfoBanner}>
+                    <Calendar size={16} color="#6B7280" />
+                    <Text style={styles.syncInfoBannerText}>
+                      Sync to add all school events to your calendar
+                    </Text>
+                  </View>
+                )}
+              </View>
             </View>
             
-            {/* School Events Section */}
-            <View style={styles.eventsSection}>
-              <Text style={styles.eventsSectionTitle}>School Events</Text>
-              
-              {eventsLoading ? (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="small" color="#0e3c67" />
-                  <Text style={styles.loadingText}>Loading events...</Text>
+            {/* School Terms Section */}
+            {selectedSchool.events && selectedSchool.events.length > 0 && (
+              <View style={styles.eventsSection}>
+                <Text style={styles.eventsSectionTitle}>School Terms</Text>
+                <View style={styles.eventsContainer}>
+                  {selectedSchool.events.map((term) => (
+                    <View key={term._id} style={styles.termCard}>
+                      <View style={styles.termHeader}>
+                        <Text style={styles.termTitle}>{term.name}</Text>
+                      </View>
+                      
+                      <View style={styles.termDetails}>
+                        <View style={styles.termDetailRow}>
+                          <Calendar size={16} color="#6B7280" />
+                          <Text style={styles.termDetailText}>
+                            {new Date(term.startDate).toLocaleDateString('en-GB', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric'
+                            })} - {new Date(term.endDate).toLocaleDateString('en-GB', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric'
+                            })}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  ))}
                 </View>
-              ) : eventsError ? (
-                <View style={styles.eventsErrorContainer}>
-                  <Text style={styles.eventsErrorTitle}>Error loading events</Text>
-                  <Text style={styles.eventsErrorText}>{eventsError}</Text>
+              </View>
+            )}
+
+            {/* School Holidays Section */}
+            {selectedSchool.holidays && selectedSchool.holidays.length > 0 && (
+              <View style={styles.eventsSection}>
+                <Text style={styles.eventsSectionTitle}>School Holidays</Text>
+                <View style={styles.eventsContainer}>
+                  {selectedSchool.holidays.map((holiday) => (
+                    <View key={holiday._id} style={styles.holidayCard}>
+                      <View style={styles.holidayHeader}>
+                        <Text style={styles.holidayTitle}>{holiday.name}</Text>
+                      </View>
+                      
+                      <View style={styles.holidayDetails}>
+                        <View style={styles.holidayDetailRow}>
+                          <Star size={16} color="#F59E0B" />
+                          <Text style={styles.holidayDetailText}>
+                            {new Date(holiday.startDate).toLocaleDateString('en-GB', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric'
+                            })} - {new Date(holiday.endDate).toLocaleDateString('en-GB', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric'
+                            })}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  ))}
                 </View>
-              ) : events.length > 0 ? (
+              </View>
+            )}
+
+            {/* Legacy Events Section (for API events) */}
+            {eventsLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color="#0e3c67" />
+                <Text style={styles.loadingText}>Loading events...</Text>
+              </View>
+            ) : eventsError ? (
+              <View style={styles.eventsErrorContainer}>
+                <Text style={styles.eventsErrorTitle}>Error loading events</Text>
+                <Text style={styles.eventsErrorText}>{eventsError}</Text>
+              </View>
+            ) : events.length > 0 ? (
+              <View style={styles.eventsSection}>
+                <Text style={styles.eventsSectionTitle}>Additional Events</Text>
                 <View style={styles.eventsContainer}>
                   <Text style={styles.eventsCount}>({events.length} events)</Text>
                   {events.map((event) => (
@@ -402,7 +578,9 @@ export default function Schools() {
                     </View>
                   ))}
                 </View>
-              ) : (
+              </View>
+            ) : (!selectedSchool.events || selectedSchool.events.length === 0) && (!selectedSchool.holidays || selectedSchool.holidays.length === 0) ? (
+              <View style={styles.eventsSection}>
                 <View style={styles.noEventsContainer}>
                   <Calendar size={32} color="#9CA3AF" />
                   <Text style={styles.noEventsTitle}>No Events Found</Text>
@@ -410,8 +588,8 @@ export default function Schools() {
                     This school doesn't have any events yet.
                   </Text>
                 </View>
-              )}
-            </View>
+              </View>
+            ) : null}
           </ScrollView>
         </SafeAreaView>
       </Modal>
@@ -545,6 +723,31 @@ export default function Schools() {
           )}
         </View>
         
+        {/* Miles Slider */}
+        {searchPostcode.trim() && (
+          <View style={styles.milesContainer}>
+            <View style={styles.milesHeader}>
+              <MapPin size={16} color="#6B7280" />
+              <Text style={styles.milesLabel}>Search radius: {Math.round(miles)} miles</Text>
+            </View>
+            <Slider
+              style={styles.milesSlider}
+              minimumValue={1}
+              maximumValue={50}
+              value={miles}
+              onValueChange={setMiles}
+              step={1}
+              minimumTrackTintColor="#0e3c67"
+              maximumTrackTintColor="#E5E7EB"
+              thumbTintColor="#0e3c67"
+            />
+            <View style={styles.milesRange}>
+              <Text style={styles.milesRangeText}>1 mile</Text>
+              <Text style={styles.milesRangeText}>50 miles</Text>
+            </View>
+          </View>
+        )}
+        
         <View style={styles.searchActions}>
           <TouchableOpacity 
             style={styles.searchButton}
@@ -559,7 +762,9 @@ export default function Schools() {
             <Text style={styles.searchButtonText}>
               {isSearching 
                 ? 'Searching...' 
-                : (searchQuery.trim() || searchPostcode.trim() ? 'Search' : 'Show Schools')
+                : (searchQuery.trim() || searchPostcode.trim() 
+                    ? `Search within ${Math.round(miles)} miles` 
+                    : 'Show Schools')
               }
             </Text>
           </TouchableOpacity>
@@ -604,6 +809,9 @@ export default function Schools() {
             renderItem={renderSchoolCard}
             keyExtractor={(item) => item._id}
             showsVerticalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingBottom: Platform.OS === 'android' ? 60 : 20
+            }}
             refreshControl={
               <RefreshControl
                 refreshing={loading}
@@ -748,6 +956,39 @@ const styles = StyleSheet.create({
     color: '#111827',
     marginLeft: 12,
   },
+  milesContainer: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  milesHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  milesLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+    marginLeft: 8,
+  },
+  milesSlider: {
+    width: '100%',
+    height: 40,
+  },
+  milesRange: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  milesRangeText: {
+    fontSize: 12,
+    color: '#6B7280',
+  },
   searchActions: {
     flexDirection: 'row',
     gap: 12,
@@ -877,6 +1118,29 @@ const styles = StyleSheet.create({
   connectedButton: {
     backgroundColor: '#22C55E',
   },
+  schoolEventsSummary: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+  },
+  eventSummaryItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  eventSummaryText: {
+    fontSize: 12,
+    color: '#374151',
+    marginLeft: 4,
+    fontWeight: '500',
+  },
   schoolDetails: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -992,13 +1256,65 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  modalAddButton: {
+  modalSpacer: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  syncSection: {
+    marginTop: 20,
+    gap: 12,
+  },
+  syncButton: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#0e3c67',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    gap: 8,
+  },
+  syncedButton: {
+    backgroundColor: '#22C55E',
+  },
+  syncButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  syncBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0F9FF',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: '#0e3c67',
+    gap: 8,
+  },
+  syncBannerText: {
+    color: '#0e3c67',
+    fontSize: 14,
+    fontWeight: '500',
+    flex: 1,
+  },
+  syncInfoBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: '#6B7280',
+    gap: 8,
+  },
+  syncInfoBannerText: {
+    color: '#6B7280',
+    fontSize: 14,
+    fontWeight: '500',
+    flex: 1,
   },
   modalTitle: {
     fontSize: 20,
@@ -1158,6 +1474,65 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6B7280',
     textAlign: 'center',
+  },
+  // Term and Holiday card styles
+  termCard: {
+    backgroundColor: '#F0F9FF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#0e3c67',
+  },
+  termHeader: {
+    marginBottom: 8,
+  },
+  termTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0e3c67',
+  },
+  termDetails: {
+    gap: 8,
+  },
+  termDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  termDetailText: {
+    fontSize: 14,
+    color: '#374151',
+    flex: 1,
+  },
+  holidayCard: {
+    backgroundColor: '#FFFBEB',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#F59E0B',
+  },
+  holidayHeader: {
+    marginBottom: 8,
+  },
+  holidayTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#92400E',
+  },
+  holidayDetails: {
+    gap: 8,
+  },
+  holidayDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  holidayDetailText: {
+    fontSize: 14,
+    color: '#374151',
+    flex: 1,
   },
   // Filter modal styles
   filterModalOverlay: {
