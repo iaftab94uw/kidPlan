@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
+import moment from 'moment';
 import { 
   View, 
   Text, 
@@ -104,6 +105,10 @@ export default function Calendar() {
         return '👤';
       case 'School':
         return '🎓';
+      case 'School_Event':
+        return '📚';
+      case 'School_Holiday':
+        return '🏫';
       case 'Activity':
         return '⚽';
       case 'Holiday':
@@ -118,6 +123,30 @@ export default function Calendar() {
   };
 
   const formatEventDate = (event: CalendarEvent) => {
+    // Handle School_Holiday and School_Event types
+    if (event.eventType === 'School_Holiday' && event.school?.holidays) {
+      // Find the matching holiday in the holidays array
+      const matchingHoliday = event.school.holidays.find(holiday => 
+        holiday.name === event.title || holiday._id === event._id
+      );
+      if (matchingHoliday?.startDate) {
+        // Use moment to parse UTC date and convert to local date only
+        return moment.utc(matchingHoliday.startDate).local().startOf('day').toDate();
+      }
+    }
+    
+    if (event.eventType === 'School_Event' && event.school?.events) {
+      // Find the matching event in the events array
+      const matchingEvent = event.school.events.find(schoolEvent => 
+        schoolEvent.name === event.title || schoolEvent._id === event._id
+      );
+      if (matchingEvent?.startDate) {
+        // Use moment to parse UTC date and convert to local date only
+        return moment.utc(matchingEvent.startDate).local().startOf('day').toDate();
+      }
+    }
+    
+    // Default behavior for other event types
     if (event.eventDate) {
       return new Date(event.eventDate);
     }
@@ -128,6 +157,41 @@ export default function Calendar() {
   };
 
   const formatEventDateRange = (event: CalendarEvent) => {
+    // Handle School_Holiday type
+    if (event.eventType === 'School_Holiday' && event.school?.holidays) {
+      const matchingHoliday = event.school.holidays.find(holiday => 
+        holiday.name === event.title || holiday._id === event._id
+      );
+      if (matchingHoliday?.startDate && matchingHoliday?.endDate) {
+        // Use moment to parse UTC dates and format properly
+        const start = moment.utc(matchingHoliday.startDate).local().startOf('day');
+        const end = moment.utc(matchingHoliday.endDate).local().startOf('day');
+        
+        if (start.isSame(end, 'day')) {
+          return start.format('D MMM YYYY');
+        }
+        return `${start.format('D MMM')} - ${end.format('D MMM YYYY')}`;
+      }
+    }
+    
+    // Handle School_Event type
+    if (event.eventType === 'School_Event' && event.school?.events) {
+      const matchingEvent = event.school.events.find(schoolEvent => 
+        schoolEvent.name === event.title || schoolEvent._id === event._id
+      );
+      if (matchingEvent?.startDate && matchingEvent?.endDate) {
+        // Use moment to parse UTC dates and format properly
+        const start = moment.utc(matchingEvent.startDate).local().startOf('day');
+        const end = moment.utc(matchingEvent.endDate).local().startOf('day');
+        
+        if (start.isSame(end, 'day')) {
+          return start.format('D MMM YYYY');
+        }
+        return `${start.format('D MMM')} - ${end.format('D MMM YYYY')}`;
+      }
+    }
+    
+    // Default behavior for other event types
     if (event.eventDate) {
       return new Date(event.eventDate).toLocaleDateString('en-GB', { 
         day: 'numeric', 
@@ -224,6 +288,8 @@ export default function Calendar() {
   const eventTypes = [
     { id: 'Personal', label: 'Personal', color: '#3B82F6' },
     { id: 'School', label: 'School', color: '#10B981' },
+    { id: 'School_Event', label: 'School Event', color: '#059669' },
+    { id: 'School_Holiday', label: 'School Holiday', color: '#DC2626' },
     { id: 'Activity', label: 'Activity', color: '#F59E0B' },
     { id: 'Holiday', label: 'Holiday', color: '#EF4444' },
     { id: 'Medical', label: 'Medical', color: '#8B5CF6' }
@@ -313,6 +379,30 @@ export default function Calendar() {
       const typeMatches = eventTypeFilter === 'all' || event.eventType === eventTypeFilter;
       if (!typeMatches) return false;
 
+      // Handle School_Holiday type
+      if (event.eventType === 'School_Holiday' && event.school?.holidays) {
+        return event.school.holidays.some(holiday => {
+          // Use moment to parse UTC dates properly
+          const startDate = moment.utc(holiday.startDate).local().startOf('day').toDate();
+          const endDate = moment.utc(holiday.endDate).local().startOf('day').toDate();
+          startDate.setHours(0, 0, 0, 0);
+          endDate.setHours(0, 0, 0, 0);
+          return dateToCheck >= startDate && dateToCheck <= endDate;
+        });
+      }
+      
+      // Handle School_Event type
+      if (event.eventType === 'School_Event' && event.school?.events) {
+        return event.school.events.some(schoolEvent => {
+          // Use moment to parse UTC dates properly
+          const startDate = moment.utc(schoolEvent.startDate).local().startOf('day').toDate();
+          const endDate = moment.utc(schoolEvent.endDate).local().startOf('day').toDate();
+          startDate.setHours(0, 0, 0, 0);
+          endDate.setHours(0, 0, 0, 0);
+          return dateToCheck >= startDate && dateToCheck <= endDate;
+        });
+      }
+
       // Check if the date falls within the event's date range
       if (event.startDate && event.endDate) {
         const startDate = new Date(event.startDate);
@@ -343,6 +433,30 @@ export default function Calendar() {
     return calendarEvents.some(event => {
       const typeMatches = eventTypeFilter === 'all' || event.eventType === eventTypeFilter;
       if (!typeMatches) return false;
+
+      // Handle School_Holiday type
+      if (event.eventType === 'School_Holiday' && event.school?.holidays) {
+        return event.school.holidays.some(holiday => {
+          // Use moment to parse UTC dates properly
+          const startDate = moment.utc(holiday.startDate).local().startOf('day').toDate();
+          const endDate = moment.utc(holiday.endDate).local().startOf('day').toDate();
+          startDate.setHours(0, 0, 0, 0);
+          endDate.setHours(0, 0, 0, 0);
+          return dateToCheck >= startDate && dateToCheck <= endDate && startDate.getTime() !== endDate.getTime();
+        });
+      }
+      
+      // Handle School_Event type
+      if (event.eventType === 'School_Event' && event.school?.events) {
+        return event.school.events.some(schoolEvent => {
+          // Use moment to parse UTC dates properly
+          const startDate = moment.utc(schoolEvent.startDate).local().startOf('day').toDate();
+          const endDate = moment.utc(schoolEvent.endDate).local().startOf('day').toDate();
+          startDate.setHours(0, 0, 0, 0);
+          endDate.setHours(0, 0, 0, 0);
+          return dateToCheck >= startDate && dateToCheck <= endDate && startDate.getTime() !== endDate.getTime();
+        });
+      }
 
       // Check if this is a multi-day event that spans this date
       if (event.startDate && event.endDate) {
@@ -408,6 +522,30 @@ export default function Calendar() {
     let filteredEvents = calendarEvents.filter(event => {
       const typeMatches = eventTypeFilter === 'all' || event.eventType === eventTypeFilter;
       if (!typeMatches) return false;
+
+      // Handle School_Holiday type
+      if (event.eventType === 'School_Holiday' && event.school?.holidays) {
+        return event.school.holidays.some(holiday => {
+          // Use moment to parse UTC dates properly
+          const startDate = moment.utc(holiday.startDate).local().startOf('day').toDate();
+          const endDate = moment.utc(holiday.endDate).local().startOf('day').toDate();
+          startDate.setHours(0, 0, 0, 0);
+          endDate.setHours(0, 0, 0, 0);
+          return selectedDateStart >= startDate && selectedDateStart <= endDate;
+        });
+      }
+      
+      // Handle School_Event type
+      if (event.eventType === 'School_Event' && event.school?.events) {
+        return event.school.events.some(schoolEvent => {
+          // Use moment to parse UTC dates properly
+          const startDate = moment.utc(schoolEvent.startDate).local().startOf('day').toDate();
+          const endDate = moment.utc(schoolEvent.endDate).local().startOf('day').toDate();
+          startDate.setHours(0, 0, 0, 0);
+          endDate.setHours(0, 0, 0, 0);
+          return selectedDateStart >= startDate && selectedDateStart <= endDate;
+        });
+      }
 
       // Check if the selected date falls within the event's date range
       if (event.startDate && event.endDate) {
@@ -974,7 +1112,7 @@ export default function Calendar() {
                 eventTypeFilter === 'all' && styles.filterButtonTextActive
               ]}>All</Text>
             </TouchableOpacity>
-            {(['Personal', 'School', 'Activity', 'Holiday', 'Medical'] as EventType[]).map((type) => (
+            {(['Personal', 'School', 'School_Event', 'School_Holiday', 'Activity', 'Holiday', 'Medical'] as EventType[]).map((type) => (
               <TouchableOpacity
                 key={type}
                 style={[
@@ -1094,7 +1232,7 @@ export default function Calendar() {
                         <Text style={styles.eventMetaText}>{event.location}</Text>
                       </View>
                     )}
-                    {(event.eventType === 'School' || event.eventType === 'School_Holiday') && event.school && (
+                    {(event.eventType === 'School' || event.eventType === 'School_Holiday' || event.eventType === 'School_Event') && event.school && (
                       <View style={styles.eventMetaItem}>
                         <School size={16} color="#6B7280" />
                         <Text style={styles.eventMetaText}>{event.school.name}</Text>

@@ -1,6 +1,6 @@
 // Calendar Events Types
 
-export type EventType = 'Personal' | 'School' | 'School_Holiday' | 'Activity' | 'Holiday' | 'Medical' | 'Schedule';
+export type EventType = 'Personal' | 'School' | 'School_Event' | 'School_Holiday' | 'Activity' | 'Holiday' | 'Medical' | 'Schedule';
 
 export interface CalendarEvent {
   _id: string;
@@ -27,6 +27,18 @@ export interface CalendarEvent {
   school?: {
     _id: string;
     name: string;
+    events?: Array<{
+      _id: string;
+      name: string;
+      startDate: string;
+      endDate: string;
+    }>;
+    holidays?: Array<{
+      _id: string;
+      name: string;
+      startDate: string;
+      endDate: string;
+    }>;
   };
 }
 
