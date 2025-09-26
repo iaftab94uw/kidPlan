@@ -123,93 +123,59 @@ export default function Calendar() {
   };
 
   const formatEventDate = (event: CalendarEvent) => {
-    // Handle School_Holiday and School_Event types
-    if (event.eventType === 'School_Holiday' && event.school?.holidays) {
-      // Find the matching holiday in the holidays array
-      const matchingHoliday = event.school.holidays.find(holiday => 
-        holiday.name === event.title || holiday._id === event._id
-      );
-      if (matchingHoliday?.startDate) {
-        // Use moment to parse UTC date and convert to local date only
-        return moment.utc(matchingHoliday.startDate).local().startOf('day').toDate();
-      }
-    }
-    
-    if (event.eventType === 'School_Event' && event.school?.events) {
-      // Find the matching event in the events array
-      const matchingEvent = event.school.events.find(schoolEvent => 
-        schoolEvent.name === event.title || schoolEvent._id === event._id
-      );
-      if (matchingEvent?.startDate) {
-        // Use moment to parse UTC date and convert to local date only
-        return moment.utc(matchingEvent.startDate).local().startOf('day').toDate();
-      }
+    // Handle School_Holiday and School_Event types - use main event dates directly
+    if ((event.eventType === 'School_Holiday' || event.eventType === 'School_Event') && event.eventDate) {
+      // Extract only the date part to avoid timezone conversion
+      const dateStr = event.eventDate.split('T')[0]; // Get "2025-06-26" from "2025-06-26T19:00:00.000Z"
+      return moment(dateStr).toDate(); // Parse as local date
     }
     
     // Default behavior for other event types
     if (event.eventDate) {
-      return new Date(event.eventDate);
+      // Extract only the date part to avoid timezone conversion
+      const dateStr = event.eventDate.split('T')[0]; // Get "2025-06-26" from "2025-06-26T19:00:00.000Z"
+      return moment(dateStr).toDate(); // Parse as local date
     }
     if (event.startDate) {
-      return new Date(event.startDate);
+      // Extract only the date part to avoid timezone conversion
+      const dateStr = event.startDate.split('T')[0]; // Get "2025-06-26" from "2025-06-26T19:00:00.000Z"
+      return moment(dateStr).toDate(); // Parse as local date
     }
     return new Date();
   };
 
   const formatEventDateRange = (event: CalendarEvent) => {
-    // Handle School_Holiday type
-    if (event.eventType === 'School_Holiday' && event.school?.holidays) {
-      const matchingHoliday = event.school.holidays.find(holiday => 
-        holiday.name === event.title || holiday._id === event._id
-      );
-      if (matchingHoliday?.startDate && matchingHoliday?.endDate) {
-        // Use moment to parse UTC dates and format properly
-        const start = moment.utc(matchingHoliday.startDate).local().startOf('day');
-        const end = moment.utc(matchingHoliday.endDate).local().startOf('day');
-        
-        if (start.isSame(end, 'day')) {
-          return start.format('D MMM YYYY');
-        }
-        return `${start.format('D MMM')} - ${end.format('D MMM YYYY')}`;
+    // Handle School_Holiday and School_Event types - use main event dates directly
+    if ((event.eventType === 'School_Holiday' || event.eventType === 'School_Event') && event.eventDate && event.endDate) {
+      // Extract only the date part to avoid timezone conversion
+      const startDateStr = event.eventDate.split('T')[0]; // Get "2025-06-26" from "2025-06-26T19:00:00.000Z"
+      const endDateStr = event.endDate.split('T')[0]; // Get "2025-08-17" from "2025-08-17T19:00:00.000Z"
+      const start = moment(startDateStr); // Parse as local date
+      const end = moment(endDateStr); // Parse as local date
+      
+      if (start.isSame(end, 'day')) {
+        return start.format('D MMM YYYY');
       }
-    }
-    
-    // Handle School_Event type
-    if (event.eventType === 'School_Event' && event.school?.events) {
-      const matchingEvent = event.school.events.find(schoolEvent => 
-        schoolEvent.name === event.title || schoolEvent._id === event._id
-      );
-      if (matchingEvent?.startDate && matchingEvent?.endDate) {
-        // Use moment to parse UTC dates and format properly
-        const start = moment.utc(matchingEvent.startDate).local().startOf('day');
-        const end = moment.utc(matchingEvent.endDate).local().startOf('day');
-        
-        if (start.isSame(end, 'day')) {
-          return start.format('D MMM YYYY');
-        }
-        return `${start.format('D MMM')} - ${end.format('D MMM YYYY')}`;
-      }
+      return `${start.format('D MMM')} - ${end.format('D MMM YYYY')}`;
     }
     
     // Default behavior for other event types
     if (event.eventDate) {
-      return new Date(event.eventDate).toLocaleDateString('en-GB', { 
-        day: 'numeric', 
-        month: 'short', 
-        year: 'numeric' 
-      });
+      // Extract only the date part to avoid timezone conversion
+      const dateStr = event.eventDate.split('T')[0]; // Get "2025-06-26" from "2025-06-26T19:00:00.000Z"
+      const eventDate = moment(dateStr); // Parse as local date
+      return eventDate.format('D MMM YYYY');
     }
     if (event.startDate && event.endDate) {
-      const start = new Date(event.startDate);
-      const end = new Date(event.endDate);
-      if (start.toDateString() === end.toDateString()) {
-        return start.toLocaleDateString('en-GB', { 
-          day: 'numeric', 
-          month: 'short', 
-          year: 'numeric' 
-        });
+      // Extract only the date part to avoid timezone conversion
+      const startDateStr = event.startDate.split('T')[0]; // Get "2025-06-26" from "2025-06-26T19:00:00.000Z"
+      const endDateStr = event.endDate.split('T')[0]; // Get "2025-08-17" from "2025-08-17T19:00:00.000Z"
+      const start = moment(startDateStr); // Parse as local date
+      const end = moment(endDateStr); // Parse as local date
+      if (start.isSame(end, 'day')) {
+        return start.format('D MMM YYYY');
       }
-      return `${start.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} - ${end.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+      return `${start.format('D MMM')} - ${end.format('D MMM YYYY')}`;
     }
     return 'No date';
   };
@@ -371,53 +337,37 @@ export default function Calendar() {
   };
 
   const hasEventsOnDate = (day: number) => {
-    const dateToCheck = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    // Set time to start of day for accurate comparison
-    dateToCheck.setHours(0, 0, 0, 0);
+    // Use moment for the date to check as well
+    const dateToCheck = moment().year(currentDate.getFullYear()).month(currentDate.getMonth()).date(day).startOf('day');
     
     let hasEvents = calendarEvents.some(event => {
       const typeMatches = eventTypeFilter === 'all' || event.eventType === eventTypeFilter;
       if (!typeMatches) return false;
 
-      // Handle School_Holiday type
-      if (event.eventType === 'School_Holiday' && event.school?.holidays) {
-        return event.school.holidays.some(holiday => {
-          // Use moment to parse UTC dates properly
-          const startDate = moment.utc(holiday.startDate).local().startOf('day').toDate();
-          const endDate = moment.utc(holiday.endDate).local().startOf('day').toDate();
-          startDate.setHours(0, 0, 0, 0);
-          endDate.setHours(0, 0, 0, 0);
-          return dateToCheck >= startDate && dateToCheck <= endDate;
-        });
-      }
-      
-      // Handle School_Event type
-      if (event.eventType === 'School_Event' && event.school?.events) {
-        return event.school.events.some(schoolEvent => {
-          // Use moment to parse UTC dates properly
-          const startDate = moment.utc(schoolEvent.startDate).local().startOf('day').toDate();
-          const endDate = moment.utc(schoolEvent.endDate).local().startOf('day').toDate();
-          startDate.setHours(0, 0, 0, 0);
-          endDate.setHours(0, 0, 0, 0);
-          return dateToCheck >= startDate && dateToCheck <= endDate;
-        });
+      // Handle School_Holiday and School_Event types - use main event dates directly
+      if ((event.eventType === 'School_Holiday' || event.eventType === 'School_Event') && event.eventDate && event.endDate) {
+        // Extract only the date part to avoid timezone conversion
+        const startDateStr = event.eventDate.split('T')[0]; // Get "2025-06-26" from "2025-06-26T19:00:00.000Z"
+        const endDateStr = event.endDate.split('T')[0]; // Get "2025-08-17" from "2025-08-17T19:00:00.000Z"
+        const startDate = moment(startDateStr); // Parse as local date
+        const endDate = moment(endDateStr); // Parse as local date
+        return dateToCheck.isBetween(startDate, endDate, 'day', '[]');
       }
 
       // Check if the date falls within the event's date range
       if (event.startDate && event.endDate) {
-        const startDate = new Date(event.startDate);
-        const endDate = new Date(event.endDate);
-        
-        // Set times to start of day for accurate comparison
-        startDate.setHours(0, 0, 0, 0);
-        endDate.setHours(0, 0, 0, 0);
-        
-        return dateToCheck >= startDate && dateToCheck <= endDate;
+        // Extract only the date part to avoid timezone conversion
+        const startDateStr = event.startDate.split('T')[0]; // Get "2025-06-26" from "2025-06-26T19:00:00.000Z"
+        const endDateStr = event.endDate.split('T')[0]; // Get "2025-08-17" from "2025-08-17T19:00:00.000Z"
+        const startDate = moment(startDateStr); // Parse as local date
+        const endDate = moment(endDateStr); // Parse as local date
+        return dateToCheck.isBetween(startDate, endDate, 'day', '[]');
       } else if (event.eventDate) {
         // Single day event
-        const eventDate = new Date(event.eventDate);
-        eventDate.setHours(0, 0, 0, 0);
-        return eventDate.getTime() === dateToCheck.getTime();
+        // Extract only the date part to avoid timezone conversion
+        const dateStr = event.eventDate.split('T')[0]; // Get "2025-06-26" from "2025-06-26T19:00:00.000Z"
+        const eventDate = moment(dateStr); // Parse as local date
+        return dateToCheck.isSame(eventDate, 'day');
       }
       return false;
     });
@@ -426,142 +376,103 @@ export default function Calendar() {
   };
 
   const hasMultiDayEventsOnDate = (day: number) => {
-    const dateToCheck = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    // Set time to start of day for accurate comparison
-    dateToCheck.setHours(0, 0, 0, 0);
+    // Use moment for the date to check as well
+    const dateToCheck = moment().year(currentDate.getFullYear()).month(currentDate.getMonth()).date(day).startOf('day');
     
     return calendarEvents.some(event => {
       const typeMatches = eventTypeFilter === 'all' || event.eventType === eventTypeFilter;
       if (!typeMatches) return false;
 
-      // Handle School_Holiday type
-      if (event.eventType === 'School_Holiday' && event.school?.holidays) {
-        return event.school.holidays.some(holiday => {
-          // Use moment to parse UTC dates properly
-          const startDate = moment.utc(holiday.startDate).local().startOf('day').toDate();
-          const endDate = moment.utc(holiday.endDate).local().startOf('day').toDate();
-          startDate.setHours(0, 0, 0, 0);
-          endDate.setHours(0, 0, 0, 0);
-          return dateToCheck >= startDate && dateToCheck <= endDate && startDate.getTime() !== endDate.getTime();
-        });
-      }
-      
-      // Handle School_Event type
-      if (event.eventType === 'School_Event' && event.school?.events) {
-        return event.school.events.some(schoolEvent => {
-          // Use moment to parse UTC dates properly
-          const startDate = moment.utc(schoolEvent.startDate).local().startOf('day').toDate();
-          const endDate = moment.utc(schoolEvent.endDate).local().startOf('day').toDate();
-          startDate.setHours(0, 0, 0, 0);
-          endDate.setHours(0, 0, 0, 0);
-          return dateToCheck >= startDate && dateToCheck <= endDate && startDate.getTime() !== endDate.getTime();
-        });
+      // Handle School_Holiday and School_Event types - use main event dates directly
+      if ((event.eventType === 'School_Holiday' || event.eventType === 'School_Event') && event.eventDate && event.endDate) {
+        // Extract only the date part to avoid timezone conversion
+        const startDateStr = event.eventDate.split('T')[0]; // Get "2025-06-26" from "2025-06-26T19:00:00.000Z"
+        const endDateStr = event.endDate.split('T')[0]; // Get "2025-08-17" from "2025-08-17T19:00:00.000Z"
+        const startDate = moment(startDateStr); // Parse as local date
+        const endDate = moment(endDateStr); // Parse as local date
+        return dateToCheck.isBetween(startDate, endDate, 'day', '[]') && !startDate.isSame(endDate, 'day');
       }
 
       // Check if this is a multi-day event that spans this date
       if (event.startDate && event.endDate) {
-        const startDate = new Date(event.startDate);
-        const endDate = new Date(event.endDate);
-        
-        // Set times to start of day for accurate comparison
-        startDate.setHours(0, 0, 0, 0);
-        endDate.setHours(0, 0, 0, 0);
-        
-        return dateToCheck >= startDate && dateToCheck <= endDate && startDate.getTime() !== endDate.getTime();
+        // Extract only the date part to avoid timezone conversion
+        const startDateStr = event.startDate.split('T')[0]; // Get "2025-06-26" from "2025-06-26T19:00:00.000Z"
+        const endDateStr = event.endDate.split('T')[0]; // Get "2025-08-17" from "2025-08-17T19:00:00.000Z"
+        const startDate = moment(startDateStr); // Parse as local date
+        const endDate = moment(endDateStr); // Parse as local date
+        return dateToCheck.isBetween(startDate, endDate, 'day', '[]') && !startDate.isSame(endDate, 'day');
       }
       return false;
     });
   };
 
   const isBankHoliday = (day: number) => {
-    const dateToCheck = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    // Set time to start of day for accurate comparison
-    dateToCheck.setHours(0, 0, 0, 0);
+    // Use moment for the date to check as well
+    const dateToCheck = moment().year(currentDate.getFullYear()).month(currentDate.getMonth()).date(day).startOf('day');
     
     const holidays = getHolidaysFromAPI();
     return holidays.some(holiday => {
-      const holidayDate = formatEventDate(holiday);
-      holidayDate.setHours(0, 0, 0, 0);
-      return holidayDate.getTime() === dateToCheck.getTime();
+      const holidayDate = moment(formatEventDate(holiday)).startOf('day');
+      return dateToCheck.isSame(holidayDate, 'day');
     });
   };
 
   const getBankHolidayName = (day: number) => {
-    const dateToCheck = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    // Set time to start of day for accurate comparison
-    dateToCheck.setHours(0, 0, 0, 0);
+    // Use moment for the date to check as well
+    const dateToCheck = moment().year(currentDate.getFullYear()).month(currentDate.getMonth()).date(day).startOf('day');
     
     const holidays = getHolidaysFromAPI();
     const holiday = holidays.find(holiday => {
-      const holidayDate = formatEventDate(holiday);
-      holidayDate.setHours(0, 0, 0, 0);
-      return holidayDate.getTime() === dateToCheck.getTime();
+      const holidayDate = moment(formatEventDate(holiday)).startOf('day');
+      return dateToCheck.isSame(holidayDate, 'day');
     });
     return holiday ? holiday.title : null;
   };
 
   const getBankHolidayColor = (day: number) => {
-    const dateToCheck = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    // Set time to start of day for accurate comparison
-    dateToCheck.setHours(0, 0, 0, 0);
+    // Use moment for the date to check as well
+    const dateToCheck = moment().year(currentDate.getFullYear()).month(currentDate.getMonth()).date(day).startOf('day');
     
     const holidays = getHolidaysFromAPI();
     const holiday = holidays.find(holiday => {
-      const holidayDate = formatEventDate(holiday);
-      holidayDate.setHours(0, 0, 0, 0);
-      return holidayDate.getTime() === dateToCheck.getTime();
+      const holidayDate = moment(formatEventDate(holiday)).startOf('day');
+      return dateToCheck.isSame(holidayDate, 'day');
     });
     return holiday ? holiday.color : '#DC2626'; // Default to red if no color found
   };
 
   const getEventsForSelectedDate = () => {
-    // Set selected date to start of day for accurate comparison
-    const selectedDateStart = new Date(selectedDate);
-    selectedDateStart.setHours(0, 0, 0, 0);
+    // Use moment for the selected date as well
+    const selectedDateMoment = moment(selectedDate).startOf('day');
     
     let filteredEvents = calendarEvents.filter(event => {
       const typeMatches = eventTypeFilter === 'all' || event.eventType === eventTypeFilter;
       if (!typeMatches) return false;
 
-      // Handle School_Holiday type
-      if (event.eventType === 'School_Holiday' && event.school?.holidays) {
-        return event.school.holidays.some(holiday => {
-          // Use moment to parse UTC dates properly
-          const startDate = moment.utc(holiday.startDate).local().startOf('day').toDate();
-          const endDate = moment.utc(holiday.endDate).local().startOf('day').toDate();
-          startDate.setHours(0, 0, 0, 0);
-          endDate.setHours(0, 0, 0, 0);
-          return selectedDateStart >= startDate && selectedDateStart <= endDate;
-        });
-      }
-      
-      // Handle School_Event type
-      if (event.eventType === 'School_Event' && event.school?.events) {
-        return event.school.events.some(schoolEvent => {
-          // Use moment to parse UTC dates properly
-          const startDate = moment.utc(schoolEvent.startDate).local().startOf('day').toDate();
-          const endDate = moment.utc(schoolEvent.endDate).local().startOf('day').toDate();
-          startDate.setHours(0, 0, 0, 0);
-          endDate.setHours(0, 0, 0, 0);
-          return selectedDateStart >= startDate && selectedDateStart <= endDate;
-        });
+      // Handle School_Holiday and School_Event types - use main event dates directly
+      if ((event.eventType === 'School_Holiday' || event.eventType === 'School_Event') && event.eventDate && event.endDate) {
+        // Extract only the date part to avoid timezone conversion
+        const startDateStr = event.eventDate.split('T')[0]; // Get "2025-06-26" from "2025-06-26T19:00:00.000Z"
+        const endDateStr = event.endDate.split('T')[0]; // Get "2025-08-17" from "2025-08-17T19:00:00.000Z"
+        const startDate = moment(startDateStr); // Parse as local date
+        const endDate = moment(endDateStr); // Parse as local date
+        return selectedDateMoment.isBetween(startDate, endDate, 'day', '[]');
       }
 
       // Check if the selected date falls within the event's date range
       if (event.startDate && event.endDate) {
-        const startDate = new Date(event.startDate);
-        const endDate = new Date(event.endDate);
-        
-        // Set times to start of day for accurate comparison
-        startDate.setHours(0, 0, 0, 0);
-        endDate.setHours(0, 0, 0, 0);
-        
-        return selectedDateStart >= startDate && selectedDateStart <= endDate;
+        // Extract only the date part to avoid timezone conversion
+        const startDateStr = event.startDate.split('T')[0]; // Get "2025-06-26" from "2025-06-26T19:00:00.000Z"
+        const endDateStr = event.endDate.split('T')[0]; // Get "2025-08-17" from "2025-08-17T19:00:00.000Z"
+        const startDate = moment(startDateStr); // Parse as local date
+        const endDate = moment(endDateStr); // Parse as local date
+        return selectedDateMoment.isBetween(startDate, endDate, 'day', '[]');
       } else if (event.eventDate) {
         // Single day event
-        const eventDate = new Date(event.eventDate);
-        eventDate.setHours(0, 0, 0, 0);
-        return eventDate.getTime() === selectedDateStart.getTime();
+        // Extract only the date part to avoid timezone conversion
+        const dateStr = event.eventDate.split('T')[0]; // Get "2025-06-26" from "2025-06-26T19:00:00.000Z"
+        const eventDate = moment(dateStr); // Parse as local date
+        return selectedDateMoment.isSame(eventDate, 'day');
       }
       return false;
     });
