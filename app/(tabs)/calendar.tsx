@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { runOnJS } from 'react-native-reanimated';
+import { CalendarList } from 'react-native-calendars';
 import moment from 'moment';
 import { 
   View, 
@@ -486,7 +485,8 @@ export default function Calendar() {
     return holiday ? holiday.color : '#DC2626'; // Default to red if no color found
   };
 
-  const getEventsForSelectedDate = () => {
+  // Memoize the function to prevent recreation on every render and improve performance
+  const getEventsForSelectedDate = useCallback(() => {
     // Use moment for the selected date as well
     const selectedDateMoment = moment(selectedDate).startOf('day');
     
@@ -528,7 +528,7 @@ export default function Calendar() {
       const timeB = b.startTime || '00:00';
       return timeA.localeCompare(timeB);
     });
-  };
+  }, [selectedDate, calendarEvents, eventTypeFilter]);
 
   const handleSaveEvent = async () => {
     if (!newEvent.title.trim()) {
@@ -1020,28 +1020,74 @@ export default function Calendar() {
     setCurrentDate(newDate);
   };
 
-  // Gesture handler for swipe navigation
-  const panGesture = Gesture.Pan()
-    .activeOffsetX([-10, 10]) // Only activate on horizontal swipes
-    .failOffsetY([-20, 20]) // Fail if vertical movement is too much
-    .onEnd((event) => {
-      const threshold = 50; // Minimum swipe distance
-      const velocityThreshold = 500; // Minimum velocity for quick swipes
-      const { translationX, velocityX } = event;
-      
-      // Check if it's a valid horizontal swipe
-      if (Math.abs(translationX) > threshold || Math.abs(velocityX) > velocityThreshold) {
-        if (translationX > 0 || velocityX > velocityThreshold) {
-          // Swipe right or fast right swipe - go to previous month
-          runOnJS(navigateMonth)('prev');
-        } else if (translationX < 0 || velocityX < -velocityThreshold) {
-          // Swipe left or fast left swipe - go to next month
-          runOnJS(navigateMonth)('next');
+  // Create marked dates object for the calendar library
+  const markedDates = useMemo(() => {
+    const marked: { [key: string]: any } = {};
+    
+    // Mark selected date
+    const selectedDateString = moment(selectedDate).format('YYYY-MM-DD');
+    marked[selectedDateString] = {
+      selected: true,
+      selectedColor: '#0e3c67',
+      selectedTextColor: '#FFFFFF'
+    };
+    
+    // Mark dates with events
+    calendarEvents.forEach(event => {
+      const typeMatches = eventTypeFilter === 'all' || event.eventType === eventTypeFilter;
+      if (!typeMatches) return;
+
+      // Handle School_Holiday and School_Event types
+      if ((event.eventType === 'School_Holiday' || event.eventType === 'School_Event') && event.eventDate && event.endDate) {
+        const startDateStr = event.eventDate.split('T')[0];
+        const endDateStr = event.endDate.split('T')[0];
+        const startDate = moment(startDateStr);
+        const endDate = moment(endDateStr);
+        
+        let currentDate = startDate.clone();
+        while (currentDate.isSameOrBefore(endDate)) {
+          const dateString = currentDate.format('YYYY-MM-DD');
+          if (!marked[dateString]) {
+            marked[dateString] = {};
+          }
+          marked[dateString].marked = true;
+          marked[dateString].dotColor = event.eventType === 'School_Holiday' ? '#DC2626' : '#059669';
+          currentDate.add(1, 'day');
         }
+      } else if (event.startDate && event.endDate) {
+        const startDateStr = event.startDate.split('T')[0];
+        const endDateStr = event.endDate.split('T')[0];
+        const startDate = moment(startDateStr);
+        const endDate = moment(endDateStr);
+        
+        let currentDate = startDate.clone();
+        while (currentDate.isSameOrBefore(endDate)) {
+          const dateString = currentDate.format('YYYY-MM-DD');
+          if (!marked[dateString]) {
+            marked[dateString] = {};
+          }
+          marked[dateString].marked = true;
+          marked[dateString].dotColor = getEventTypeColor(event.eventType);
+          currentDate.add(1, 'day');
+        }
+      } else if (event.eventDate) {
+        const dateStr = event.eventDate.split('T')[0];
+        const dateString = moment(dateStr).format('YYYY-MM-DD');
+        if (!marked[dateString]) {
+          marked[dateString] = {};
+        }
+        marked[dateString].marked = true;
+        marked[dateString].dotColor = getEventTypeColor(event.eventType);
       }
     });
+    
+    return marked;
+  }, [selectedDate, calendarEvents, eventTypeFilter]);
 
-  const selectedDateEvents = getEventsForSelectedDate();
+  // Memoize selectedDateEvents to prevent unnecessary re-renders when month changes
+  const selectedDateEvents = useMemo(() => {
+    return getEventsForSelectedDate();
+  }, [selectedDate, calendarEvents, eventTypeFilter]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -1107,37 +1153,59 @@ export default function Calendar() {
           </View>
         )}
 
-        {/* Calendar Navigation */}
-        <View style={styles.calendarHeader}>
-          <TouchableOpacity onPress={() => navigateMonth('prev')}>
-            <ChevronLeft size={30} color="#374151" />
-          </TouchableOpacity>
-          <Text style={styles.monthYear}>
-            {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-          </Text>
-          <TouchableOpacity onPress={() => navigateMonth('next')}>
-            <ChevronRight size={30} color="#374151" />
-          </TouchableOpacity>
+        {/* Smooth Horizontal Calendar using react-native-calendars */}
+        <View style={styles.calendarWrapper}>
+          <CalendarList
+            horizontal={true}
+            pagingEnabled={true}
+            showScrollIndicator={false}
+            current={moment(currentDate).format('YYYY-MM-DD')}
+            markedDates={markedDates}
+            onDayPress={(day) => {
+              const newDate = moment(day.dateString).toDate();
+              setSelectedDate(newDate);
+              setCurrentDate(newDate);
+            }}
+            onVisibleMonthsChange={(months) => {
+              if (months.length > 0) {
+                const newDate = moment(months[0].dateString).toDate();
+                setCurrentDate(newDate);
+              }
+            }}
+            theme={{
+              backgroundColor: '#FFFFFF',
+              calendarBackground: '#FFFFFF',
+              textSectionTitleColor: '#6B7280',
+              selectedDayBackgroundColor: '#0e3c67',
+              selectedDayTextColor: '#FFFFFF',
+              todayTextColor: '#0e3c67',
+              dayTextColor: '#111827',
+              textDisabledColor: '#9CA3AF',
+              dotColor: '#0e3c67',
+              selectedDotColor: '#FFFFFF',
+              arrowColor: '#0e3c67',
+              monthTextColor: '#111827',
+              indicatorColor: '#0e3c67',
+              textDayFontFamily: 'System',
+              textMonthFontFamily: 'System',
+              textDayHeaderFontFamily: 'System',
+              textDayFontWeight: '400',
+              textMonthFontWeight: '600',
+              textDayHeaderFontWeight: '500',
+              textDayFontSize: 16,
+              textMonthFontSize: 18,
+              textDayHeaderFontSize: 14,
+            }}
+            style={styles.calendarList}
+            calendarWidth={width - 40}
+            calendarHeight={320}
+            pastScrollRange={50}
+            futureScrollRange={50}
+            scrollEnabled={true}
+            showWeekNumbers={false}
+            firstDay={0} // Sunday = 0, Monday = 1
+          />
         </View>
-
-        {/* Calendar Grid with Swipe Navigation */}
-        <GestureDetector gesture={panGesture}>
-          <View style={styles.calendar}>
-            {/* Day Headers */}
-            <View style={styles.dayHeaders}>
-              {dayNames.map((day) => (
-                <Text key={day} style={styles.dayHeader}>
-                  {day}
-                </Text>
-              ))}
-            </View>
-
-            {/* Calendar Days */}
-            <View style={styles.daysGrid}>
-              {renderCalendarDays()}
-            </View>
-          </View>
-        </GestureDetector>
 
         {/* Events for Selected Date */}
         <View style={styles.eventsSection}>
@@ -2225,6 +2293,22 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
+  },
+  // New styles for react-native-calendars horizontal calendar
+  calendarWrapper: {
+    marginHorizontal: 20,
+    marginTop: 16,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    overflow: 'hidden',
+  },
+  calendarList: {
+    borderRadius: 16,
   },
   dayHeaders: {
     flexDirection: 'row',
