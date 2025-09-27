@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { runOnJS } from 'react-native-reanimated';
 import moment from 'moment';
 import { 
   View, 
@@ -49,9 +51,10 @@ export default function Calendar() {
   const router = useRouter();
   const searchParams = useLocalSearchParams();
   const { user, token } = useAuth();
-  const { triggerRefresh } = useAppEvents();
+  const { triggerRefresh, subscribeToRefresh } = useAppEvents();
   const hasFetchedFamilyData = useRef(false);
   const lastFamilyFetchTime = useRef(0);
+  const lastEventsFetchTime = useRef(0);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showAddEventModal, setShowAddEventModal] = useState(false);
@@ -216,15 +219,57 @@ export default function Calendar() {
     }
   }, [token]);
 
-  // Refresh family data when calendar screen becomes active (with debounce)
+  // Subscribe to app-wide refresh events
+  useEffect(() => {
+    if (!token) return;
+
+    const unsubscribe = subscribeToRefresh((type) => {
+      console.log(`Calendar received refresh event: ${type}`);
+      const now = Date.now();
+      
+      if (type === 'events' || type === 'all') {
+        const timeSinceLastEventsFetch = now - lastEventsFetchTime.current;
+        // Only fetch if more than 2 seconds have passed since last fetch
+        if (timeSinceLastEventsFetch > 2000) {
+          console.log('Calendar: Refreshing events due to app event');
+          lastEventsFetchTime.current = now;
+          refetchEvents();
+        }
+      }
+      
+      if (type === 'family' || type === 'all') {
+        const timeSinceLastFamilyFetch = now - lastFamilyFetchTime.current;
+        // Only fetch if more than 2 seconds have passed since last fetch
+        if (timeSinceLastFamilyFetch > 2000) {
+          console.log('Calendar: Refreshing family due to app event');
+          lastFamilyFetchTime.current = now;
+          refetchFamily();
+        }
+      }
+    });
+
+    return unsubscribe;
+  }, [token, subscribeToRefresh, refetchEvents, refetchFamily]);
+
+  // Refresh both events and family data when calendar screen becomes active (with debounce)
   useFocusEffect(
     React.useCallback(() => {
       if (token) {
         const now = Date.now();
-        const timeSinceLastFetch = now - lastFamilyFetchTime.current;
+        const timeSinceLastEventsFetch = now - lastEventsFetchTime.current;
+        const timeSinceLastFamilyFetch = now - lastFamilyFetchTime.current;
         
-        // Only fetch if more than 5 seconds have passed since last fetch
-        if (timeSinceLastFetch > 5000) {
+        // Refresh events if more than 3 seconds have passed since last fetch
+        if (timeSinceLastEventsFetch > 3000) {
+          console.log('Calendar screen focused - refreshing events (debounced)');
+          lastEventsFetchTime.current = now;
+          refetchEvents();
+        } else {
+          console.log('Calendar screen focused - skipping events fetch (too recent)');
+        }
+        
+        // Refresh family data if more than 5 seconds have passed since last fetch
+        if (timeSinceLastFamilyFetch > 5000) {
           console.log('Calendar screen focused - refreshing family data (debounced)');
           lastFamilyFetchTime.current = now;
           refetchFamily();
@@ -232,7 +277,7 @@ export default function Calendar() {
           console.log('Calendar screen focused - skipping family data fetch (too recent)');
         }
       }
-    }, [token, refetchFamily])
+    }, [token, refetchEvents, refetchFamily])
   );
   const [newEvent, setNewEvent] = useState({
     title: '',
@@ -975,6 +1020,27 @@ export default function Calendar() {
     setCurrentDate(newDate);
   };
 
+  // Gesture handler for swipe navigation
+  const panGesture = Gesture.Pan()
+    .activeOffsetX([-10, 10]) // Only activate on horizontal swipes
+    .failOffsetY([-20, 20]) // Fail if vertical movement is too much
+    .onEnd((event) => {
+      const threshold = 50; // Minimum swipe distance
+      const velocityThreshold = 500; // Minimum velocity for quick swipes
+      const { translationX, velocityX } = event;
+      
+      // Check if it's a valid horizontal swipe
+      if (Math.abs(translationX) > threshold || Math.abs(velocityX) > velocityThreshold) {
+        if (translationX > 0 || velocityX > velocityThreshold) {
+          // Swipe right or fast right swipe - go to previous month
+          runOnJS(navigateMonth)('prev');
+        } else if (translationX < 0 || velocityX < -velocityThreshold) {
+          // Swipe left or fast left swipe - go to next month
+          runOnJS(navigateMonth)('next');
+        }
+      }
+    });
+
   const selectedDateEvents = getEventsForSelectedDate();
 
   return (
@@ -1044,32 +1110,34 @@ export default function Calendar() {
         {/* Calendar Navigation */}
         <View style={styles.calendarHeader}>
           <TouchableOpacity onPress={() => navigateMonth('prev')}>
-            <ChevronLeft size={24} color="#374151" />
+            <ChevronLeft size={30} color="#374151" />
           </TouchableOpacity>
           <Text style={styles.monthYear}>
             {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
           </Text>
           <TouchableOpacity onPress={() => navigateMonth('next')}>
-            <ChevronRight size={24} color="#374151" />
+            <ChevronRight size={30} color="#374151" />
           </TouchableOpacity>
         </View>
 
-        {/* Calendar Grid */}
-        <View style={styles.calendar}>
-          {/* Day Headers */}
-          <View style={styles.dayHeaders}>
-            {dayNames.map((day) => (
-              <Text key={day} style={styles.dayHeader}>
-                {day}
-              </Text>
-            ))}
-          </View>
+        {/* Calendar Grid with Swipe Navigation */}
+        <GestureDetector gesture={panGesture}>
+          <View style={styles.calendar}>
+            {/* Day Headers */}
+            <View style={styles.dayHeaders}>
+              {dayNames.map((day) => (
+                <Text key={day} style={styles.dayHeader}>
+                  {day}
+                </Text>
+              ))}
+            </View>
 
-          {/* Calendar Days */}
-          <View style={styles.daysGrid}>
-            {renderCalendarDays()}
+            {/* Calendar Days */}
+            <View style={styles.daysGrid}>
+              {renderCalendarDays()}
+            </View>
           </View>
-        </View>
+        </GestureDetector>
 
         {/* Events for Selected Date */}
         <View style={styles.eventsSection}>
@@ -2160,7 +2228,7 @@ const styles = StyleSheet.create({
   },
   dayHeaders: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexWrap: 'wrap',
     marginBottom: 16,
   },
   dayHeader: {
@@ -2168,18 +2236,19 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#6B7280',
     textAlign: 'center',
-    width: (width - 72) / 7,
+    width: (width - 76) / 7,
   },
   daysGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    justifyContent: 'flex-start',
   },
   emptyDay: {
-    width: (width - 72) / 7,
+    width: (width - 76) / 7,
     height: 40,
   },
   dayCell: {
-    width: (width - 72) / 7,
+    width: (width - 76) / 7,
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',

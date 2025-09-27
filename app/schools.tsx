@@ -21,6 +21,7 @@ import { router } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 import { useSchools } from '@/hooks/useSchools';
 import { useSchoolEvents } from '@/hooks/useSchoolEvents';
+import { useAppEvents } from '@/hooks/useAppEvents';
 import { School as SchoolType } from '@/types/schools';
 import { API_CONFIG, getApiUrl, getAuthHeaders } from '@/config/api';
 
@@ -28,6 +29,7 @@ const { width } = Dimensions.get('window');
 
 export default function Schools() {
   const { token, user } = useAuth();
+  const { triggerRefresh } = useAppEvents();
   const [searchPostcode, setSearchPostcode] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [miles, setMiles] = useState(15); // Default to 15 miles
@@ -224,6 +226,9 @@ export default function Schools() {
           [schoolId]: !wasSyncedBefore
         }));
 
+        // Trigger refresh for all calendar-related components
+        triggerRefresh('events');
+        
         // Show appropriate success message based on the action performed
         // If the school was synced before the action, it means we just unsynced it
         if (wasSyncedBefore) {

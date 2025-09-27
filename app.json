@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "bolt-expo-nativewind",
-    "slug": "bolt-expo-nativewind",
+    "name": "kidPlan App",
+    "slug": "kidPlan_App",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -29,6 +29,7 @@
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#0e3c67"
       },
+      "icon": "./assets/images/icon.png",
       "permissions": [
         "android.permission.RECEIVE_BOOT_COMPLETED",
         "android.permission.VIBRATE",

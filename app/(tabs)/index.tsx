@@ -530,7 +530,12 @@ export default function Dashboard() {
               );
             } else {
               return (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.membersScroll}>
+                <ScrollView 
+                  horizontal 
+                  showsHorizontalScrollIndicator={false} 
+                  style={styles.membersScroll}
+                  contentContainerStyle={styles.membersScrollContent}
+                >
                   {familyMembers.map((member, index) => (
                     <View 
                       key={`${member._id}-${index}`}
@@ -825,6 +830,9 @@ const styles = StyleSheet.create({
     marginHorizontal: -20,
     paddingHorizontal: 20,
   },
+  membersScrollContent: {
+    paddingRight: 20,
+  },
   memberCard: {
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
@@ -832,6 +840,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginRight: 12,
     width: 100,
+    height: 136,
+    marginVertical:4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -858,11 +868,12 @@ const styles = StyleSheet.create({
   },
   addMemberCard: {
     width: 100,
-    height: 120,
+    height: 136,
     borderRadius: 12,
     backgroundColor: '#F3F4F6',
     alignItems: 'center',
     justifyContent: 'center',
+    alignSelf: 'center',
     borderWidth: 2,
     borderColor: '#E5E7EB',
     borderStyle: 'dashed',
