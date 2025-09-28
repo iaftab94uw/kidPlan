@@ -110,7 +110,7 @@ export const useFamilyDetails = (token: string): UseFamilyDetailsReturn => {
     
     // Add children
     if (familyData.children) {
-      console.log('Adding children:', familyData.children);
+      // console.log('Adding children:', familyData.children);
       familyData.children.forEach(child => {
         if (!seenIds.has(child._id)) {
           allMembers.push(child);
@@ -121,7 +121,7 @@ export const useFamilyDetails = (token: string): UseFamilyDetailsReturn => {
     
     // Add parents
     if (familyData.parents) {
-      console.log('Adding parents:', familyData.parents);
+      // console.log('Adding parents:', familyData.parents);
       familyData.parents.forEach(parent => {
         if (!seenIds.has(parent._id)) {
           allMembers.push(parent);
@@ -143,7 +143,7 @@ export const useFamilyDetails = (token: string): UseFamilyDetailsReturn => {
     
     // Add others
     if (familyData.others) {
-      console.log('Adding others:', familyData.others);
+      // console.log('Adding others:', familyData.others);
       familyData.others.forEach(other => {
         if (!seenIds.has(other._id)) {
           allMembers.push(other);

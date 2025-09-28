@@ -27,7 +27,10 @@ import {
   ChevronRight,
   User,
   Camera,
-  CalendarDays
+  CalendarDays,
+  School,
+  Heart,
+  Briefcase
 } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
@@ -80,6 +83,64 @@ export default function Dashboard() {
       return user.fullName;
     }
     return 'User';
+  };
+
+  // Helper function to get event type icon
+  const getEventTypeIcon = (eventType: string) => {
+    switch (eventType) {
+      case 'School_Event':
+      case 'School_Holiday':
+        return School;
+      case 'Personal':
+        return Heart;
+      case 'Work':
+        return Briefcase;
+      case 'Schedule':
+        return Users;
+      default:
+        return Calendar;
+    }
+  };
+
+  // Helper function to get event type color
+  const getEventTypeColor = (eventType: string) => {
+    switch (eventType) {
+      case 'School_Event':
+        return '#059669'; // Green
+      case 'School_Holiday':
+        return '#DC2626'; // Red
+      case 'Personal':
+        return '#8B5CF6'; // Purple
+      case 'Work':
+        return '#0e3c67'; // Blue
+      case 'Schedule':
+        return '#F59E0B'; // Orange
+      default:
+        return '#6B7280'; // Gray
+    }
+  };
+
+  const getEventTypeIcon2 = (eventType: EventType) => {
+    switch (eventType) {
+      case 'Personal':
+        return '👤';
+      case 'School':
+        return '🎓';
+      case 'School_Event':
+        return '📚';
+      case 'School_Holiday':
+        return '🏫';
+      case 'Activity':
+        return '⚽';
+      case 'Holiday':
+        return '🎉';
+      case 'Medical':
+        return '🏥';
+      case 'Schedule':
+        return '📅';
+      default:
+        return '📅';
+    }
   };
 
   // Helper functions for data processing
@@ -173,9 +234,9 @@ export default function Dashboard() {
       console.log('Today\'s events response:', data);
       
       if (data.success && Array.isArray(data.data)) {
-        const scheduleEvents = data.data.filter((event: CalendarEvent) => event.eventType === 'Schedule');
-        console.log('Today\'s schedule events:', scheduleEvents);
-        setTodayEvents(scheduleEvents);
+        // Show all calendar events, not just schedules
+        console.log('Today\'s events:', data.data);
+        setTodayEvents(data.data);
       } else {
         setTodayEvents([]);
       }
@@ -225,9 +286,9 @@ export default function Dashboard() {
       console.log('This week\'s events response:', data);
       
       if (data.success && Array.isArray(data.data)) {
-        const scheduleEvents = data.data.filter((event: CalendarEvent) => event.eventType === 'Schedule');
-        console.log('This week\'s schedule events:', scheduleEvents);
-        setThisWeekEvents(scheduleEvents);
+        // Show all calendar events, not just schedules
+        console.log('This week\'s events:', data.data);
+        setThisWeekEvents(data.data);
       } else {
         setThisWeekEvents([]);
       }
@@ -449,31 +510,35 @@ export default function Dashboard() {
               <Text style={styles.noDataSubtitle}>Your day is free! Add a schedule to get started.</Text>
             </View>
           ) : (
-            todayEvents.slice(0, 2).map((schedule) => (
-              <TouchableOpacity 
-                key={schedule._id} 
-                style={styles.eventCard}
-                // onPress={() => router.push(`/schedule-detail/${schedule._id}`)}
-              >
-                <View style={styles.eventAvatar}>
-                  <Calendar size={20} color="#8B5CF6" />
-                </View>
+            todayEvents.slice(0, 2).map((event) => {
+              const eventIcon = getEventTypeIcon2(event.eventType);
+              const eventColor = getEventTypeColor(event.eventType);
+              
+              return (
+                <TouchableOpacity 
+                  key={event._id} 
+                  style={styles.eventCard}
+                  // onPress={() => router.push(`/event-detail/${event._id}`)}
+                >
+                  <View style={[styles.eventAvatar, { backgroundColor: `${eventColor}20` }]}>
+                    <Text style={styles.eventEmojiIcon}>{eventIcon}</Text>
+                  </View>
                 <View style={styles.eventInfo}>
-                  <Text style={styles.eventTitle}>{schedule.title}</Text>
+                  <Text style={styles.eventTitle}>{event.title}</Text>
                   <View style={styles.eventMeta}>
                     <View style={styles.eventMetaItem}>
                       <Clock size={14} color="#6B7280" />
                       <Text style={styles.eventMetaText}>
-                        {schedule.startDate && schedule.endDate ? (
-                          `${new Date(schedule.startDate).toLocaleDateString('en-GB', { 
+                        {event.startDate && event.endDate ? (
+                          `${new Date(event.startDate).toLocaleDateString('en-GB', { 
                             day: 'numeric', 
                             month: 'short' 
-                          })} - ${new Date(schedule.endDate).toLocaleDateString('en-GB', { 
+                          })} - ${new Date(event.endDate).toLocaleDateString('en-GB', { 
                             day: 'numeric', 
                             month: 'short' 
                           })}`
                         ) : (
-                          schedule.eventDate ? new Date(schedule.eventDate).toLocaleDateString('en-GB', { 
+                          event.eventDate ? new Date(event.eventDate).toLocaleDateString('en-GB', { 
                             day: 'numeric', 
                             month: 'short' 
                           }) : 'Today'
@@ -482,13 +547,14 @@ export default function Dashboard() {
                     </View>
                     <View style={styles.eventMetaItem}>
                       <MapPin size={14} color="#6B7280" />
-                      <Text style={styles.eventMetaText}>{schedule.location || 'No location'}</Text>
+                      <Text style={styles.eventMetaText}>{event.location || event.school?.name || 'No location'}</Text>
                     </View>
                   </View>
                 </View>
-                <View style={[styles.eventColorBar, { backgroundColor: schedule.color || '#8B5CF6' }]} />
+                <View style={[styles.eventColorBar, { backgroundColor: eventColor }]} />
               </TouchableOpacity>
-            ))
+            );
+            })
           )}
         </View>
 
@@ -588,26 +654,30 @@ export default function Dashboard() {
               <Text style={styles.noDataSubtitle}>Plan your week by adding co-parenting schedules.</Text>
             </View>
           ) : (
-            thisWeekEvents.slice(0, 2).map((schedule) => (
-              <TouchableOpacity 
-                key={schedule._id}
-                style={styles.scheduleCard}
-                // onPress={() => router.push(`/schedule-detail/${schedule._id}`)}
-              >
+            thisWeekEvents.slice(0, 2).map((event) => {
+              const eventIcon = getEventTypeIcon2(event.eventType);
+              const eventColor = getEventTypeColor(event.eventType);
+              
+              return (
+                <TouchableOpacity 
+                  key={event._id}
+                  style={styles.scheduleCard}
+                  // onPress={() => router.push(`/event-detail/${event._id}`)}
+                >
                 <View style={styles.scheduleHeader}>
                   <View style={styles.scheduleInfo}>
-                    <Text style={styles.scheduleTitle}>{schedule.title}</Text>
+                    <Text style={styles.scheduleTitle}>{event.title}</Text>
                     <Text style={styles.scheduleDate}>
-                      {schedule.startDate && schedule.endDate ? (
-                        `${new Date(schedule.startDate).toLocaleDateString('en-GB', { 
+                      {event.startDate && event.endDate ? (
+                        `${new Date(event.startDate).toLocaleDateString('en-GB', { 
                           day: 'numeric', 
                           month: 'short' 
-                        })} - ${new Date(schedule.endDate).toLocaleDateString('en-GB', { 
+                        })} - ${new Date(event.endDate).toLocaleDateString('en-GB', { 
                           day: 'numeric', 
                           month: 'short' 
                         })}`
                       ) : (
-                        schedule.eventDate ? new Date(schedule.eventDate).toLocaleDateString('en-GB', { 
+                        event.eventDate ? new Date(event.eventDate).toLocaleDateString('en-GB', { 
                           day: 'numeric', 
                           month: 'short' 
                         }) : 'This week'
@@ -616,25 +686,27 @@ export default function Dashboard() {
                   </View>
                   <View style={[
                     styles.scheduleParentBadge, 
-                    { backgroundColor: schedule.responsibleParent === 'Primary' ? '#E6F3FF' : '#F3E8FF' }
+                    { backgroundColor: `${eventColor}20` }
                   ]}>
+                    <Text style={styles.badgeEmojiIcon}>{eventIcon}</Text>
                     <Text style={[
                       styles.scheduleParentText, 
-                      { color: schedule.responsibleParent === 'Primary' ? '#0e3c67' : '#8B5CF6' }
+                      { color: eventColor }
                     ]}>
-                      {schedule.responsibleParent === 'Primary' ? 'You' : 'Co-Parent'}
+                      {event.eventType.replace('_', ' ')}
                     </Text>
                   </View>
                 </View>
                 <View style={styles.scheduleDetails}>
                   <View style={styles.scheduleDetailRow}>
                     <MapPin size={16} color="#6B7280" />
-                    <Text style={styles.scheduleDetailText}>{schedule.location || 'No location'}</Text>
+                    <Text style={styles.scheduleDetailText}>{event.location || event.school?.name || 'No location'}</Text>
                   </View>
-                  <Text style={styles.scheduleActivities}>{schedule.activities || schedule.description || 'No activities specified'}</Text>
+                  <Text style={styles.scheduleActivities}>{event.activities || event.description || 'No description available'}</Text>
                 </View>
               </TouchableOpacity>
-            ))
+              );
+            })
           )}
         </View>
 
@@ -799,6 +871,8 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 24,
     marginRight: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   eventInfo: {
     flex: 1,
@@ -820,6 +894,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6B7280',
     marginLeft: 6,
+  },
+  eventTypeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    textTransform: 'capitalize',
+  },
+  eventEmojiIcon: {
+    fontSize: 24,
+    textAlign: 'center',
+  },
+  badgeEmojiIcon: {
+    fontSize: 16,
+    textAlign: 'center',
   },
   eventColorBar: {
     width: 4,
@@ -921,6 +1008,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   scheduleParentText: {
     fontSize: 12,

@@ -258,22 +258,18 @@ export default function Calendar() {
         const timeSinceLastEventsFetch = now - lastEventsFetchTime.current;
         const timeSinceLastFamilyFetch = now - lastFamilyFetchTime.current;
         
-        // Refresh events if more than 3 seconds have passed since last fetch
-        if (timeSinceLastEventsFetch > 3000) {
-          console.log('Calendar screen focused - refreshing events (debounced)');
+        // Refresh events only if more than 30 seconds have passed (prevent API calls on date selection)
+        if (timeSinceLastEventsFetch > 30000) {
+          console.log('Calendar screen focused - refreshing events (30s debounce)');
           lastEventsFetchTime.current = now;
           refetchEvents();
-        } else {
-          console.log('Calendar screen focused - skipping events fetch (too recent)');
         }
         
-        // Refresh family data if more than 5 seconds have passed since last fetch
-        if (timeSinceLastFamilyFetch > 5000) {
-          console.log('Calendar screen focused - refreshing family data (debounced)');
+        // Refresh family data only if more than 60 seconds have passed
+        if (timeSinceLastFamilyFetch > 60000) {
+          console.log('Calendar screen focused - refreshing family data (60s debounce)');
           lastFamilyFetchTime.current = now;
           refetchFamily();
-        } else {
-          console.log('Calendar screen focused - skipping family data fetch (too recent)');
         }
       }
     }, [token, refetchEvents, refetchFamily])
@@ -298,8 +294,6 @@ export default function Calendar() {
   const eventTypes = [
     { id: 'Personal', label: 'Personal', color: '#3B82F6' },
     { id: 'School', label: 'School', color: '#10B981' },
-    { id: 'School_Event', label: 'School Event', color: '#059669' },
-    { id: 'School_Holiday', label: 'School Holiday', color: '#DC2626' },
     { id: 'Activity', label: 'Activity', color: '#F59E0B' },
     { id: 'Holiday', label: 'Holiday', color: '#EF4444' },
     { id: 'Medical', label: 'Medical', color: '#8B5CF6' }
@@ -945,6 +939,40 @@ export default function Calendar() {
     }
   }, [searchParams.action, router]);
 
+  // Handle edit/delete navigation parameters when events are loaded
+  useEffect(() => {
+    if (!eventsLoading && calendarEvents.length > 0) {
+      if (searchParams.action === 'editEvent' && searchParams.eventId) {
+        console.log('Opening edit event modal from navigation parameter');
+        // Find the event to edit
+        const eventToEdit = calendarEvents.find(event => event._id === searchParams.eventId);
+        if (eventToEdit) {
+          handleEditEvent(eventToEdit);
+          // Clear the parameter to avoid reopening on subsequent renders
+          router.replace('/(tabs)/calendar');
+        }
+      } else if (searchParams.action === 'editSchedule' && searchParams.scheduleId) {
+        console.log('Opening edit schedule modal from navigation parameter');
+        // Find the schedule to edit
+        const scheduleToEdit = calendarEvents.find(event => event._id === searchParams.scheduleId);
+        if (scheduleToEdit) {
+          handleEditSchedule(scheduleToEdit);
+          // Clear the parameter to avoid reopening on subsequent renders
+          router.replace('/(tabs)/calendar');
+        }
+      } else if (searchParams.action === 'deleteEvent' && searchParams.eventId) {
+        console.log('Deleting event from navigation parameter');
+        // Find the event to delete
+        const eventToDelete = calendarEvents.find(event => event._id === searchParams.eventId);
+        if (eventToDelete) {
+          handleDeleteEvent(eventToDelete);
+          // Clear the parameter to avoid reopening on subsequent renders
+          router.replace('/(tabs)/calendar');
+        }
+      }
+    }
+  }, [searchParams.action, searchParams.eventId, searchParams.scheduleId, calendarEvents, eventsLoading, router]);
+
   const renderCalendarDays = () => {
     const daysInMonth = getDaysInMonth(currentDate);
     const firstDay = getFirstDayOfMonth(currentDate);
@@ -1153,6 +1181,27 @@ export default function Calendar() {
           </View>
         )}
 
+        {/* Month Navigation Header */}
+        <View style={styles.monthNavigation}>
+          <TouchableOpacity 
+            style={styles.navButton}
+            onPress={() => navigateMonth('prev')}
+          >
+            <ChevronLeft size={24} color="#0e3c67" />
+          </TouchableOpacity>
+          
+          <Text style={styles.monthTitle}>
+            {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+          </Text>
+          
+          <TouchableOpacity 
+            style={styles.navButton}
+            onPress={() => navigateMonth('next')}
+          >
+            <ChevronRight size={24} color="#0e3c67" />
+          </TouchableOpacity>
+        </View>
+
         {/* Smooth Horizontal Calendar using react-native-calendars */}
         <View style={styles.calendarWrapper}>
           <CalendarList
@@ -1162,6 +1211,7 @@ export default function Calendar() {
             current={moment(currentDate).format('YYYY-MM-DD')}
             markedDates={markedDates}
             onDayPress={(day) => {
+              console.log('📅 Date selected:', day.dateString, '- No API call should happen');
               const newDate = moment(day.dateString).toDate();
               setSelectedDate(newDate);
               setCurrentDate(newDate);
@@ -1183,8 +1233,8 @@ export default function Calendar() {
               textDisabledColor: '#9CA3AF',
               dotColor: '#0e3c67',
               selectedDotColor: '#FFFFFF',
-              arrowColor: '#0e3c67',
-              monthTextColor: '#111827',
+              arrowColor: 'transparent', // Hide arrows
+              monthTextColor: 'transparent', // Hide month text
               indicatorColor: '#0e3c67',
               textDayFontFamily: 'System',
               textMonthFontFamily: 'System',
@@ -1193,7 +1243,7 @@ export default function Calendar() {
               textMonthFontWeight: '600',
               textDayHeaderFontWeight: '500',
               textDayFontSize: 16,
-              textMonthFontSize: 18,
+              textMonthFontSize: 1, // Minimal font size (0 causes Android error)
               textDayHeaderFontSize: 14,
             }}
             style={styles.calendarList}
@@ -1201,7 +1251,7 @@ export default function Calendar() {
             calendarHeight={320}
             pastScrollRange={50}
             futureScrollRange={50}
-            scrollEnabled={true}
+            scrollEnabled={false}
             showWeekNumbers={false}
             firstDay={0} // Sunday = 0, Monday = 1
           />
@@ -2295,9 +2345,41 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   // New styles for react-native-calendars horizontal calendar
-  calendarWrapper: {
+  monthNavigation: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#FFFFFF',
     marginHorizontal: 20,
     marginTop: 16,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  navButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#F8FAFC',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  monthTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#1E293B',
+    textAlign: 'center',
+  },
+  calendarWrapper: {
+    marginHorizontal: 20,
+    marginTop: 8,
     borderRadius: 16,
     backgroundColor: '#FFFFFF',
     shadowColor: '#000',

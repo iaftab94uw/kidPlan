@@ -37,7 +37,7 @@ export const useCalendarEvents = (token: string, initialParams?: CalendarEventsP
         if (params.endDate) queryParams.append('endDate', params.endDate);
         url += `?${queryParams.toString()}`;
       }
-
+      console.log('url of fetchEvents', url);
       const data = await makeAuthenticatedApiCall(
         url,
         {

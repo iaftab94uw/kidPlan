@@ -8,20 +8,24 @@ import {
   SafeAreaView,
   Image,
   ActivityIndicator,
-  RefreshControl
+  RefreshControl,
+  Alert
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 import { useFamilyDetails } from '@/hooks/useFamilyDetails';
 import { API_CONFIG, getApiUrl, getAuthHeaders } from '@/config/api';
-import { CalendarEvent } from '@/types/calendar';
+import { CalendarEvent, EventType } from '@/types/calendar';
 import { 
   ArrowLeft,
   Clock,
   MapPin,
   User,
   Plus,
-  Filter
+  Filter,
+  Edit,
+  Trash2,
+  School
 } from 'lucide-react-native';
 
 export default function TodaySchedule() {
@@ -34,6 +38,29 @@ export default function TodaySchedule() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const getEventTypeIcon = (eventType: EventType) => {
+    switch (eventType) {
+      case 'Personal':
+        return '👤';
+      case 'School':
+        return '🎓';
+      case 'School_Event':
+        return '📚';
+      case 'School_Holiday':
+        return '🏫';
+      case 'Activity':
+        return '⚽';
+      case 'Holiday':
+        return '🎉';
+      case 'Medical':
+        return '🏥';
+      case 'Schedule':
+        return '📅';
+      default:
+        return '📅';
+    }
+  };
 
   // Fetch today's events from API
   const fetchTodayEvents = useCallback(async () => {
@@ -212,6 +239,137 @@ export default function TodaySchedule() {
     return 'All';
   };
 
+  // Helper function for time formatting
+  const formatTimeDisplay = (timeString: string) => {
+    const [hours, minutes] = timeString.split(':');
+    const hour24 = parseInt(hours);
+    const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+    const ampm = hour24 >= 12 ? 'PM' : 'AM';
+    return `${hour12}:${minutes} ${ampm}`;
+  };
+
+  // Handle edit event
+  const handleEditEvent = (event: CalendarEvent) => {
+    // Check if it's a schedule event
+    if (event.eventType === 'Schedule') {
+      handleEditSchedule(event);
+    } else {
+      // Navigate to calendar with edit action for regular events
+      router.push({
+        pathname: '/(tabs)/calendar',
+        params: { action: 'editEvent', eventId: event._id }
+      });
+    }
+  };
+
+  // Handle edit schedule
+  const handleEditSchedule = (schedule: CalendarEvent) => {
+    // Navigate to calendar with edit schedule action
+    router.push({
+      pathname: '/(tabs)/calendar',
+      params: { action: 'editSchedule', scheduleId: schedule._id }
+    });
+  };
+
+  // Handle delete event
+  const handleDeleteEvent = (event: CalendarEvent) => {
+    // Check if it's a schedule event
+    if (event.eventType === 'Schedule') {
+      handleDeleteSchedule(event);
+    } else {
+      // Regular event deletion
+      Alert.alert(
+        'Delete Event',
+        `Are you sure you want to delete "${event.title}"?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: async () => {
+              if (!token) {
+                Alert.alert('Error', 'No authentication token available');
+                return;
+              }
+
+              try {
+                const url = `${getApiUrl(API_CONFIG.ENDPOINTS.DELETE_EVENT)}/${event._id}`;
+                const response = await fetch(url, {
+                  method: 'DELETE',
+                  headers: getAuthHeaders(token),
+                });
+
+                if (!response.ok) {
+                  throw new Error(`Failed to delete event: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.success) {
+                  Alert.alert('Success', 'Event deleted successfully!');
+                  
+                  // Refresh events
+                  fetchTodayEvents();
+                } else {
+                  throw new Error(data.message || 'Failed to delete event');
+                }
+              } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+                Alert.alert('Error', `Failed to delete event: ${errorMessage}`);
+                console.error('Delete event error:', error);
+              }
+            }
+          }
+        ]
+      );
+    }
+  };
+
+  // Handle delete schedule
+  const handleDeleteSchedule = async (schedule: CalendarEvent) => {
+    Alert.alert(
+      'Delete Schedule',
+      `Are you sure you want to delete "${schedule.title}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const scheduleData = {
+                scheduleId: schedule._id
+              };
+
+              const url = getApiUrl(API_CONFIG.ENDPOINTS.DELETE_SCHEDULE);
+              const headers = getAuthHeaders(token!);
+              
+              const response = await fetch(url, {
+                method: 'DELETE',
+                headers: headers,
+                body: JSON.stringify(scheduleData),
+              });
+
+              const data = await response.json();
+              
+              if (data.success) {
+                Alert.alert('Success', 'Schedule deleted successfully!');
+                
+                // Refresh events
+                fetchTodayEvents();
+              } else {
+                throw new Error(data.message || 'Failed to delete schedule');
+              }
+            } catch (error) {
+              console.error('Delete schedule error:', error);
+              Alert.alert('Error', 'Failed to delete schedule. Please try again.');
+            }
+          }
+        }
+      ]
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
@@ -317,23 +475,36 @@ export default function TodaySchedule() {
                   // onPress={() => router.push(`/event-detail/${event._id}`)}
                 >
                   <View style={[styles.eventColorBar, { backgroundColor: event.color || '#0e3c67' }]} />
-                  <View style={styles.eventAvatar}>
-                    <User size={24} color="#6B7280" />
-                  </View>
                   <View style={styles.eventContent}>
                     <View style={styles.eventHeader}>
                       <View style={styles.eventTitleContainer}>
-                        <Text style={styles.eventTitle}>{event.title}</Text>
-                        {event.eventType !== 'Schedule' && (
-                          <View style={[styles.eventTypeBadge, { backgroundColor: event.color || '#0e3c67' }]}>
-                            <Text style={styles.eventTypeText}>
-                              {event.eventType === 'Holiday' ? 'HOLIDAY' : 'EVENT'}
-                            </Text>
+                        <View style={styles.eventIconContainer}>
+                          <Text style={styles.eventTypeIcon}>{getEventTypeIcon(event.eventType)}</Text>
+                        </View>
+                        <View style={styles.eventTitleContent}>
+                          <Text style={styles.eventTitle}>{event.title}</Text>
+                          <Text style={styles.eventDateRange}>{formatEventTime(event)}</Text>
+                        </View>
+                      </View>
+                      <View style={styles.eventHeaderRight}>
+                        <Text style={styles.eventType}>{event.eventType}</Text>
+                        {/* Hide edit and delete buttons for school events */}
+                        {event.eventType !== 'School_Event' && event.eventType !== 'School_Holiday' && (
+                          <View style={styles.eventActions}>
+                            <TouchableOpacity
+                              style={styles.eventActionButton}
+                              onPress={() => handleEditEvent(event)}
+                            >
+                              <Edit size={16} color="#6B7280" />
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              style={styles.eventActionButton}
+                              onPress={() => handleDeleteEvent(event)}
+                            >
+                              <Trash2 size={16} color="#DC2626" />
+                            </TouchableOpacity>
                           </View>
                         )}
-                      </View>
-                      <View style={[styles.statusBadge, { backgroundColor: getStatusColor(status) }]}>
-                        <Text style={styles.statusText}>{getStatusText(status)}</Text>
                       </View>
                     </View>
                     <View style={styles.eventMeta}>
@@ -347,15 +518,21 @@ export default function TodaySchedule() {
                           <Text style={styles.eventMetaText}>{event.location}</Text>
                         </View>
                       )}
-                      <View style={styles.eventMetaItem}>
-                        <User size={16} color="#6B7280" />
-                        <Text style={styles.eventMetaText}>{getFamilyMemberNames(event)}</Text>
-                      </View>
+                      {(event.eventType === 'School' || event.eventType === 'School_Holiday' || event.eventType === 'School_Event') && event.school && (
+                        <View style={styles.eventMetaItem}>
+                          <School size={16} color="#6B7280" />
+                          <Text style={styles.eventMetaText}>{event.school.name}</Text>
+                        </View>
+                      )}
+                      {event.responsibleParent && (
+                        <View style={styles.eventMetaItem}>
+                          <User size={16} color="#6B7280" />
+                          <Text style={styles.eventMetaText}>{event.responsibleParent}</Text>
+                        </View>
+                      )}
                     </View>
-                    {(event.description || event.activities || event.notes) && (
-                      <Text style={styles.eventNotes}>
-                        {event.description || event.activities || event.notes}
-                      </Text>
+                    {event.description && (
+                      <Text style={styles.eventDescription}>{event.description}</Text>
                     )}
                   </View>
                 </TouchableOpacity>
@@ -458,8 +635,8 @@ const styles = StyleSheet.create({
   },
   eventCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    marginBottom: 16,
+    borderRadius: 12,
+    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -471,35 +648,73 @@ const styles = StyleSheet.create({
   eventColorBar: {
     width: 4,
   },
-  eventAvatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    margin: 16,
-    backgroundColor: '#F3F4F6',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   eventContent: {
     flex: 1,
     padding: 16,
-    paddingLeft: 0,
   },
   eventHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: 0,
   },
   eventTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
+  },
+  eventIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(14, 60, 103, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 12,
+  },
+  eventTitleContent: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  eventTypeIcon: {
+    fontSize: 18,
+    color: '#0e3c67',
   },
   eventTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: '#111827',
-    marginBottom: 4,
+  },
+  eventDateRange: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginTop: 2,
+  },
+  eventType: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#6B7280',
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    textTransform: 'capitalize',
+  },
+  eventHeaderRight: {
+    alignItems: 'flex-end',
+    gap: 8,
+  },
+  eventActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  eventActionButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   eventTypeBadge: {
     alignSelf: 'flex-start',
@@ -537,13 +752,11 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     marginLeft: 8,
   },
-  eventNotes: {
-    fontSize: 12,
+  eventDescription: {
+    fontSize: 14,
     color: '#6B7280',
-    fontStyle: 'italic',
-    backgroundColor: '#F9FAFB',
-    padding: 8,
-    borderRadius: 6,
+    lineHeight: 20,
+    marginTop: 8,
   },
   bottomSpacing: {
     height: 32,
