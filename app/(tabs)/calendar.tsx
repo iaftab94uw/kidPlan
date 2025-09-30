@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
-import { CalendarList } from 'react-native-calendars';
+// Removed react-native-calendars - using custom calendar component
 import moment from 'moment';
 import { 
   View, 
@@ -921,13 +921,6 @@ export default function Calendar() {
     );
   };
 
-  const getDaysInMonth = (date: Date) => {
-    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-  };
-
-  const getFirstDayOfMonth = (date: Date) => {
-    return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
-  };
 
   // Handle navigation parameters (e.g., opening add event modal from home screen)
   useEffect(() => {
@@ -973,70 +966,6 @@ export default function Calendar() {
     }
   }, [searchParams.action, searchParams.eventId, searchParams.scheduleId, calendarEvents, eventsLoading, router]);
 
-  const renderCalendarDays = () => {
-    const daysInMonth = getDaysInMonth(currentDate);
-    const firstDay = getFirstDayOfMonth(currentDate);
-    const days = [];
-
-    // Empty cells for days before the first day of the month
-    for (let i = 0; i < firstDay; i++) {
-      days.push(<View key={`empty-${i}`} style={styles.emptyDay} />);
-    }
-
-    // Days of the month
-    for (let day = 1; day <= daysInMonth; day++) {
-      const isSelected = selectedDate.getDate() === day && 
-                        selectedDate.getMonth() === currentDate.getMonth() &&
-                        selectedDate.getFullYear() === currentDate.getFullYear();
-      const isToday = new Date().getDate() === day && 
-                     new Date().getMonth() === currentDate.getMonth() &&
-                     new Date().getFullYear() === currentDate.getFullYear();
-      const hasEvents = hasEventsOnDate(day);
-      const hasMultiDayEvents = hasMultiDayEventsOnDate(day);
-      const isBankHol = isBankHoliday(day);
-
-      days.push(
-        <TouchableOpacity
-          key={day}
-          style={[
-            styles.dayCell,
-            isSelected && styles.selectedDay,
-            isToday && !isSelected && styles.todayDay,
-            isBankHol && !isSelected && styles.bankHolidayDay
-          ]}
-          onPress={() => {
-            const newDate = new Date(currentDate);
-            newDate.setDate(day);
-            setSelectedDate(newDate);
-          }}
-        >
-          <Text style={[
-            styles.dayText,
-            isSelected && styles.selectedDayText,
-            isToday && !isSelected && styles.todayDayText,
-            isBankHol && !isSelected && styles.bankHolidayText
-          ]}>
-            {day}
-          </Text>
-          {(hasEvents || isBankHol) && (
-            <View style={styles.dotsContainer}>
-              {hasEvents && (
-                <View style={[
-                  styles.eventDot, 
-                  { backgroundColor: hasMultiDayEvents ? '#F59E0B' : '#0e3c67' }
-                ]} />
-              )}
-              {isBankHol && (
-                <View style={[styles.holidayDot, { backgroundColor: getBankHolidayColor(day) }]} />
-              )}
-            </View>
-          )}
-        </TouchableOpacity>
-      );
-    }
-
-    return days;
-  };
 
   const navigateMonth = (direction: 'prev' | 'next') => {
     const newDate = new Date(currentDate);
@@ -1048,69 +977,128 @@ export default function Calendar() {
     setCurrentDate(newDate);
   };
 
-  // Create marked dates object for the calendar library
-  const markedDates = useMemo(() => {
-    const marked: { [key: string]: any } = {};
+  // Custom calendar component
+  const CustomCalendar = () => {
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
     
-    // Mark selected date
-    const selectedDateString = moment(selectedDate).format('YYYY-MM-DD');
-    marked[selectedDateString] = {
-      selected: true,
-      selectedColor: '#0e3c67',
-      selectedTextColor: '#FFFFFF'
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    
+    const getDaysInMonth = (date: Date) => {
+      return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
     };
     
-    // Mark dates with events
-    calendarEvents.forEach(event => {
-      const typeMatches = eventTypeFilter === 'all' || event.eventType === eventTypeFilter;
-      if (!typeMatches) return;
-
-      // Handle School_Holiday and School_Event types
-      if ((event.eventType === 'School_Holiday' || event.eventType === 'School_Event') && event.eventDate && event.endDate) {
-        const startDateStr = event.eventDate.split('T')[0];
-        const endDateStr = event.endDate.split('T')[0];
-        const startDate = moment(startDateStr);
-        const endDate = moment(endDateStr);
-        
-        let currentDate = startDate.clone();
-        while (currentDate.isSameOrBefore(endDate)) {
-          const dateString = currentDate.format('YYYY-MM-DD');
-          if (!marked[dateString]) {
-            marked[dateString] = {};
-          }
-          marked[dateString].marked = true;
-          marked[dateString].dotColor = event.eventType === 'School_Holiday' ? '#DC2626' : '#059669';
-          currentDate.add(1, 'day');
-        }
-      } else if (event.startDate && event.endDate) {
-        const startDateStr = event.startDate.split('T')[0];
-        const endDateStr = event.endDate.split('T')[0];
-        const startDate = moment(startDateStr);
-        const endDate = moment(endDateStr);
-        
-        let currentDate = startDate.clone();
-        while (currentDate.isSameOrBefore(endDate)) {
-          const dateString = currentDate.format('YYYY-MM-DD');
-          if (!marked[dateString]) {
-            marked[dateString] = {};
-          }
-          marked[dateString].marked = true;
-          marked[dateString].dotColor = getEventTypeColor(event.eventType);
-          currentDate.add(1, 'day');
-        }
-      } else if (event.eventDate) {
-        const dateStr = event.eventDate.split('T')[0];
-        const dateString = moment(dateStr).format('YYYY-MM-DD');
-        if (!marked[dateString]) {
-          marked[dateString] = {};
-        }
-        marked[dateString].marked = true;
-        marked[dateString].dotColor = getEventTypeColor(event.eventType);
-      }
-    });
+    const getFirstDayOfMonth = (date: Date) => {
+      return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+    };
     
-    return marked;
-  }, [selectedDate, calendarEvents, eventTypeFilter]);
+    const hasEventsOnDate = (day: number) => {
+      const dateToCheck = moment().year(currentDate.getFullYear()).month(currentDate.getMonth()).date(day).startOf('day');
+      
+      return calendarEvents.some(event => {
+        const typeMatches = eventTypeFilter === 'all' || event.eventType === eventTypeFilter;
+        if (!typeMatches) return false;
+        
+        // Handle School_Event and School_Holiday with eventDate and endDate
+        if ((event.eventType === 'School_Event' || event.eventType === 'School_Holiday') && event.eventDate && event.endDate) {
+          const startDate = moment(event.eventDate.split('T')[0]).startOf('day');
+          const endDate = moment(event.endDate.split('T')[0]).startOf('day');
+          return dateToCheck.isBetween(startDate, endDate, null, '[]');
+        }
+        
+        // Handle regular events with startDate and endDate
+        if (event.startDate && event.endDate) {
+          const startDate = moment(event.startDate.split('T')[0]).startOf('day');
+          const endDate = moment(event.endDate.split('T')[0]).startOf('day');
+          return dateToCheck.isBetween(startDate, endDate, null, '[]');
+        }
+        
+        // Handle single-day events with only eventDate
+        if (event.eventDate && !event.endDate) {
+          const eventDate = moment(event.eventDate.split('T')[0]).startOf('day');
+          return eventDate.isSame(dateToCheck);
+        }
+        
+        return false;
+      });
+    };
+    
+    const renderCalendarDays = () => {
+      const daysInMonth = getDaysInMonth(currentDate);
+      const firstDay = getFirstDayOfMonth(currentDate);
+      const days = [];
+      
+      // Empty cells for days before the first day of the month
+      for (let i = 0; i < firstDay; i++) {
+        days.push(
+          <View key={`empty-${i}`} style={styles.calendarDay} />
+        );
+      }
+      
+      // Days of the month
+      for (let day = 1; day <= daysInMonth; day++) {
+        const isSelected = selectedDate.getDate() === day && 
+                          selectedDate.getMonth() === currentDate.getMonth() &&
+                          selectedDate.getFullYear() === currentDate.getFullYear();
+        const isToday = new Date().getDate() === day && 
+                       new Date().getMonth() === currentDate.getMonth() &&
+                       new Date().getFullYear() === currentDate.getFullYear();
+        const hasEvents = hasEventsOnDate(day);
+        
+        days.push(
+          <TouchableOpacity
+            key={day}
+            style={[
+              styles.calendarDay,
+              isSelected && styles.selectedDay,
+              isToday && !isSelected && styles.todayDay
+            ]}
+            onPress={() => {
+              const newDate = new Date(currentDate);
+              newDate.setDate(day);
+              setSelectedDate(newDate);
+            }}
+          >
+            <Text style={[
+              styles.calendarDayText,
+              isSelected && styles.selectedDayText,
+              isToday && !isSelected && styles.todayDayText
+            ]}>
+              {day}
+            </Text>
+            {hasEvents && (
+              <View style={[
+                styles.eventDot,
+                isSelected && styles.selectedEventDot
+              ]} />
+            )}
+          </TouchableOpacity>
+        );
+      }
+      
+      return days;
+    };
+    
+    return (
+      <View style={styles.customCalendar}>
+        {/* Day Names */}
+        <View style={styles.dayNamesRow}>
+          {dayNames.map(dayName => (
+            <View key={dayName} style={styles.dayNameCell}>
+              <Text style={styles.dayNameText}>{dayName}</Text>
+            </View>
+          ))}
+        </View>
+        
+        {/* Calendar Grid */}
+        <View style={styles.calendarGrid}>
+          {renderCalendarDays()}
+        </View>
+      </View>
+    );
+  };
 
   // Memoize selectedDateEvents to prevent unnecessary re-renders when month changes
   const selectedDateEvents = useMemo(() => {
@@ -1203,59 +1191,8 @@ export default function Calendar() {
         </View>
 
         {/* Smooth Horizontal Calendar using react-native-calendars */}
-        <View style={styles.calendarWrapper}>
-          <CalendarList
-            horizontal={true}
-            pagingEnabled={true}
-            showScrollIndicator={false}
-            current={moment(currentDate).format('YYYY-MM-DD')}
-            markedDates={markedDates}
-            onDayPress={(day) => {
-              console.log('📅 Date selected:', day.dateString, '- No API call should happen');
-              const newDate = moment(day.dateString).toDate();
-              setSelectedDate(newDate);
-              setCurrentDate(newDate);
-            }}
-            onVisibleMonthsChange={(months) => {
-              if (months.length > 0) {
-                const newDate = moment(months[0].dateString).toDate();
-                setCurrentDate(newDate);
-              }
-            }}
-            theme={{
-              backgroundColor: '#FFFFFF',
-              calendarBackground: '#FFFFFF',
-              textSectionTitleColor: '#6B7280',
-              selectedDayBackgroundColor: '#0e3c67',
-              selectedDayTextColor: '#FFFFFF',
-              todayTextColor: '#0e3c67',
-              dayTextColor: '#111827',
-              textDisabledColor: '#9CA3AF',
-              dotColor: '#0e3c67',
-              selectedDotColor: '#FFFFFF',
-              arrowColor: 'transparent', // Hide arrows
-              monthTextColor: 'transparent', // Hide month text
-              indicatorColor: '#0e3c67',
-              textDayFontFamily: 'System',
-              textMonthFontFamily: 'System',
-              textDayHeaderFontFamily: 'System',
-              textDayFontWeight: '400',
-              textMonthFontWeight: '600',
-              textDayHeaderFontWeight: '500',
-              textDayFontSize: 16,
-              textMonthFontSize: 1, // Minimal font size (0 causes Android error)
-              textDayHeaderFontSize: 14,
-            }}
-            style={styles.calendarList}
-            calendarWidth={width - 40}
-            calendarHeight={320}
-            pastScrollRange={50}
-            futureScrollRange={50}
-            scrollEnabled={false}
-            showWeekNumbers={false}
-            firstDay={0} // Sunday = 0, Monday = 1
-          />
-        </View>
+        {/* Custom Calendar Component - No Third Party Library */}
+        <CustomCalendar />
 
         {/* Events for Selected Date */}
         <View style={styles.eventsSection}>
@@ -2327,6 +2264,99 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     backgroundColor: '#FFFFFF',
   },
+  // Custom Calendar Styles
+  customCalendar: {
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 20,
+    marginTop: 16,
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  dayNamesRow: {
+    flexDirection: 'row',
+    marginBottom: 8,
+    width: '100%',
+  },
+  dayNameCell: {
+    width: '14.28571%', // Match calendar day width
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  dayNameText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+  calendarGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    width: '100%',
+  },
+  calendarDay: {
+    width: '14.28571%', // Exactly 100/7 for proper Sunday alignment
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    paddingVertical: 8,
+  },
+  calendarDayText: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#111827',
+  },
+  selectedDay: {
+    backgroundColor: '#0e3c67',
+    borderRadius: 18,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  selectedDayText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  todayDay: {
+    backgroundColor: '#EBF4FF',
+    borderRadius: 18,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  todayDayText: {
+    color: '#0e3c67',
+    fontWeight: '600',
+  },
+  eventDot: {
+    position: 'absolute',
+    bottom: 2,
+    left: '50%',
+    transform: [{ translateX: -2 }],
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#0e3c67',
+    zIndex: 2,
+  },
+  selectedEventDot: {
+    backgroundColor: '#FFFFFF',
+  },
+  navButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  monthTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#111827',
+  },
   monthYear: {
     fontSize: 18,
     fontWeight: '600',
@@ -2360,22 +2390,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
-  },
-  navButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#F8FAFC',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  monthTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#1E293B',
-    textAlign: 'center',
   },
   calendarWrapper: {
     marginHorizontal: 20,
@@ -2420,26 +2434,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     position: 'relative',
   },
-  selectedDay: {
-    backgroundColor: '#0e3c67',
-    borderRadius: 20,
-  },
-  todayDay: {
-    backgroundColor: '#E6F3FF',
-    borderRadius: 20,
-  },
   dayText: {
     fontSize: 16,
     color: '#374151',
     fontWeight: '500',
-  },
-  selectedDayText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  todayDayText: {
-    color: '#0e3c67',
-    fontWeight: '600',
   },
   bankHolidayDay: {
     backgroundColor: '#FEE2E2',
@@ -2458,11 +2456,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: 3,
-  },
-  eventDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
   },
   holidayDot: {
     width: 6,
