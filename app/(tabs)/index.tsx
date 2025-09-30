@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
   TouchableOpacity,
   SafeAreaView,
   Image,
   Dimensions,
-  RefreshControl
+  RefreshControl,
+  TextInput
 } from 'react-native';
 import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
@@ -66,6 +67,7 @@ export default function Dashboard() {
   const [thisWeekEvents, setThisWeekEvents] = useState<CalendarEvent[]>([]);
   const [todayEventsLoading, setTodayEventsLoading] = useState(false);
   const [thisWeekEventsLoading, setThisWeekEventsLoading] = useState(false);
+  const [schoolPostcode, setSchoolPostcode] = useState('');
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -474,8 +476,8 @@ export default function Dashboard() {
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.quickActionsGrid}>
             {quickActions.map((action, index) => (
-              <TouchableOpacity 
-                key={index} 
+              <TouchableOpacity
+                key={index}
                 style={[styles.quickActionCard, { backgroundColor: action.background }]}
                 onPress={action.action}
               >
@@ -483,6 +485,52 @@ export default function Dashboard() {
                 <Text style={[styles.quickActionText, { color: action.color }]}>{action.title}</Text>
               </TouchableOpacity>
             ))}
+          </View>
+        </View>
+
+        {/* Schools Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Schools</Text>
+            <TouchableOpacity
+              style={styles.seeAllButton}
+              onPress={() => router.push('/schools')}
+            >
+              <Text style={styles.seeAllText}>View All</Text>
+              <ChevronRight size={16} color="#0e3c67" />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.schoolsCard}>
+            <View style={styles.schoolsHeader}>
+              <View style={styles.schoolsIconContainer}>
+                <School size={32} color="#059669" />
+              </View>
+              <View style={styles.schoolsHeaderText}>
+                <Text style={styles.schoolsTitle}>Find Your School</Text>
+                <Text style={styles.schoolsSubtitle}>Sync school events & holidays to your calendar</Text>
+              </View>
+            </View>
+
+            <View style={styles.schoolsSearchContainer}>
+              <MapPin size={18} color="#6B7280" />
+              <TextInput
+                style={styles.schoolsSearchInput}
+                placeholder="Enter postcode (e.g., NP20 6WJ)"
+                value={schoolPostcode}
+                onChangeText={setSchoolPostcode}
+                placeholderTextColor="#9CA3AF"
+                autoCapitalize="characters"
+              />
+            </View>
+
+            <TouchableOpacity
+              style={styles.schoolsSearchButton}
+              onPress={() => router.push('/schools')}
+            >
+              <Text style={styles.schoolsSearchButtonText}>Search Schools</Text>
+              <ChevronRight size={18} color="#FFFFFF" />
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -1038,6 +1086,79 @@ const styles = StyleSheet.create({
   },
   bottomSpacing: {
     height: 32,
+  },
+  // Schools Section Styles
+  schoolsCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  schoolsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  schoolsIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#ECFDF5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  schoolsHeaderText: {
+    flex: 1,
+  },
+  schoolsTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  schoolsSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    lineHeight: 20,
+  },
+  schoolsSearchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginBottom: 12,
+  },
+  schoolsSearchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#111827',
+    marginLeft: 12,
+  },
+  schoolsSearchButton: {
+    backgroundColor: '#059669',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 12,
+    shadowColor: '#059669',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  schoolsSearchButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    marginRight: 8,
   },
   // Loading and No Data States
   loadingCard: {
