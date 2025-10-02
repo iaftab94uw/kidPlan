@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocalSearchParams } from 'expo-router';
 import { 
   View, 
   Text, 
@@ -28,6 +29,7 @@ import { API_CONFIG, getApiUrl, getAuthHeaders } from '@/config/api';
 const { width } = Dimensions.get('window');
 
 export default function Schools() {
+  const params = useLocalSearchParams();
   const { token, user } = useAuth();
   const { triggerRefresh } = useAppEvents();
   const [searchPostcode, setSearchPostcode] = useState('');
@@ -144,12 +146,23 @@ export default function Schools() {
     }
   };
 
-  // Load schools on component mount
+  // On mount, if postcode param exists, set it
   useEffect(() => {
-    if (token) {
+    if (token && params && typeof params.postcode === 'string' && params.postcode.trim() !== '') {
+      setSearchPostcode(params.postcode);
+    } else if (token) {
       handleShowAll();
     }
-  }, [token]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, params?.postcode]);
+
+  // When searchPostcode is set from param, trigger search
+  useEffect(() => {
+    if (token && params && typeof params.postcode === 'string' && params.postcode.trim() !== '' && searchPostcode === params.postcode) {
+      handleSearch();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchPostcode, token, params?.postcode]);
 
 
   // Filter schools based on current filters

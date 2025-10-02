@@ -526,7 +526,7 @@ export default function Dashboard() {
 
             <TouchableOpacity
               style={styles.schoolsSearchButton}
-              onPress={() => router.push('/schools')}
+              onPress={() => router.push({ pathname: '/schools', params: { postcode: schoolPostcode } })}
             >
               <Text style={styles.schoolsSearchButtonText}>Search Schools</Text>
               <ChevronRight size={18} color="#FFFFFF" />
