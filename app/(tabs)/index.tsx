@@ -460,15 +460,27 @@ export default function Dashboard() {
 
         {/* Family Stats */}
         <View style={styles.statsContainer}>
-          {familyStats.map((stat, index) => (
-            <View key={index} style={styles.statCard}>
-              <View style={[styles.statIcon, { backgroundColor: `${stat.color}20` }]}>
-                <stat.icon size={20} color={stat.color} />
-              </View>
-              <Text style={styles.statValue}>{stat.value}</Text>
-              <Text style={styles.statLabel}>{stat.label}</Text>
-            </View>
-          ))}
+          {familyStats.map((stat, index) => {
+            // Determine navigation target based on stat index
+            return (
+              <TouchableOpacity
+                key={index}
+                style={styles.statCard}
+                activeOpacity={0.7}
+                onPress={() => {
+                  if (index === 0) router.push('/today-schedule');
+                  else if (index === 1) router.push('/week-schedule');
+                  else if (index === 2) router.push('/family');
+                }}
+              >
+                <View style={[styles.statIcon, { backgroundColor: `${stat.color}20` }]}> 
+                  <stat.icon size={20} color={stat.color} />
+                </View>
+                <Text style={styles.statValue}>{stat.value}</Text>
+                <Text style={styles.statLabel}>{stat.label}</Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         {/* Quick Actions */}
