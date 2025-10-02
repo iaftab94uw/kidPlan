@@ -41,18 +41,18 @@ export default function More() {
   };
 
   const menuSections = [
-    {
-      title: "Features",
-      items: [
-        {
-          icon: School,
-          title: "Schools",
-          subtitle: "Find and sync school calendars",
-          action: () => router.push('/schools'),
-          color: "#0e3c67"
-        }
-      ]
-    },
+    // {
+    //   title: "Features",
+    //   items: [
+    //     {
+    //       icon: School,
+    //       title: "Schools",
+    //       subtitle: "Find and sync school calendars",
+    //       action: () => router.push('/schools'),
+    //       color: "#0e3c67"
+    //     }
+    //   ]
+    // },
     {
       title: "Account",
       items: [
