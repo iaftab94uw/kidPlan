@@ -99,11 +99,11 @@ export const useFamilyDetails = (token: string): UseFamilyDetailsReturn => {
 
   const getAllFamilyMembers = (): FamilyMember[] => {
     if (!familyData) {
-      console.log('getAllFamilyMembers: No familyData available');
+      // console.log('getAllFamilyMembers: No familyData available');
       return [];
     }
     
-    console.log('getAllFamilyMembers: Processing familyData:', familyData);
+    // console.log('getAllFamilyMembers: Processing familyData:', familyData);
     
     const allMembers: FamilyMember[] = [];
     const seenIds = new Set<string>();
@@ -152,7 +152,7 @@ export const useFamilyDetails = (token: string): UseFamilyDetailsReturn => {
       });
     }
     
-    console.log('getAllFamilyMembers: Final result (unique):', allMembers);
+    // console.log('getAllFamilyMembers: Final result (unique):', allMembers);
     return allMembers;
   };
 
