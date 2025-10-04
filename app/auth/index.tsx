@@ -1,8 +1,8 @@
 import React from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
+import {
+  View,
+  Text,
+  StyleSheet,
   TouchableOpacity,
   SafeAreaView,
   Image,
@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Calendar, Users, Camera, Shield } from 'lucide-react-native';
+import { COLORS, SHADOWS, SPACING, BORDER_RADIUS } from '@/theme/colors';
 
 const { width } = Dimensions.get('window');
 
@@ -63,7 +64,7 @@ export default function AuthWelcome() {
             {features.map((feature, index) => (
               <View key={index} style={styles.featureItem}>
                 <View style={styles.featureIcon}>
-                  <feature.icon size={24} color="#0e3c67" />
+                  <feature.icon size={24} color={COLORS.primary} />
                 </View>
                 <View style={styles.featureContent}>
                   <Text style={styles.featureTitle}>{feature.title}</Text>
@@ -98,7 +99,7 @@ export default function AuthWelcome() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -122,13 +123,13 @@ const styles = StyleSheet.create({
   welcomeTitle: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#0e3c67',
+    color: COLORS.textPrimary,
     marginBottom: 8,
     textAlign: 'center',
   },
   welcomeSubtitle: {
     fontSize: 16,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
     paddingHorizontal: 16,
@@ -141,15 +142,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 16,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: COLORS.cardBackground,
     borderRadius: 16,
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    ...SHADOWS.small,
   },
   featureIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#E6F3FF',
+    backgroundColor: 'rgba(46, 134, 222, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -160,31 +164,27 @@ const styles = StyleSheet.create({
   featureTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#0e3c67',
+    color: COLORS.textPrimary,
     marginBottom: 2,
   },
   featureDescription: {
     fontSize: 13,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
     lineHeight: 18,
   },
   buttonSection: {
     paddingBottom: Platform.OS === 'android' ? 60 : 20,
   },
   primaryButton: {
-    backgroundColor: '#0e3c67',
+    backgroundColor: COLORS.primary,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
     marginBottom: 16,
-    shadowColor: '#0e3c67',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    ...SHADOWS.glow(COLORS.primary),
   },
   primaryButtonText: {
-    color: '#FFFFFF',
+    color: COLORS.textPrimary,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   secondaryButtonText: {
-    color: '#0e3c67',
+    color: COLORS.textSecondary,
     fontSize: 14,
     fontWeight: '500',
   },

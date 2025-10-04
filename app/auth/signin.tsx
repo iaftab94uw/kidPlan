@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
+import {
+  View,
+  Text,
+  StyleSheet,
   TouchableOpacity,
   SafeAreaView,
   TextInput,
@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
 import Banner from '@/components/Banner';
+import { COLORS, SHADOWS, SPACING, BORDER_RADIUS } from '@/theme/colors';
 
 
 
@@ -100,7 +101,7 @@ export default function SignIn() {
               style={styles.backButton}
               onPress={() => router.back()}
             >
-              <ArrowLeft size={24} color="#0e3c67" />
+              <ArrowLeft size={24} color={COLORS.textPrimary} />
             </TouchableOpacity>
             <Text style={styles.headerBrand}>KidPlan</Text>
           </View>
@@ -198,7 +199,7 @@ export default function SignIn() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.background,
   },
   keyboardView: {
     flex: 1,
@@ -219,15 +220,17 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: COLORS.cardBackground,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   headerBrand: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#0e3c67',
+    color: COLORS.textPrimary,
   },
   titleSection: {
     marginBottom: 40,
@@ -235,12 +238,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#0e3c67',
+    color: COLORS.textPrimary,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
   },
   form: {
     flex: 1,
@@ -251,18 +254,18 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#374151',
+    color: COLORS.textPrimary,
     marginBottom: 8,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: COLORS.inputBorder,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 16,
     fontSize: 16,
-    color: '#111827',
-    backgroundColor: '#FFFFFF',
+    color: COLORS.textPrimary,
+    backgroundColor: COLORS.inputBackground,
   },
   inputError: {
     borderColor: '#DC2626',
@@ -277,16 +280,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: COLORS.inputBorder,
     borderRadius: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.inputBackground,
   },
   passwordInput: {
     flex: 1,
     paddingHorizontal: 16,
     paddingVertical: 16,
     fontSize: 16,
-    color: '#111827',
+    color: COLORS.textPrimary,
   },
   passwordInputError: {
     borderColor: '#DC2626',
@@ -301,25 +304,21 @@ const styles = StyleSheet.create({
   },
   forgotPasswordText: {
     fontSize: 14,
-    color: '#0e3c67',
+    color: COLORS.primary,
     fontWeight: '500',
   },
   signInButton: {
-    backgroundColor: '#0e3c67',
+    backgroundColor: COLORS.primary,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
-    shadowColor: '#0e3c67',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    ...SHADOWS.glow(COLORS.primary),
   },
   signInButtonDisabled: {
     opacity: 0.6,
   },
   signInButtonText: {
-    color: '#FFFFFF',
+    color: COLORS.textPrimary,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -332,11 +331,11 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 14,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
   },
   footerLink: {
     fontSize: 14,
-    color: '#0e3c67',
+    color: COLORS.primary,
     fontWeight: '600',
   },
 });
