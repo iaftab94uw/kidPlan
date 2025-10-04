@@ -56,14 +56,25 @@ export default function Calendar() {
   const lastEventsFetchTime = useRef(0);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
+  // ...existing code...
   const [showAddEventModal, setShowAddEventModal] = useState(false);
+  // ...existing code...
+  const [showEditEventModal, setShowEditEventModal] = useState(false);
+
+  // Keep newEvent.eventDate in sync with selectedDate when modals are closed
+  useEffect(() => {
+    if (!showAddEventModal && !showEditEventModal) {
+      setNewEvent(prev => ({ ...prev, eventDate: undefined }));
+    } else if (showAddEventModal && !showEditEventModal) {
+      setNewEvent(prev => ({ ...prev, eventDate: selectedDate.toISOString() }));
+    }
+  }, [selectedDate, showAddEventModal, showEditEventModal]);
   const [showEventTypeDropdown, setShowEventTypeDropdown] = useState(false);
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
   const [eventTypeFilter, setEventTypeFilter] = useState<EventType | 'all'>('all');
   const [showEventTypeFilter, setShowEventTypeFilter] = useState(false);
   const [isCreatingEvent, setIsCreatingEvent] = useState(false);
-  const [showEditEventModal, setShowEditEventModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [isUpdatingEvent, setIsUpdatingEvent] = useState(false);
   const [isDeletingEvent, setIsDeletingEvent] = useState(false);
@@ -281,7 +292,8 @@ export default function Calendar() {
     endTime: '10:00',
     location: '',
     description: '',
-    familyMember: 'all'
+    familyMember: 'all',
+    eventDate: undefined as string | undefined, // ISO string or undefined
   });
 
   const monthNames = [
@@ -300,6 +312,9 @@ export default function Calendar() {
   ];
 
   // Schedule-specific options
+
+  // State for Edit Event Date Picker
+  const [showEditEventDatePicker, setShowEditEventDatePicker] = useState(false);
   const parentOptions = [
     { id: 'primary', label: 'Primary Parent' },
     { id: 'secondary', label: 'Secondary Parent' }
@@ -525,8 +540,13 @@ export default function Calendar() {
   }, [selectedDate, calendarEvents, eventTypeFilter]);
 
   const handleSaveEvent = async () => {
-    if (!newEvent.title.trim()) {
+    const trimmedTitle = newEvent.title.trim();
+    if (!trimmedTitle) {
       Alert.alert('Error', 'Please enter an event title');
+      return;
+    }
+    if (trimmedTitle.length < 3) {
+      Alert.alert('Error', 'Event title must be at least 3 characters long');
       return;
     }
 
@@ -554,9 +574,15 @@ export default function Calendar() {
         familyMembers = [newEvent.familyMember];
       }
 
-      // Format the selected date (avoid timezone issues)
-      const eventDate = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
-      console.log('Selected date:', selectedDate);
+      // Use eventDate from picker if set, otherwise fallback to selectedDate
+      let eventDateObj: Date;
+      if (newEvent.eventDate) {
+        eventDateObj = new Date(newEvent.eventDate);
+      } else {
+        eventDateObj = selectedDate;
+      }
+      const eventDate = `${eventDateObj.getFullYear()}-${String(eventDateObj.getMonth() + 1).padStart(2, '0')}-${String(eventDateObj.getDate()).padStart(2, '0')}`;
+      console.log('Selected event date:', eventDateObj);
       console.log('Formatted event date:', eventDate);
       const eventData = {
         familyId: familyData?._id,
@@ -569,7 +595,8 @@ export default function Calendar() {
         familyMembers: familyMembers,
         description: newEvent.description || ''
       };
-
+      console.log('Creating event with data:', eventData);
+      
       const url = getApiUrl(API_CONFIG.ENDPOINTS.CREATE_EVENT);
       const response = await fetch(url, {
         method: 'POST',
@@ -594,7 +621,8 @@ export default function Calendar() {
           endTime: '10:00',
           location: '',
           description: '',
-          familyMember: 'all'
+          familyMember: 'all',
+          eventDate: undefined,
         });
         
         // Close modal
@@ -631,7 +659,8 @@ export default function Calendar() {
         endTime: event.endTime ? event.endTime.replace(' AM', '').replace(' PM', '') : '10:00',
         location: event.location || '',
         description: event.description || '',
-        familyMember: event.familyMembers && event.familyMembers.length > 1 ? 'all' : (event.familyMembers?.[0] || 'all')
+        familyMember: event.familyMembers && event.familyMembers.length > 1 ? 'all' : (event.familyMembers?.[0] || 'all'),
+  eventDate: event.eventDate || undefined,
       });
       setShowEditEventModal(true);
     }
@@ -652,8 +681,13 @@ export default function Calendar() {
   };
 
   const handleUpdateEvent = async () => {
-    if (!newEvent.title.trim()) {
-      Alert.alert('Error', 'Please enter an event title');
+    const trimmedTitle = newEvent.title.trim();
+    if (!trimmedTitle) {
+      Alert.alert('Error', 'Please jk event title');
+      return;
+    }
+    if (trimmedTitle.length < 3) {
+      Alert.alert('Error', 'Event title must be at least 3 characters long');
       return;
     }
 
@@ -727,7 +761,8 @@ export default function Calendar() {
           endTime: '10:00',
           location: '',
           description: '',
-          familyMember: 'all'
+          familyMember: 'all',
+          eventDate: undefined,
         });
         
         // Refresh calendar events
@@ -975,6 +1010,13 @@ export default function Calendar() {
       newDate.setMonth(newDate.getMonth() + 1);
     }
     setCurrentDate(newDate);
+    // If selectedDate is not in the new month, select the 1st of the new month
+    if (
+      selectedDate.getMonth() !== newDate.getMonth() ||
+      selectedDate.getFullYear() !== newDate.getFullYear()
+    ) {
+      setSelectedDate(new Date(newDate.getFullYear(), newDate.getMonth(), 1));
+    }
   };
 
   // Custom calendar component
@@ -1400,7 +1442,59 @@ export default function Calendar() {
                 )}
               </View>
 
+              {/* Event Date */}
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>Event Date</Text>
+                <TouchableOpacity
+                  style={styles.textInput}
+                  onPress={() => setShowEditEventDatePicker(true)}
+                >
+                  <Text style={styles.timeText}>
+                    {newEvent.eventDate
+                      ? new Date(newEvent.eventDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+                      : selectedDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
               {/* Time Fields */}
+          {/* Edit Event Date Picker */}
+          {showEditEventDatePicker && (
+            <Modal
+              visible={showEditEventDatePicker}
+              animationType="slide"
+              transparent={true}
+              onRequestClose={() => setShowEditEventDatePicker(false)}
+            >
+              <View style={styles.overlay}>
+                <SafeAreaView style={styles.datePickerModal}>
+                  <View style={styles.datePickerHeader}>
+                    <TouchableOpacity onPress={() => setShowEditEventDatePicker(false)}>
+                      <Text style={styles.datePickerCancel}>Cancel</Text>
+                    </TouchableOpacity>
+                    <Text style={styles.datePickerTitle}>Select Event Date</Text>
+                    <TouchableOpacity onPress={() => setShowEditEventDatePicker(false)}>
+                      <Text style={styles.datePickerDone}>Done</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.datePickerContent}>
+                    <DateTimePicker
+                      value={newEvent.eventDate ? new Date(newEvent.eventDate) : selectedDate}
+                      mode="date"
+                      display="spinner"
+                      onChange={(event, selectedDateValue) => {
+                        if (selectedDateValue) {
+                          setNewEvent(prev => ({ ...prev, eventDate: selectedDateValue.toISOString() }));
+                        }
+                      }}
+                      textColor="#000000"
+                      accentColor="#0e3c67"
+                    />
+                  </View>
+                </SafeAreaView>
+              </View>
+            </Modal>
+          )}
               <View style={styles.timeRow}>
                 <View style={styles.timeField}>
                   <Text style={styles.fieldLabel}>Start Time</Text>

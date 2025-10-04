@@ -132,7 +132,6 @@ export const useFamilyDetails = (token: string): UseFamilyDetailsReturn => {
     
     // Add co-parents
     if (familyData.coParents) {
-      console.log('Adding coParents:', familyData.coParents);
       familyData.coParents.forEach(coParent => {
         if (!seenIds.has(coParent._id)) {
           allMembers.push(coParent);
