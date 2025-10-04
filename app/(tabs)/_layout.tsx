@@ -2,11 +2,11 @@ import { Tabs } from 'expo-router';
 import { Calendar, Chrome as Home, Users, Camera, Menu } from 'lucide-react-native';
 import { View, Text } from 'react-native';
 
-const TabBarIcon = ({ icon: Icon, color, focused, title }: { 
-  icon: any; 
-  color: string; 
-  focused: boolean; 
-  title: string; 
+const TabBarIcon = ({ icon: Icon, color, focused, title }: {
+  icon: any;
+  color: string;
+  focused: boolean;
+  title: string;
 }) => (
   <View style={{
     alignItems: 'center',
@@ -20,23 +20,23 @@ const TabBarIcon = ({ icon: Icon, color, focused, title }: {
       width: 40,
       height: 40,
       borderRadius: 20,
-      backgroundColor: focused ? '#0e3c67' : 'transparent',
+      backgroundColor: focused ? '#FFB84C' : 'transparent',
       alignItems: 'center',
       justifyContent: 'center',
       marginBottom: 4,
-      shadowColor: focused ? '#0e3c67' : 'transparent',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: focused ? 0.3 : 0,
-      shadowRadius: 4,
-      elevation: focused ? 4 : 0,
+      shadowColor: focused ? '#FFB84C' : 'transparent',
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: focused ? 0.5 : 0,
+      shadowRadius: 10,
+      elevation: focused ? 6 : 0,
     }}>
-      <Icon size={20} color={focused ? '#FFFFFF' : color} />
+      <Icon size={20} color={focused ? '#0B1C2E' : color} />
     </View>
-    <Text 
+    <Text
       style={{
         fontSize: 10,
         fontWeight: focused ? '700' : '600',
-        color: focused ? '#0e3c67' : color,
+        color: focused ? '#FFB84C' : color,
         textAlign: 'center',
         maxWidth: '100%',
         minWidth: 80,
@@ -56,21 +56,21 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
+          backgroundColor: '#0B1C2E',
           borderTopWidth: 0,
           paddingBottom: 20,
           paddingTop: 12,
           height: 110,
           shadowColor: '#000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-          elevation: 8,
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.4,
+          shadowRadius: 15,
+          elevation: 12,
           borderTopLeftRadius: 20,
           borderTopRightRadius: 20,
           marginTop: 8,
         },
-        tabBarActiveTintColor: '#0e3c67',
+        tabBarActiveTintColor: '#FFB84C',
         tabBarInactiveTintColor: '#6B7280',
         tabBarShowLabel: false,
         tabBarHideOnKeyboard: true,

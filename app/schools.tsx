@@ -895,7 +895,7 @@ export default function Schools() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#0E1726',
   },
   header: {
     flexDirection: 'row',
@@ -903,7 +903,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 20,
     paddingTop: 60,
-    backgroundColor: '#0e3c67',
+    backgroundColor: '#0B1C2E',
   },
   backButton: {
     width: 40,
@@ -934,25 +934,27 @@ const styles = StyleSheet.create({
     height: 40,
   },
   searchSection: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1A2335',
     paddingHorizontal: 20,
     paddingVertical: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#0E1726',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: '#111827',
+    color: '#F5F7FA',
     marginLeft: 12,
   },
   clearButton: {
@@ -962,26 +964,28 @@ const styles = StyleSheet.create({
   postcodeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#0E1726',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   postcodeInput: {
     flex: 1,
     fontSize: 16,
-    color: '#111827',
+    color: '#F5F7FA',
     marginLeft: 12,
   },
   milesContainer: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#0E1726',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   milesHeader: {
     flexDirection: 'row',
@@ -1012,7 +1016,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   searchButton: {
-    backgroundColor: '#0e3c67',
+    backgroundColor: '#2E86DE',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1020,11 +1024,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 12,
     flex: 1,
-    shadowColor: '#0e3c67',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowColor: '#2E86DE',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 15,
+    elevation: 8,
   },
   resetButton: {
     backgroundColor: '#F3F4F6',
@@ -1067,7 +1071,7 @@ const styles = StyleSheet.create({
   resultsTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#111827',
+    color: '#F5F7FA',
   },
   showAllButton: {
     flexDirection: 'row',
@@ -1084,15 +1088,17 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   schoolCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1A2335',
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 15,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   schoolHeader: {
     flexDirection: 'row',
@@ -1107,17 +1113,17 @@ const styles = StyleSheet.create({
   schoolName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#111827',
+    color: '#F5F7FA',
     marginBottom: 4,
   },
   schoolType: {
     fontSize: 14,
-    color: '#6B7280',
+    color: '#B0B8C2',
     marginBottom: 4,
   },
   schoolAddress: {
     fontSize: 14,
-    color: '#6B7280',
+    color: '#B0B8C2',
     lineHeight: 20,
   },
   schoolActions: {
@@ -1128,13 +1134,19 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#0e3c67',
+    backgroundColor: '#2E86DE',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 8,
+    shadowColor: '#2E86DE',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 4,
   },
   connectedButton: {
     backgroundColor: '#22C55E',
+    shadowColor: '#22C55E',
   },
   schoolEventsSummary: {
     flexDirection: 'row',
@@ -1256,7 +1268,7 @@ const styles = StyleSheet.create({
   // Modal styles
   modalContainer: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#0E1726',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1264,7 +1276,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 20,
     paddingTop: 60,
-    backgroundColor: '#0e3c67',
+    backgroundColor: '#0B1C2E',
   },
   modalCloseButton: {
     width: 40,
@@ -1286,14 +1298,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#0e3c67',
+    backgroundColor: '#2E86DE',
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 12,
     gap: 8,
+    shadowColor: '#2E86DE',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 15,
+    elevation: 8,
   },
   syncedButton: {
     backgroundColor: '#22C55E',
+    shadowColor: '#22C55E',
   },
   syncButtonText: {
     color: '#FFFFFF',
@@ -1350,25 +1368,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   schoolDetailCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1A2335',
     borderRadius: 16,
     padding: 20,
     marginTop: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 15,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   schoolDetailName: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#111827',
+    color: '#F5F7FA',
     marginBottom: 8,
   },
   schoolDetailType: {
     fontSize: 16,
-    color: '#6B7280',
+    color: '#B0B8C2',
     marginBottom: 20,
   },
   schoolDetailSection: {
@@ -1377,12 +1397,12 @@ const styles = StyleSheet.create({
   schoolDetailSectionTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#374151',
+    color: '#F5F7FA',
     marginBottom: 4,
   },
   schoolDetailSectionText: {
     fontSize: 16,
-    color: '#6B7280',
+    color: '#B0B8C2',
     lineHeight: 24,
   },
   // School events section styles
@@ -1495,12 +1515,14 @@ const styles = StyleSheet.create({
   },
   // Term and Holiday card styles
   termCard: {
-    backgroundColor: '#F0F9FF',
+    backgroundColor: 'rgba(46, 134, 222, 0.15)',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderLeftWidth: 4,
-    borderLeftColor: '#0e3c67',
+    borderLeftColor: '#2E86DE',
+    borderWidth: 1,
+    borderColor: 'rgba(46, 134, 222, 0.3)',
   },
   termHeader: {
     marginBottom: 8,
@@ -1508,7 +1530,7 @@ const styles = StyleSheet.create({
   termTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#0e3c67',
+    color: '#2E86DE',
   },
   termDetails: {
     gap: 8,
@@ -1520,16 +1542,18 @@ const styles = StyleSheet.create({
   },
   termDetailText: {
     fontSize: 14,
-    color: '#374151',
+    color: '#F5F7FA',
     flex: 1,
   },
   holidayCard: {
-    backgroundColor: '#FFFBEB',
+    backgroundColor: 'rgba(255, 184, 76, 0.15)',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderLeftWidth: 4,
-    borderLeftColor: '#F59E0B',
+    borderLeftColor: '#FFB84C',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 184, 76, 0.3)',
   },
   holidayHeader: {
     marginBottom: 8,
@@ -1537,7 +1561,7 @@ const styles = StyleSheet.create({
   holidayTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#92400E',
+    color: '#FFB84C',
   },
   holidayDetails: {
     gap: 8,
@@ -1549,7 +1573,7 @@ const styles = StyleSheet.create({
   },
   holidayDetailText: {
     fontSize: 14,
-    color: '#374151',
+    color: '#F5F7FA',
     flex: 1,
   },
   // Filter modal styles

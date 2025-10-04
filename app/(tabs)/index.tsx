@@ -376,8 +376,8 @@ export default function Dashboard() {
     {
       icon: Calendar,
       title: "Add Event",
-      color: "#3B82F6",
-      background: "#EBF4FF",
+      color: "#2E86DE",
+      background: "#1A2335",
       action: () => {
         // Navigate to calendar tab and trigger add event modal
         router.push('/(tabs)/calendar?action=addEvent');
@@ -387,14 +387,14 @@ export default function Dashboard() {
       icon: User,
       title: "Add Member",
       color: "#10B981",
-      background: "#ECFDF5",
+      background: "#1A2335",
       action: () => router.push('/add-family-member')
     },
     {
       icon: CalendarDays,
       title: "Schedule",
-      color: "#8B5CF6",
-      background: "#F3E8FF",
+      color: "#FFB84C",
+      background: "#1A2335",
       action: () => {
         // Navigate to family tab and trigger schedule modal
         router.push('/(tabs)/family?action=addSchedule');
@@ -403,8 +403,8 @@ export default function Dashboard() {
     {
       icon: Camera,
       title: "Add Photos",
-      color: "#F59E0B",
-      background: "#FFFBEB",
+      color: "#2E86DE",
+      background: "#1A2335",
       action: () => router.push('/(tabs)/photos')
     }
   ];
@@ -509,14 +509,14 @@ export default function Dashboard() {
               onPress={() => router.push('/schools')}
             >
               <Text style={styles.seeAllText}>View All</Text>
-              <ChevronRight size={16} color="#0e3c67" />
+              <ChevronRight size={16} color="#2E86DE" />
             </TouchableOpacity>
           </View>
 
           <View style={styles.schoolsCard}>
             <View style={styles.schoolsHeader}>
               <View style={styles.schoolsIconContainer}>
-                <School size={32} color="#059669" />
+                <School size={32} color="#2E86DE" />
               </View>
               <View style={styles.schoolsHeaderText}>
                 <Text style={styles.schoolsTitle}>Find Your School</Text>
@@ -555,7 +555,7 @@ export default function Dashboard() {
               onPress={() => router.push('/today-schedule')}
             >
               <Text style={styles.seeAllText}>See All</Text>
-              <ChevronRight size={16} color="#0e3c67" />
+              <ChevronRight size={16} color="#2E86DE" />
             </TouchableOpacity>
           </View>
           
@@ -627,7 +627,7 @@ export default function Dashboard() {
               onPress={() => router.push('/(tabs)/family')}
             >
               <Text style={styles.seeAllText}>Manage</Text>
-              <ChevronRight size={16} color="#0e3c67" />
+              <ChevronRight size={16} color="#2E86DE" />
             </TouchableOpacity>
           </View>
           
@@ -699,7 +699,7 @@ export default function Dashboard() {
               onPress={() => router.push('/week-schedule')}
             >
               <Text style={styles.seeAllText}>View All</Text>
-              <ChevronRight size={16} color="#0e3c67" />
+              <ChevronRight size={16} color="#2E86DE" />
             </TouchableOpacity>
           </View>
           
@@ -780,7 +780,7 @@ export default function Dashboard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#0E1726',
   },
   header: {
     flexDirection: 'row',
@@ -789,7 +789,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 20,
     paddingTop: 60,
-    backgroundColor: '#0e3c67',
+    backgroundColor: '#0B1C2E',
   },
   headerLeft: {
     flex: 1,
@@ -837,15 +837,15 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1A2335',
     padding: 16,
     borderRadius: 16,
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 15,
+    elevation: 8,
   },
   statIcon: {
     width: 40,
@@ -858,12 +858,12 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#111827',
+    color: '#F5F7FA',
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 12,
-    color: '#6B7280',
+    color: '#B0B8C2',
     textAlign: 'center',
     fontWeight: '500',
   },
@@ -880,7 +880,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#111827',
+    color: '#F5F7FA',
   },
   seeAllButton: {
     flexDirection: 'row',
@@ -888,7 +888,7 @@ const styles = StyleSheet.create({
   },
   seeAllText: {
     fontSize: 14,
-    color: '#0e3c67',
+    color: '#2E86DE',
     fontWeight: '500',
     marginRight: 4,
   },
@@ -902,29 +902,33 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 16,
     alignItems: 'center',
+    backgroundColor: '#1A2335',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 15,
+    elevation: 6,
   },
   quickActionText: {
     fontSize: 14,
     fontWeight: '600',
     marginTop: 8,
+    color: '#F5F7FA',
   },
   eventCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1A2335',
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
     borderRadius: 16,
     marginBottom: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 15,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   eventAvatar: {
     width: 48,
@@ -940,7 +944,7 @@ const styles = StyleSheet.create({
   eventTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#111827',
+    color: '#F5F7FA',
     marginBottom: 6,
   },
   eventMeta: {
@@ -952,7 +956,7 @@ const styles = StyleSheet.create({
   },
   eventMetaText: {
     fontSize: 14,
-    color: '#6B7280',
+    color: '#B0B8C2',
     marginLeft: 6,
   },
   eventTypeText: {
@@ -981,19 +985,21 @@ const styles = StyleSheet.create({
     paddingRight: 20,
   },
   memberCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1A2335',
     alignItems: 'center',
     padding: 16,
     borderRadius: 12,
     marginRight: 12,
     width: 100,
     height: 136,
-    marginVertical:4,
+    marginVertical: 4,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 15,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   memberAvatar: {
     width: 60,
@@ -1004,45 +1010,47 @@ const styles = StyleSheet.create({
   memberName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#111827',
+    color: '#F5F7FA',
     marginBottom: 2,
     textAlign: 'center',
   },
   memberAge: {
     fontSize: 12,
-    color: '#6B7280',
+    color: '#B0B8C2',
     textAlign: 'center',
   },
   addMemberCard: {
     width: 100,
     height: 136,
     borderRadius: 12,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: 'rgba(46, 134, 222, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
     borderWidth: 2,
-    borderColor: '#E5E7EB',
+    borderColor: 'rgba(46, 134, 222, 0.3)',
     borderStyle: 'dashed',
     marginRight: 12,
   },
   addMemberText: {
     fontSize: 12,
-    color: '#6B7280',
+    color: '#2E86DE',
     fontWeight: '500',
     marginTop: 4,
     textAlign: 'center',
   },
   scheduleCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1A2335',
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 15,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   scheduleHeader: {
     flexDirection: 'row',
@@ -1056,12 +1064,12 @@ const styles = StyleSheet.create({
   scheduleTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#111827',
+    color: '#F5F7FA',
     marginBottom: 4,
   },
   scheduleDate: {
     fontSize: 14,
-    color: '#6B7280',
+    color: '#B0B8C2',
   },
   scheduleParentBadge: {
     backgroundColor: '#FEF3C7',
@@ -1087,12 +1095,12 @@ const styles = StyleSheet.create({
   },
   scheduleDetailText: {
     fontSize: 14,
-    color: '#374151',
+    color: '#B0B8C2',
     marginLeft: 8,
   },
   scheduleActivities: {
     fontSize: 12,
-    color: '#6B7280',
+    color: '#B0B8C2',
     fontStyle: 'italic',
     lineHeight: 16,
   },
@@ -1101,14 +1109,16 @@ const styles = StyleSheet.create({
   },
   // Schools Section Styles
   schoolsCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1A2335',
     borderRadius: 16,
     padding: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 15,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(46, 134, 222, 0.2)',
   },
   schoolsHeader: {
     flexDirection: 'row',
@@ -1119,10 +1129,15 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#ECFDF5',
+    backgroundColor: 'rgba(46, 134, 222, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
+    shadowColor: '#2E86DE',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 4,
   },
   schoolsHeaderText: {
     flex: 1,
@@ -1130,41 +1145,43 @@ const styles = StyleSheet.create({
   schoolsTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#111827',
+    color: '#F5F7FA',
     marginBottom: 4,
   },
   schoolsSubtitle: {
     fontSize: 14,
-    color: '#6B7280',
+    color: '#B0B8C2',
     lineHeight: 20,
   },
   schoolsSearchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#0E1726',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   schoolsSearchInput: {
     flex: 1,
     fontSize: 16,
-    color: '#111827',
+    color: '#F5F7FA',
     marginLeft: 12,
   },
   schoolsSearchButton: {
-    backgroundColor: '#059669',
+    backgroundColor: '#2E86DE',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 14,
     borderRadius: 12,
-    shadowColor: '#059669',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowColor: '#2E86DE',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 15,
+    elevation: 8,
   },
   schoolsSearchButtonText: {
     color: '#FFFFFF',
@@ -1174,36 +1191,36 @@ const styles = StyleSheet.create({
   },
   // Loading and No Data States
   loadingCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1A2335',
     borderRadius: 12,
     padding: 20,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   loadingText: {
     fontSize: 14,
-    color: '#6B7280',
+    color: '#B0B8C2',
     textAlign: 'center',
   },
   noDataCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1A2335',
     borderRadius: 12,
     padding: 24,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     gap: 8,
   },
   noDataTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#374151',
+    color: '#F5F7FA',
     textAlign: 'center',
   },
   noDataSubtitle: {
     fontSize: 14,
-    color: '#6B7280',
+    color: '#B0B8C2',
     textAlign: 'center',
     lineHeight: 20,
   },
