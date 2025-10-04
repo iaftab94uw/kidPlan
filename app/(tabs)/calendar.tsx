@@ -715,12 +715,16 @@ export default function Calendar() {
         familyMembers = [newEvent.familyMember];
       }
 
-      // Format the event date (avoid timezone issues)
+
+      // Use eventDate from picker if set, otherwise fallback to selectedDate
       const formatDate = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-      
-      const eventDate = editingEvent.eventDate ? 
-        formatDate(new Date(editingEvent.eventDate)) :
-        (editingEvent.startDate ? formatDate(new Date(editingEvent.startDate)) : formatDate(selectedDate));
+      let eventDateObj: Date;
+      if (newEvent.eventDate) {
+        eventDateObj = new Date(newEvent.eventDate);
+      } else {
+        eventDateObj = selectedDate;
+      }
+      const eventDate = formatDate(eventDateObj);
 
       const eventData = {
         eventId: editingEvent._id,
@@ -1790,6 +1794,59 @@ export default function Calendar() {
                 )}
               </View>
 
+              {/* Event Date */}
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>Event Date</Text>
+                <TouchableOpacity
+                  style={styles.textInput}
+                  onPress={() => setShowEditEventDatePicker(true)}
+                >
+                  <Text style={styles.timeText}>
+                    {newEvent.eventDate
+                      ? new Date(newEvent.eventDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+                      : selectedDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Edit Event Date Picker */}
+              {showEditEventDatePicker && (
+                <Modal
+                  visible={showEditEventDatePicker}
+                  animationType="slide"
+                  transparent={true}
+                  onRequestClose={() => setShowEditEventDatePicker(false)}
+                >
+                  <View style={styles.overlay}>
+                    <SafeAreaView style={styles.datePickerModal}>
+                      <View style={styles.datePickerHeader}>
+                        <TouchableOpacity onPress={() => setShowEditEventDatePicker(false)}>
+                          <Text style={styles.datePickerCancel}>Cancel</Text>
+                        </TouchableOpacity>
+                        <Text style={styles.datePickerTitle}>Select Event Date</Text>
+                        <TouchableOpacity onPress={() => setShowEditEventDatePicker(false)}>
+                          <Text style={styles.datePickerDone}>Done</Text>
+                        </TouchableOpacity>
+                      </View>
+                      <View style={styles.datePickerContent}>
+                        <DateTimePicker
+                          value={newEvent.eventDate ? new Date(newEvent.eventDate) : selectedDate}
+                          mode="date"
+                          display="spinner"
+                          onChange={(event, selectedDateValue) => {
+                            if (selectedDateValue) {
+                              setNewEvent(prev => ({ ...prev, eventDate: selectedDateValue.toISOString() }));
+                            }
+                          }}
+                          textColor="#000000"
+                          accentColor="#0e3c67"
+                        />
+                      </View>
+                    </SafeAreaView>
+                  </View>
+                </Modal>
+              )}
+              
               {/* Time Fields */}
               <View style={styles.timeRow}>
                 <View style={styles.timeField}>
