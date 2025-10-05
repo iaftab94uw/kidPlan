@@ -27,7 +27,7 @@ import { useRouter } from 'expo-router';
   import * as FileSystem from 'expo-file-system/legacy';
   import * as Sharing from 'expo-sharing';
   import * as MediaLibrary from 'expo-media-library';
-  import { COLORS, SHADOWS } from '@/theme/colors';
+  import { COLORS } from '@/theme/colors';
 
   const { width } = Dimensions.get('window');
 
@@ -476,17 +476,6 @@ export default function Photos() {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         {/* Header - Fixed outside ScrollView */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Photos</Text>
-          <View style={styles.headerActions}>
-            <TouchableOpacity 
-              style={styles.filterButton}
-              onPress={() => setShowFilterModal(true)}
-            >
-              <Filter size={20} color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
-        </View>
 
         <ScrollView 
           showsVerticalScrollIndicator={false}
@@ -501,6 +490,18 @@ export default function Photos() {
           scrollEventThrottle={16}
           nestedScrollEnabled={true}
         >
+
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Photos</Text>
+          <View style={styles.headerActions}>
+            <TouchableOpacity 
+              style={styles.filterButton}
+              onPress={() => setShowFilterModal(true)}
+            >
+              <Filter size={20} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
+        </View>
 
           {/* Active Filter Display */}
           {activeFilter !== 'all' && (
@@ -1451,9 +1452,53 @@ export default function Photos() {
   }
 
   const styles = StyleSheet.create({
+    // Section Title
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: COLORS.textPrimary,
+      marginBottom: 12,
+    },
+    // View Mode Buttons
+    viewModeButtons: {
+      flexDirection: 'row',
+      backgroundColor: COLORS.secondaryBackground,
+      borderRadius: 8,
+      padding: 2,
+      marginBottom: 16,
+    },
+    viewModeButton: {
+      width: 32,
+      height: 32,
+      borderRadius: 6,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    viewModeButtonActive: {
+      backgroundColor: COLORS.primary,
+    },
+    // List view containers for albums/photos
+    viewAllAlbumsList: {
+      gap: 12,
+    },
+    viewAllPhotosList: {
+      gap: 12,
+    },
+    // List view text styles for photos
+    viewAllPhotoListTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: COLORS.textPrimary,
+      marginBottom: 4,
+    },
+    viewAllPhotoListDate: {
+      fontSize: 14,
+      color: COLORS.textSecondary,
+      fontWeight: '500',
+    },
     container: {
       flex: 1,
-      backgroundColor: '#F9FAFB',
+      backgroundColor: COLORS.background,
     },
     keyboardAvoidingView: {
       flex: 1,
@@ -1464,12 +1509,17 @@ export default function Photos() {
       alignItems: 'center',
       paddingHorizontal: 20,
       paddingVertical: 20,
-      backgroundColor: '#0e3c67',
+      backgroundColor: COLORS.background,
+      shadowColor: COLORS.shadowColor,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.4,
+      shadowRadius: 15,
+      elevation: 8,
     },
     headerTitle: {
       fontSize: 24,
       fontWeight: '700',
-      color: '#FFFFFF',
+      color: COLORS.textPrimary,
     },
     headerActions: {
       flexDirection: 'row',
@@ -1479,12 +1529,12 @@ export default function Photos() {
       width: 40,
       height: 40,
       borderRadius: 20,
-      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+      backgroundColor: COLORS.secondaryBackground,
       alignItems: 'center',
       justifyContent: 'center',
     },
     activeFilterContainer: {
-      backgroundColor: '#E6F3FF',
+      backgroundColor: COLORS.secondaryBackground,
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
@@ -1496,18 +1546,18 @@ export default function Photos() {
     },
     activeFilterText: {
       fontSize: 14,
-      color: '#0e3c67',
+      color: COLORS.textPrimary,
       fontWeight: '500',
     },
     clearFilterButton: {
-      backgroundColor: '#0e3c67',
+      backgroundColor: COLORS.primary,
       paddingHorizontal: 12,
       paddingVertical: 6,
       borderRadius: 12,
     },
     clearFilterText: {
       fontSize: 12,
-      color: '#FFFFFF',
+      color: COLORS.textPrimary,
       fontWeight: '600',
     },
     statsContainer: {
@@ -1518,25 +1568,28 @@ export default function Photos() {
     },
     statCard: {
       flex: 1,
-      backgroundColor: '#FFFFFF',
       padding: 16,
       borderRadius: 12,
       alignItems: 'center',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.05,
-      shadowRadius: 4,
-      elevation: 2,
+      // borderWidth: 1,
+      // borderColor: COLORS.border,
+    backgroundColor: COLORS.background,
+    shadowColor: COLORS.shadowColor,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 15,
+    elevation: 8,
+
     },
     statNumber: {
       fontSize: 20,
       fontWeight: '700',
-      color: '#111827',
+      color: COLORS.textPrimary,
       marginBottom: 4,
     },
     statLabel: {
       fontSize: 12,
-      color: '#6B7280',
+      color: COLORS.textSecondary,
       fontWeight: '500',
     },
     quickActions: {
@@ -1547,13 +1600,13 @@ export default function Photos() {
     },
     quickActionButton: {
       flex: 1,
-      backgroundColor: '#0e3c67',
+      backgroundColor: COLORS.secondaryBackground,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
       paddingVertical: 16,
       borderRadius: 12,
-      shadowColor: '#0e3c67',
+      shadowColor: COLORS.primary,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.2,
       shadowRadius: 8,
@@ -1562,18 +1615,87 @@ export default function Photos() {
       zIndex: 1,
     },
     quickActionText: {
-      color: '#FFFFFF',
+      color: COLORS.textPrimary,
       fontSize: 14,
       fontWeight: '600',
       marginLeft: 8,
     },
+    albumsSection: {
+      marginTop: 20,
+      paddingHorizontal: 20,
+      zIndex: 10,
+    },
+    albumsHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    albumsTitle: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: COLORS.textPrimary,
+    },
+    viewAllButton: {
+      backgroundColor: COLORS.secondaryBackground,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 12,
+    },
+    viewAllText: {
+      fontSize: 14,
+      color: COLORS.primary,
+      fontWeight: '600',
+    },
+    albumsList: {
+      paddingRight: 20,
+    },
+    albumCard: {
+      width: 160,
+      height: 200,
+      marginRight: 16,
+      borderRadius: 16,
+      overflow: 'hidden',
+      backgroundColor: COLORS.cardBackground,
+      shadowColor: COLORS.shadowColor,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+      elevation: 4,
+      zIndex: 1,
+      borderWidth: 1,
+      borderColor: COLORS.border,
+    },
+    albumCoverImage: {
+      width: '100%',
+      height: '100%',
+    },
+    albumOverlay: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      padding: 12,
+    },
+    albumName: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: COLORS.textPrimary,
+      marginBottom: 4,
+    },
+    albumCount: {
+      fontSize: 12,
+      color: COLORS.textSecondary,
+      fontWeight: '500',
+    },
     // Modal Styles
     modalContainer: {
       flex: 1,
-      backgroundColor: '#F8FAFC',
+      backgroundColor: COLORS.cardBackground,
     },
     modalHeader: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: COLORS.background,
       paddingTop: 8,
     },
     modalHeaderContent: {
@@ -1585,30 +1707,30 @@ export default function Photos() {
     },
     modalHeaderDivider: {
       height: 1,
-      backgroundColor: '#F3F4F6',
+      backgroundColor: COLORS.border,
       marginTop: 12,
     },
     closeButton: {
       width: 36,
       height: 36,
       borderRadius: 18,
-      backgroundColor: '#F3F4F6',
+      backgroundColor: COLORS.secondaryBackground,
       alignItems: 'center',
       justifyContent: 'center',
     },
     modalTitle: {
       fontSize: 18,
       fontWeight: '700',
-      color: '#111827',
+      color: COLORS.textPrimary,
     },
     doneButton: {
-      backgroundColor: '#0e3c67',
+      backgroundColor: COLORS.primary,
       paddingHorizontal: 16,
       paddingVertical: 8,
       borderRadius: 16,
     },
     doneButtonText: {
-      color: '#FFFFFF',
+      color: COLORS.textPrimary,
       fontWeight: '600',
       fontSize: 14,
     },
@@ -1618,7 +1740,7 @@ export default function Photos() {
     },
     modalContent: {
       flex: 1,
-      backgroundColor: '#F9FAFB',
+      backgroundColor: COLORS.cardBackground,
       padding: 20,
     },
     searchSection: {
@@ -1627,13 +1749,13 @@ export default function Photos() {
     filterSectionTitle: {
       fontSize: 16,
       fontWeight: '600',
-      color: '#374151',
+      color: COLORS.textPrimary,
       marginBottom: 12,
     },
     searchContainer: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: '#FFFFFF',
+      backgroundColor: COLORS.background,
       borderRadius: 12,
       paddingHorizontal: 16,
       paddingVertical: 12,
@@ -1646,7 +1768,7 @@ export default function Photos() {
     searchInput: {
       flex: 1,
       fontSize: 16,
-      color: '#111827',
+      color: COLORS.textPrimary,
       marginLeft: 12,
     },
     filterSection: {
@@ -1656,7 +1778,7 @@ export default function Photos() {
       gap: 8,
     },
     filterOption: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: COLORS.background,
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
@@ -1669,11 +1791,11 @@ export default function Photos() {
       elevation: 1,
     },
     filterOptionSelected: {
-      backgroundColor: '#0e3c67',
+      backgroundColor: COLORS.primary,
     },
     filterOptionText: {
       fontSize: 16,
-      color: '#111827',
+      color: COLORS.textPrimary,
       fontWeight: '500',
     },
     filterOptionTextSelected: {
@@ -1684,7 +1806,7 @@ export default function Photos() {
       gap: 8,
     },
     memberFilterOption: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: COLORS.background,
       flexDirection: 'row',
       alignItems: 'center',
       padding: 16,
@@ -1697,7 +1819,7 @@ export default function Photos() {
       position: 'relative',
     },
     memberFilterOptionSelected: {
-      backgroundColor: '#0e3c67',
+      backgroundColor: COLORS.primary,
     },
     memberFilterAvatar: {
       width: 40,
@@ -1707,7 +1829,7 @@ export default function Photos() {
     },
     memberFilterText: {
       fontSize: 16,
-      color: '#111827',
+      color: COLORS.textPrimary,
       fontWeight: '500',
       flex: 1,
     },
@@ -1723,7 +1845,7 @@ export default function Photos() {
       gap: 8,
     },
     albumFilterOption: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: COLORS.background,
       flexDirection: 'row',
       alignItems: 'center',
       padding: 16,
@@ -1735,7 +1857,7 @@ export default function Photos() {
       elevation: 1,
     },
     albumFilterOptionSelected: {
-      backgroundColor: '#0e3c67',
+      backgroundColor: COLORS.primary,
     },
     albumFilterCover: {
       width: 40,
@@ -1748,7 +1870,7 @@ export default function Photos() {
     },
     albumFilterName: {
       fontSize: 16,
-      color: '#111827',
+      color: COLORS.textPrimary,
       fontWeight: '500',
       marginBottom: 2,
     },
@@ -1758,18 +1880,18 @@ export default function Photos() {
     },
     albumFilterCount: {
       fontSize: 12,
-      color: '#6B7280',
+      color: COLORS.textSecondary,
     },
     // Loading and Error States
     loadingContainer: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: '#F9FAFB',
+      backgroundColor: COLORS.background,
     },
     loadingText: {
       fontSize: 16,
-      color: '#6B7280',
+      color: COLORS.textSecondary,
       marginTop: 16,
       fontWeight: '500',
     },
@@ -1777,24 +1899,24 @@ export default function Photos() {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: '#F9FAFB',
+      backgroundColor: COLORS.background,
       paddingHorizontal: 20,
     },
     errorText: {
       fontSize: 16,
-      color: '#EF4444',
+      color: COLORS.error,
       textAlign: 'center',
       marginBottom: 20,
       fontWeight: '500',
     },
     retryButton: {
-      backgroundColor: '#0e3c67',
+      backgroundColor: COLORS.primary,
       paddingHorizontal: 24,
       paddingVertical: 12,
       borderRadius: 8,
     },
     retryButtonText: {
-      color: '#FFFFFF',
+      color: COLORS.textPrimary,
       fontSize: 16,
       fontWeight: '600',
     },
@@ -1808,13 +1930,13 @@ export default function Photos() {
     createGalleryTitle: {
       fontSize: 24,
       fontWeight: '700',
-      color: '#111827',
+      color: COLORS.textPrimary,
       textAlign: 'center',
       marginBottom: 16,
     },
     createGalleryDescription: {
       fontSize: 16,
-      color: '#6B7280',
+      color: COLORS.textSecondary,
       textAlign: 'center',
       lineHeight: 24,
       marginBottom: 32,
@@ -1824,31 +1946,31 @@ export default function Photos() {
       gap: 12,
     },
     createGalleryButton: {
-      backgroundColor: '#0e3c67',
+      backgroundColor: COLORS.primary,
       paddingVertical: 16,
       borderRadius: 12,
       alignItems: 'center',
       justifyContent: 'center',
-      shadowColor: '#0e3c67',
+      shadowColor: COLORS.primary,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.2,
       shadowRadius: 8,
       elevation: 4,
     },
     createGalleryButtonText: {
-      color: '#FFFFFF',
+      color: COLORS.textPrimary,
       fontSize: 16,
       fontWeight: '600',
     },
     cancelGalleryButton: {
-      backgroundColor: '#F3F4F6',
+      backgroundColor: COLORS.secondaryBackground,
       paddingVertical: 16,
       borderRadius: 12,
       alignItems: 'center',
       justifyContent: 'center',
     },
     cancelGalleryButtonText: {
-      color: '#6B7280',
+      color: COLORS.textPrimary,
       fontSize: 16,
       fontWeight: '600',
     },
@@ -1863,25 +1985,25 @@ export default function Photos() {
     fieldLabel: {
       fontSize: 16,
       fontWeight: '600',
-      color: '#111827',
+      color: COLORS.textPrimary,
       marginBottom: 8,
     },
     textInput: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: COLORS.background,
       borderWidth: 1,
-      borderColor: '#E5E7EB',
+      borderColor: COLORS.border,
       borderRadius: 8,
       paddingHorizontal: 16,
       paddingVertical: 12,
       fontSize: 16,
-      color: '#111827',
+      color: COLORS.textPrimary,
     },
     textArea: {
       minHeight: 80,
       textAlignVertical: 'top',
     },
     selectPhotoButton: {
-      backgroundColor: '#F3F4F6',
+      backgroundColor: COLORS.secondaryBackground,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
@@ -1890,7 +2012,7 @@ export default function Photos() {
       marginBottom: 12,
     },
     selectPhotoButtonText: {
-      color: '#0e3c67',
+      color: COLORS.primary,
       fontSize: 16,
       fontWeight: '600',
       marginLeft: 8,
@@ -1900,40 +2022,40 @@ export default function Photos() {
     },
     progressBar: {
       height: 4,
-      backgroundColor: '#E5E7EB',
+      backgroundColor: COLORS.border,
       borderRadius: 2,
       overflow: 'hidden',
       marginBottom: 8,
     },
     progressFill: {
       height: '100%',
-      backgroundColor: '#0e3c67',
+      backgroundColor: COLORS.primary,
     },
     progressText: {
       fontSize: 14,
-      color: '#6B7280',
+      color: COLORS.textSecondary,
       textAlign: 'center',
     },
     uploadErrorContainer: {
-      backgroundColor: '#FEF2F2',
+      backgroundColor: COLORS.errorBackground,
       padding: 12,
       borderRadius: 8,
       marginBottom: 12,
     },
     uploadErrorText: {
-      color: '#DC2626',
+      color: COLORS.error,
       fontSize: 14,
       marginBottom: 8,
     },
     uploadRetryButton: {
-      backgroundColor: '#DC2626',
+      backgroundColor: COLORS.error,
       paddingHorizontal: 16,
       paddingVertical: 8,
       borderRadius: 6,
       alignSelf: 'flex-start',
     },
     uploadRetryButtonText: {
-      color: '#FFFFFF',
+      color: COLORS.textPrimary,
       fontSize: 14,
       fontWeight: '600',
     },
@@ -1955,11 +2077,11 @@ export default function Photos() {
     },
     modalSubtitle: {
       fontSize: 14,
-      color: '#64748B',
+      color: COLORS.textSecondary,
       fontWeight: '500',
     },
     createButton: {
-      backgroundColor: '#0e3c67',
+      backgroundColor: COLORS.primary,
       paddingHorizontal: 20,
       paddingVertical: 10,
       borderRadius: 12,
@@ -1971,7 +2093,7 @@ export default function Photos() {
       backgroundColor: '#94A3B8',
     },
     createButtonText: {
-      color: '#FFFFFF',
+      color: COLORS.textPrimary,
       fontSize: 16,
       fontWeight: '600',
     },
@@ -1981,19 +2103,19 @@ export default function Photos() {
       marginBottom: 32,
     },
     selectPhotoCard: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: COLORS.cardBackground,
       borderRadius: 16,
       padding: 32,
       alignItems: 'center',
       borderWidth: 2,
-      borderColor: '#E2E8F0',
+      borderColor: COLORS.border,
       borderStyle: 'dashed',
     },
     selectPhotoIconContainer: {
       width: 64,
       height: 64,
       borderRadius: 32,
-      backgroundColor: '#F0F9FF',
+      backgroundColor: COLORS.primaryBackground,
       alignItems: 'center',
       justifyContent: 'center',
       marginBottom: 16,
@@ -2001,12 +2123,12 @@ export default function Photos() {
     selectPhotoTitle: {
       fontSize: 18,
       fontWeight: '600',
-      color: '#1E293B',
+      color: COLORS.textPrimary,
       marginBottom: 8,
     },
     selectPhotoSubtitle: {
       fontSize: 14,
-      color: '#64748B',
+      color: COLORS.textSecondary,
     },
     imagePreviewContainer: {
       position: 'relative',
@@ -2025,7 +2147,7 @@ export default function Photos() {
       width: 48,
       height: 48,
       borderRadius: 24,
-      backgroundColor: '#0e3c67',
+      backgroundColor: COLORS.primary,
       alignItems: 'center',
       justifyContent: 'center',
       shadowColor: '#000',
@@ -2053,11 +2175,11 @@ export default function Photos() {
     
     // Upload Progress
     uploadProgressCard: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: COLORS.cardBackground,
       borderRadius: 12,
       padding: 16,
       borderWidth: 1,
-      borderColor: '#E2E8F0',
+      borderColor: COLORS.border,
       marginTop: 16,
     },
     progressHeader: {
@@ -2069,38 +2191,38 @@ export default function Photos() {
     progressTitle: {
       fontSize: 16,
       fontWeight: '600',
-      color: '#1E293B',
+      color: COLORS.textPrimary,
     },
     progressPercentage: {
       fontSize: 14,
       fontWeight: '600',
-      color: '#0e3c67',
+      color: COLORS.primary,
     },
     progressBarContainer: {
       height: 6,
-      backgroundColor: '#F1F5F9',
+      backgroundColor: COLORS.border,
       borderRadius: 3,
       overflow: 'hidden',
     },
     progressBarFill: {
       height: '100%',
-      backgroundColor: '#0e3c67',
+      backgroundColor: COLORS.primary,
       borderRadius: 3,
     },
     
     // Upload Error
     uploadErrorCard: {
-      backgroundColor: '#FEF2F2',
+      backgroundColor: COLORS.errorBackground,
       borderRadius: 12,
       padding: 16,
       borderWidth: 1,
-      borderColor: '#FECACA',
+      borderColor: COLORS.error,
       marginTop: 16,
     },
     uploadErrorTitle: {
       fontSize: 16,
       fontWeight: '600',
-      color: '#DC2626',
+      color: COLORS.error,
       marginBottom: 8,
     },
     
@@ -2114,34 +2236,34 @@ export default function Photos() {
     inputLabel: {
       fontSize: 16,
       fontWeight: '600',
-      color: '#1E293B',
+      color: COLORS.textPrimary,
       marginBottom: 8,
     },
     inputContainer: {
       position: 'relative',
     },
     modernTextInput: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: COLORS.background,
       borderWidth: 1,
-      borderColor: '#E2E8F0',
+      borderColor: COLORS.border,
       borderRadius: 12,
       paddingHorizontal: 16,
       paddingVertical: 14,
       fontSize: 16,
-      color: '#1E293B',
+      color: COLORS.textPrimary,
     },
     textAreaContainer: {
       position: 'relative',
     },
     modernTextArea: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: COLORS.background,
       borderWidth: 1,
-      borderColor: '#E2E8F0',
+      borderColor: COLORS.border,
       borderRadius: 12,
       paddingHorizontal: 16,
       paddingVertical: 14,
       fontSize: 16,
-      color: '#1E293B',
+      color: COLORS.textPrimary,
       minHeight: 100,
       textAlignVertical: 'top',
     },
@@ -2150,26 +2272,26 @@ export default function Photos() {
       bottom: 8,
       right: 12,
       fontSize: 12,
-      color: '#94A3B8',
+      color: COLORS.textSecondary,
     },
     
     // Tips Section
     tipsSection: {
-      backgroundColor: '#F0F9FF',
+      backgroundColor: COLORS.primaryBackground,
       borderRadius: 12,
       padding: 16,
       borderWidth: 1,
-      borderColor: '#BAE6FD',
+      borderColor: COLORS.primary,
     },
     tipsTitle: {
       fontSize: 16,
       fontWeight: '600',
-      color: '#0369A1',
+      color: COLORS.textPrimary,
       marginBottom: 12,
     },
     tipText: {
       fontSize: 14,
-      color: '#0369A1',
+      color: COLORS.textPrimary,
       lineHeight: 20,
     },
     tipsList: {
@@ -2177,7 +2299,7 @@ export default function Photos() {
     },
     tipItem: {
       fontSize: 14,
-      color: '#0369A1',
+      color: COLORS.textPrimary,
       lineHeight: 20,
     },
     emptyContainer: {
@@ -2189,7 +2311,7 @@ export default function Photos() {
     },
     emptyText: {
       fontSize: 16,
-      color: '#666',
+      color: COLORS.textSecondary,
       textAlign: 'center',
     },
     
@@ -2208,17 +2330,17 @@ export default function Photos() {
     albumsTitle: {
       fontSize: 20,
       fontWeight: '700',
-      color: '#111827',
+      color: COLORS.textPrimary,
     },
     viewAllButton: {
-      backgroundColor: '#F3F4F6',
+      backgroundColor: COLORS.secondaryBackground,
       paddingHorizontal: 12,
       paddingVertical: 6,
       borderRadius: 12,
     },
     viewAllText: {
       fontSize: 14,
-      color: '#0e3c67',
+      color: COLORS.primary,
       fontWeight: '600',
     },
     albumsFlatList: {
@@ -2233,13 +2355,15 @@ export default function Photos() {
       marginRight: 16,
       borderRadius: 16,
       overflow: 'hidden',
-      backgroundColor: '#FFFFFF',
-      shadowColor: '#000',
+      backgroundColor: COLORS.cardBackground,
+      shadowColor: COLORS.shadowColor,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.1,
       shadowRadius: 8,
       elevation: 4,
       zIndex: 1,
+      borderWidth: 1,
+      borderColor: COLORS.border,
     },
     albumCoverImage: {
       width: '100%',
@@ -2256,12 +2380,12 @@ export default function Photos() {
     albumName: {
       fontSize: 16,
       fontWeight: '600',
-      color: '#FFFFFF',
+      color: COLORS.textPrimary,
       marginBottom: 4,
     },
     albumCount: {
       fontSize: 12,
-      color: 'rgba(255, 255, 255, 0.8)',
+      color: COLORS.textSecondary,
       fontWeight: '500',
     },
     
@@ -2280,11 +2404,11 @@ export default function Photos() {
     photosTitle: {
       fontSize: 20,
       fontWeight: '700',
-      color: '#111827',
+      color: COLORS.textPrimary,
     },
     photosCount: {
       fontSize: 14,
-      color: '#6B7280',
+      color: COLORS.textSecondary,
       fontWeight: '500',
     },
     photosGrid: {
@@ -2296,8 +2420,8 @@ export default function Photos() {
       margin: 2,
       borderRadius: 8,
       overflow: 'hidden',
-      backgroundColor: '#FFFFFF',
-      shadowColor: '#000',
+      backgroundColor: COLORS.cardBackground,
+      shadowColor: COLORS.shadowColor,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
       shadowRadius: 4,
@@ -2332,8 +2456,8 @@ export default function Photos() {
       marginRight: 12,
       borderRadius: 12,
       overflow: 'hidden',
-      backgroundColor: '#FFFFFF',
-      shadowColor: '#000',
+      backgroundColor: COLORS.cardBackground,
+      shadowColor: COLORS.shadowColor,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
       shadowRadius: 4,
@@ -2365,7 +2489,7 @@ export default function Photos() {
     viewAllSectionTitle: {
       fontSize: 18,
       fontWeight: '700',
-      color: '#111827',
+      color: COLORS.textPrimary,
       marginBottom: 16,
     },
     viewAllAlbumsGrid: {
@@ -2375,37 +2499,62 @@ export default function Photos() {
     },
     viewAllAlbumCard: {
       width: '48%',
-      backgroundColor: '#FFFFFF',
+      backgroundColor: COLORS.cardBackground,
       borderRadius: 12,
       overflow: 'hidden',
-      shadowColor: '#000',
+      shadowColor: COLORS.shadowColor,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
       shadowRadius: 4,
       elevation: 2,
     },
+    // List view for albums
+    viewAllAlbumCardList: {
+      backgroundColor: COLORS.cardBackground,
+      borderRadius: 12,
+      flexDirection: 'row',
+      overflow: 'hidden',
+      shadowColor: COLORS.shadowColor,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 2,
+      alignItems: 'center',
+      minHeight: 100,
+      marginBottom: 8,
+    },
     viewAllAlbumImage: {
       width: '100%',
       height: 120,
     },
+    viewAllAlbumImageList: {
+      width: 100,
+      height: 100,
+      borderRadius: 8,
+    },
     viewAllAlbumInfo: {
       padding: 12,
+    },
+    viewAllAlbumInfoList: {
+      flex: 1,
+      padding: 16,
+      justifyContent: 'center',
     },
     viewAllAlbumName: {
       fontSize: 16,
       fontWeight: '600',
-      color: '#111827',
+      color: COLORS.textPrimary,
       marginBottom: 4,
     },
     viewAllAlbumCount: {
       fontSize: 12,
-      color: '#6B7280',
+      color: COLORS.textSecondary,
       fontWeight: '500',
       marginBottom: 4,
     },
     viewAllAlbumDescription: {
       fontSize: 12,
-      color: '#9CA3AF',
+      color: COLORS.textSecondary,
       lineHeight: 16,
     },
     viewAllPhotosGrid: {
@@ -2418,16 +2567,41 @@ export default function Photos() {
       aspectRatio: 1,
       borderRadius: 8,
       overflow: 'hidden',
-      backgroundColor: '#FFFFFF',
-      shadowColor: '#000',
+      backgroundColor: COLORS.cardBackground,
+      shadowColor: COLORS.shadowColor,
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.05,
       shadowRadius: 2,
       elevation: 1,
     },
+    // List view for photos
+    viewAllPhotoCardList: {
+      backgroundColor: COLORS.cardBackground,
+      borderRadius: 12,
+      flexDirection: 'row',
+      overflow: 'hidden',
+      shadowColor: COLORS.shadowColor,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 2,
+      alignItems: 'center',
+      minHeight: 100,
+      marginBottom: 8,
+    },
     viewAllPhotoImage: {
       width: '100%',
       height: '100%',
+    },
+    viewAllPhotoImageList: {
+      width: 80,
+      height: 80,
+      borderRadius: 8,
+    },
+    viewAllPhotoListContent: {
+      flex: 1,
+      padding: 12,
+      justifyContent: 'center',
     },
     viewAllPhotoOverlay: {
       position: 'absolute',
@@ -2449,110 +2623,72 @@ export default function Photos() {
       alignItems: 'center',
       paddingVertical: 60,
       paddingHorizontal: 20,
+      backgroundColor: COLORS.cardBackground,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: COLORS.border,
+      shadowColor: COLORS.shadowColor,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+      elevation: 2,
     },
     viewAllEmptyTitle: {
       fontSize: 20,
-      fontWeight: '700',
-      color: '#111827',
+      fontWeight: '600',
+      color: COLORS.textPrimary,
+      marginTop: 16,
       marginBottom: 8,
       textAlign: 'center',
     },
     viewAllEmptyDescription: {
       fontSize: 16,
-      color: '#6B7280',
+      color: COLORS.textSecondary,
       textAlign: 'center',
+      marginBottom: 24,
       lineHeight: 24,
     },
-    
-    // View Mode Buttons
-    viewModeButtons: {
-      flexDirection: 'row',
-      backgroundColor: '#F3F4F6',
-      borderRadius: 8,
-      padding: 2,
-    },
-    viewModeButton: {
-      width: 32,
-      height: 32,
-      borderRadius: 6,
+    emptyState: {
       alignItems: 'center',
       justifyContent: 'center',
-    },
-    viewModeButtonActive: {
-      backgroundColor: '#0e3c67',
-    },
-    
-    // List View Styles for Albums
-    viewAllAlbumsList: {
-      gap: 12,
-    },
-    viewAllAlbumCardList: {
-      backgroundColor: '#FFFFFF',
-      borderRadius: 12,
-      flexDirection: 'row',
-      overflow: 'hidden',
-      shadowColor: '#000',
+      paddingVertical: 40,
+      paddingHorizontal: 20,
+      backgroundColor: COLORS.cardBackground,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: COLORS.border,
+      shadowColor: COLORS.shadowColor,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
-      shadowRadius: 4,
+      shadowRadius: 8,
       elevation: 2,
     },
-    viewAllAlbumImageList: {
-      width: 100,
-      height: 100,
-    },
-    viewAllAlbumInfoList: {
-      flex: 1,
-      padding: 16,
-      justifyContent: 'center',
-    },
-    
-    // List View Styles for Photos
-    viewAllPhotosList: {
-      gap: 12,
-    },
-    viewAllPhotoCardList: {
-      backgroundColor: '#FFFFFF',
-      borderRadius: 12,
-      flexDirection: 'row',
-      overflow: 'hidden',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 2,
-      alignItems: 'center',
-      minHeight: 100,
+    emptyStateTitle: {
+      fontSize: 20,
+      fontWeight: '600',
+      color: COLORS.textPrimary,
+      marginTop: 16,
       marginBottom: 8,
+      textAlign: 'center',
     },
-    viewAllPhotoImageList: {
-      width: 80,
-      height: 80,
+    emptyStateSubtitle: {
+      fontSize: 16,
+      color: COLORS.textSecondary,
+      textAlign: 'center',
+      marginBottom: 24,
+      lineHeight: 24,
+    },
+    emptyStateButton: {
+      backgroundColor: COLORS.primary,
+      paddingHorizontal: 24,
+      paddingVertical: 12,
       borderRadius: 8,
     },
-    viewAllPhotoListContent: {
-      flex: 1,
-      padding: 12,
-      justifyContent: 'center',
-    },
-    viewAllPhotoListTitle: {
+    emptyStateButtonText: {
+      color: COLORS.textPrimary,
       fontSize: 16,
       fontWeight: '600',
-      color: '#1F2937',
-      marginBottom: 4,
     },
-    viewAllPhotoListDate: {
-      fontSize: 14,
-      color: '#6B7280',
-      fontWeight: '500',
-    },
-    sectionTitle: {
-      fontSize: 18,
-      fontWeight: '600',
-      color: '#1F2937',
-      marginBottom: 12,
-    },
-    
     // Photo Preview Modal Styles
     photoPreviewContainer: {
       flex: 1,
@@ -2618,39 +2754,5 @@ export default function Photos() {
       width: '100%',
       height: '100%',
       resizeMode: 'contain',
-    },
-    
-    // Empty State Styles
-    emptyState: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: 40,
-      paddingHorizontal: 20,
-    },
-    emptyStateTitle: {
-      fontSize: 20,
-      fontWeight: '600',
-      color: '#1F2937',
-      marginTop: 16,
-      marginBottom: 8,
-      textAlign: 'center',
-    },
-    emptyStateSubtitle: {
-      fontSize: 16,
-      color: '#6B7280',
-      textAlign: 'center',
-      marginBottom: 24,
-      lineHeight: 24,
-    },
-    emptyStateButton: {
-      backgroundColor: '#0e3c67',
-      paddingHorizontal: 24,
-      paddingVertical: 12,
-      borderRadius: 8,
-    },
-    emptyStateButtonText: {
-      color: '#FFFFFF',
-      fontSize: 16,
-      fontWeight: '600',
     },
   });
