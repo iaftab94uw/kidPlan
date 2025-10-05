@@ -33,6 +33,7 @@ import {
   Heart,
   Briefcase
 } from 'lucide-react-native';
+import { COLORS } from '@/theme/colors';
 
 const { width } = Dimensions.get('window');
 
