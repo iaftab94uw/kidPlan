@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { ArrowLeft, Mail, CircleCheck as CheckCircle } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
 import Banner from '@/components/Banner';
+import { COLORS, SHADOWS } from '@/theme/colors';
 
 
 
@@ -223,7 +224,7 @@ export default function ForgotPassword() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.cardBackground,
   },
   keyboardView: {
     flex: 1,
@@ -275,7 +276,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: COLORS.secondaryBackground,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
@@ -283,7 +284,7 @@ const styles = StyleSheet.create({
   headerBrand: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#0e3c67',
+    color: COLORS.primary,
   },
   content: {
     flex: 1,
@@ -304,13 +305,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#0e3c67',
+    color: COLORS.primary,
     marginBottom: 12,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
     paddingHorizontal: 16,
@@ -329,13 +330,13 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: COLORS.inputBorder,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 16,
     fontSize: 16,
-    color: '#111827',
-    backgroundColor: '#FFFFFF',
+    color: COLORS.textPrimary,
+    backgroundColor: COLORS.cardBackground,
   },
   inputError: {
     borderColor: '#DC2626',
@@ -347,7 +348,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   resetButton: {
-    backgroundColor: '#0e3c67',
+    backgroundColor: COLORS.primary,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
@@ -375,39 +376,39 @@ const styles = StyleSheet.create({
   successTitle: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#0e3c67',
+    color: COLORS.primary,
     marginBottom: 12,
     textAlign: 'center',
   },
   successSubtitle: {
     fontSize: 16,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
     textAlign: 'center',
     marginBottom: 8,
   },
   emailAddress: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#0e3c67',
+    color: COLORS.primary,
     marginBottom: 20,
     textAlign: 'center',
   },
   instructionText: {
     fontSize: 14,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: 32,
     paddingHorizontal: 16,
   },
   resendButton: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: COLORS.secondaryBackground,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
   },
   resendButtonText: {
-    color: '#0e3c67',
+    color: COLORS.primary,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -420,11 +421,11 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 14,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
   },
   footerLink: {
     fontSize: 14,
-    color: '#0e3c67',
+    color: COLORS.primary,
     fontWeight: '600',
   },
 });

@@ -16,7 +16,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useFamilyDetails } from '@/hooks/useFamilyDetails';
 import { API_CONFIG, getApiUrl, getAuthHeaders } from '@/config/api';
 import { CalendarEvent, EventType } from '@/types/calendar';
-import { 
+import {
   ArrowLeft,
   Clock,
   MapPin,
@@ -27,6 +27,7 @@ import {
   Trash2,
   School
 } from 'lucide-react-native';
+import { COLORS, SHADOWS } from '@/theme/colors';
 
 export default function TodaySchedule() {
   const router = useRouter();

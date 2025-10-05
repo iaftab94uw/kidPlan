@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import { Eye, EyeOff, ArrowLeft, CircleCheck as CheckCircle } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
 import Banner from '@/components/Banner';
+import { COLORS, SHADOWS } from '@/theme/colors';
 
 
 
@@ -325,7 +326,7 @@ export default function SignUp() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.background,
   },
   keyboardView: {
     flex: 1,
@@ -374,15 +375,17 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: COLORS.cardBackground,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   headerBrand: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#0e3c67',
+    color: COLORS.textPrimary,
   },
   titleSection: {
     marginBottom: 40,
@@ -390,12 +393,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#0e3c67',
+    color: COLORS.textPrimary,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
   },
   form: {
     flex: 1,
@@ -406,18 +409,18 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#374151',
+    color: COLORS.textPrimary,
     marginBottom: 8,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: COLORS.inputBorder,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 16,
     fontSize: 16,
-    color: '#111827',
-    backgroundColor: '#FFFFFF',
+    color: COLORS.textPrimary,
+    backgroundColor: COLORS.inputBackground,
   },
   inputError: {
     borderColor: '#DC2626',
@@ -432,9 +435,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: COLORS.inputBorder,
     borderRadius: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.inputBackground,
   },
   passwordContainerError: {
     borderColor: '#DC2626',
@@ -445,7 +448,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
     fontSize: 16,
-    color: '#111827',
+    color: COLORS.textPrimary,
   },
   eyeButton: {
     paddingHorizontal: 16,
@@ -462,7 +465,7 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderWidth: 2,
-    borderColor: '#D1D5DB',
+    borderColor: COLORS.inputBorder,
     borderRadius: 4,
     marginRight: 12,
     marginTop: 2,
@@ -470,8 +473,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   checkboxChecked: {
-    backgroundColor: '#0e3c67',
-    borderColor: '#0e3c67',
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
   checkboxError: {
     borderColor: '#DC2626',
@@ -479,29 +482,25 @@ const styles = StyleSheet.create({
   termsText: {
     flex: 1,
     fontSize: 14,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
     lineHeight: 20,
   },
   termsLink: {
-    color: '#0e3c67',
+    color: COLORS.primary,
     fontWeight: '500',
   },
   signUpButton: {
-    backgroundColor: '#0e3c67',
+    backgroundColor: COLORS.primary,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
-    shadowColor: '#0e3c67',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    ...SHADOWS.glow(COLORS.primary),
   },
   signUpButtonDisabled: {
     opacity: 0.6,
   },
   signUpButtonText: {
-    color: '#FFFFFF',
+    color: COLORS.textPrimary,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -514,11 +513,11 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 14,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
   },
   footerLink: {
     fontSize: 14,
-    color: '#0e3c67',
+    color: COLORS.primary,
     fontWeight: '600',
   },
 });
