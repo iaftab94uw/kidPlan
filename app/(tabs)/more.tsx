@@ -20,7 +20,7 @@ import {
   LogOut
 } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
-import { COLORS, SHADOWS } from '@/theme/colors';
+import { COLORS } from '@/theme/colors';
 
 export default function More() {
   const router = useRouter();
@@ -101,11 +101,12 @@ export default function More() {
     }
   ];
 
-  const renderMenuItem = (item: any) => {
+  const renderMenuItem = (item: any, index: number, items: any[]) => {
+    const isLast = index === items.length - 1;
     return (
-      <TouchableOpacity key={item.title} style={styles.menuItem} onPress={item.action}>
-        <View style={[styles.menuIcon, { backgroundColor: `${item.color}20` }]}>
-          <item.icon size={20} color={item.color} />
+      <TouchableOpacity key={item.title} style={[styles.menuItem, isLast && { borderBottomWidth: 0 }]} onPress={item.action}>
+        <View style={[styles.menuIcon, { backgroundColor: `${item.color}40` }]}>
+          <item.icon size={20} color={COLORS.textSecondary} />
         </View>
         <View style={styles.menuContent}>
           <Text style={styles.menuTitle}>{item.title}</Text>
@@ -158,7 +159,7 @@ export default function More() {
           <View key={section.title} style={styles.menuSection}>
             <Text style={styles.sectionTitle}>{section.title}</Text>
             <View style={styles.sectionItems}>
-              {section.items.map(renderMenuItem)}
+              {section.items.map((item, idx) => renderMenuItem(item, idx, section.items))}
             </View>
           </View>
         ))}
@@ -166,7 +167,7 @@ export default function More() {
         {/* App Info */}
         <View style={styles.appInfo}>
           <Text style={styles.appInfoTitle}>KidPlan</Text>
-          <Text style={styles.appInfoVersion}>Version 2.1.0</Text>
+          <Text style={styles.appInfoVersion}>Version 1.0.0</Text>
           <Text style={styles.appInfoCopyright}>© 2024 KidPlan Ltd. All rights reserved.</Text>
         </View>
 
@@ -186,31 +187,44 @@ export default function More() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: COLORS.background,
   },
   header: {
     paddingHorizontal: 20,
     paddingVertical: 20,
     paddingTop: 60,
-    backgroundColor: '#0e3c67',
+    backgroundColor: COLORS.background,
+    shadowColor: COLORS.shadowColor,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 15,
+    elevation: 8,
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: COLORS.textPrimary,
   },
   profileCard: {
-    backgroundColor: '#FFFFFF',
+    // backgroundColor: COLORS.cardBackground,
     flexDirection: 'row',
     alignItems: 'center',
     margin: 20,
     padding: 20,
     borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    // shadowColor: COLORS.shadowColor,
+    // shadowOffset: { width: 0, height: 2 },
+    // shadowOpacity: 0.1,
+    // shadowRadius: 8,
+    // elevation: 4,
+    // borderWidth: 1,
+    // borderColor: COLORS.border,
+        backgroundColor: COLORS.background,
+    shadowColor: COLORS.shadowColor,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 15,
+    elevation: 8,
   },
   profileImage: {
     width: 64,
@@ -224,12 +238,12 @@ const styles = StyleSheet.create({
   profileName: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#111827',
+    color: COLORS.textPrimary,
     marginBottom: 4,
   },
   profileEmail: {
     fontSize: 14,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
     marginBottom: 8,
   },
   profileBadge: {
@@ -245,14 +259,14 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   editProfileButton: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: COLORS.secondaryBackground,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
   },
   editProfileText: {
     fontSize: 14,
-    color: '#374151',
+    color: COLORS.textPrimary,
     fontWeight: '500',
   },
   menuSection: {
@@ -261,26 +275,28 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#374151',
+    color: COLORS.textPrimary,
     paddingHorizontal: 20,
     marginBottom: 12,
   },
   sectionItems: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.cardBackground,
     marginHorizontal: 20,
     borderRadius: 16,
-    shadowColor: '#000',
+    shadowColor: COLORS.shadowColor,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: COLORS.border,
   },
   menuIcon: {
     width: 40,
@@ -289,6 +305,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
+    backgroundColor: COLORS.secondaryBackground,
   },
   menuContent: {
     flex: 1,
@@ -296,12 +313,12 @@ const styles = StyleSheet.create({
   menuTitle: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#111827',
+    color: COLORS.textPrimary,
     marginBottom: 2,
   },
   menuSubtitle: {
     fontSize: 14,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
   },
   appInfo: {
     alignItems: 'center',
@@ -311,21 +328,21 @@ const styles = StyleSheet.create({
   appInfoTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#0e3c67',
+    color: COLORS.textPrimary,
     marginBottom: 4,
   },
   appInfoVersion: {
     fontSize: 14,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
     marginBottom: 8,
   },
   appInfoCopyright: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: COLORS.textSecondary,
     textAlign: 'center',
   },
   signOutButton: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.cardBackground,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -334,7 +351,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#FEE2E2',
-    shadowColor: '#000',
+    shadowColor: COLORS.shadowColor,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,

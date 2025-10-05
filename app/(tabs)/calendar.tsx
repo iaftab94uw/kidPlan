@@ -2357,7 +2357,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 15,
     elevation: 8,
-
   },
   headerTitle: {
     fontSize: 24,

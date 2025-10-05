@@ -199,7 +199,7 @@ export default function Settings() {
         {/* App Info */}
         <View style={styles.appInfo}>
           <Text style={styles.appInfoTitle}>KidPlan</Text>
-          <Text style={styles.appInfoVersion}>Version 2.1.0</Text>
+          <Text style={styles.appInfoVersion}>Version 1.0.0</Text>
           <Text style={styles.appInfoCopyright}>© 2024 KidPlan Ltd. All rights reserved.</Text>
         </View>
 
