@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import { Calendar, Chrome as Home, Users, Camera, Menu } from 'lucide-react-native';
 import { View, Text } from 'react-native';
+import { COLORS } from '@/theme/colors';
 
 const TabBarIcon = ({ icon: Icon, color, focused, title }: {
   icon: any;
@@ -20,23 +21,23 @@ const TabBarIcon = ({ icon: Icon, color, focused, title }: {
       width: 40,
       height: 40,
       borderRadius: 20,
-      backgroundColor: focused ? '#FFB84C' : 'transparent',
+      backgroundColor: focused ? COLORS.accent : 'transparent',
       alignItems: 'center',
       justifyContent: 'center',
       marginBottom: 4,
-      shadowColor: focused ? '#FFB84C' : 'transparent',
+      shadowColor: focused ? COLORS.accent : 'transparent',
       shadowOffset: { width: 0, height: 0 },
       shadowOpacity: focused ? 0.5 : 0,
       shadowRadius: 10,
       elevation: focused ? 6 : 0,
     }}>
-      <Icon size={20} color={focused ? '#0B1C2E' : color} />
+      <Icon size={20} color={focused ? COLORS.primary : color} />
     </View>
     <Text
       style={{
         fontSize: 10,
         fontWeight: focused ? '700' : '600',
-        color: focused ? '#FFB84C' : color,
+        color: focused ? COLORS.accent : color,
         textAlign: 'center',
         maxWidth: '100%',
         minWidth: 80,
@@ -56,7 +57,7 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#0B1C2E',
+          backgroundColor: COLORS.primary,
           borderTopWidth: 0,
           paddingBottom: 20,
           paddingTop: 12,
@@ -70,8 +71,8 @@ export default function TabLayout() {
           borderTopRightRadius: 20,
           marginTop: 8,
         },
-        tabBarActiveTintColor: '#FFB84C',
-        tabBarInactiveTintColor: '#6B7280',
+        tabBarActiveTintColor: COLORS.textPrimary,
+        tabBarInactiveTintColor: COLORS.textSecondary,
         tabBarShowLabel: false,
         tabBarHideOnKeyboard: true,
         tabBarItemStyle: {

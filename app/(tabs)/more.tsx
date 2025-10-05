@@ -20,6 +20,7 @@ import {
   LogOut
 } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
+import { COLORS, SHADOWS } from '@/theme/colors';
 
 export default function More() {
   const router = useRouter();

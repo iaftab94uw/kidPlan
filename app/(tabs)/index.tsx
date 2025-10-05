@@ -780,7 +780,7 @@ export default function Dashboard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0E1726',
+    backgroundColor: COLORS.background,
   },
   header: {
     flexDirection: 'row',
@@ -789,20 +789,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 20,
     paddingTop: 60,
-    backgroundColor: '#0B1C2E',
+    backgroundColor: COLORS.primary,
   },
   headerLeft: {
     flex: 1,
   },
   greeting: {
     fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: COLORS.textSecondary,
     marginBottom: 4,
   },
   userName: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: COLORS.textPrimary,
   },
   notificationButton: {
     width: 44,
@@ -837,7 +837,7 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#1A2335',
+    backgroundColor: COLORS.cardBackground,
     padding: 16,
     borderRadius: 16,
     alignItems: 'center',
@@ -858,12 +858,12 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#F5F7FA',
+    color: COLORS.textPrimary,
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 12,
-    color: '#B0B8C2',
+    color: COLORS.textSecondary,
     textAlign: 'center',
     fontWeight: '500',
   },
@@ -880,7 +880,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#F5F7FA',
+    color: COLORS.textPrimary,
   },
   seeAllButton: {
     flexDirection: 'row',
@@ -902,7 +902,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 16,
     alignItems: 'center',
-    backgroundColor: '#1A2335',
+    backgroundColor: COLORS.cardBackground,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
@@ -913,10 +913,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     marginTop: 8,
-    color: '#F5F7FA',
+    color: COLORS.textPrimary,
   },
   eventCard: {
-    backgroundColor: '#1A2335',
+    backgroundColor: COLORS.cardBackground,
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
@@ -928,7 +928,7 @@ const styles = StyleSheet.create({
     shadowRadius: 15,
     elevation: 6,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: COLORS.border,
   },
   eventAvatar: {
     width: 48,
@@ -944,7 +944,7 @@ const styles = StyleSheet.create({
   eventTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#F5F7FA',
+    color: COLORS.textPrimary,
     marginBottom: 6,
   },
   eventMeta: {
@@ -956,7 +956,7 @@ const styles = StyleSheet.create({
   },
   eventMetaText: {
     fontSize: 14,
-    color: '#B0B8C2',
+    color: COLORS.textSecondary,
     marginLeft: 6,
   },
   eventTypeText: {
@@ -985,7 +985,7 @@ const styles = StyleSheet.create({
     paddingRight: 20,
   },
   memberCard: {
-    backgroundColor: '#1A2335',
+    backgroundColor: COLORS.cardBackground,
     alignItems: 'center',
     padding: 16,
     borderRadius: 12,
@@ -999,7 +999,7 @@ const styles = StyleSheet.create({
     shadowRadius: 15,
     elevation: 6,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: COLORS.border,
   },
   memberAvatar: {
     width: 60,
@@ -1010,13 +1010,13 @@ const styles = StyleSheet.create({
   memberName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#F5F7FA',
+    color: COLORS.textPrimary,
     marginBottom: 2,
     textAlign: 'center',
   },
   memberAge: {
     fontSize: 12,
-    color: '#B0B8C2',
+    color: COLORS.textSecondary,
     textAlign: 'center',
   },
   addMemberCard: {
@@ -1040,7 +1040,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   scheduleCard: {
-    backgroundColor: '#1A2335',
+    backgroundColor: COLORS.cardBackground,
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
@@ -1050,7 +1050,7 @@ const styles = StyleSheet.create({
     shadowRadius: 15,
     elevation: 6,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: COLORS.border,
   },
   scheduleHeader: {
     flexDirection: 'row',
@@ -1064,12 +1064,12 @@ const styles = StyleSheet.create({
   scheduleTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#F5F7FA',
+    color: COLORS.textPrimary,
     marginBottom: 4,
   },
   scheduleDate: {
     fontSize: 14,
-    color: '#B0B8C2',
+    color: COLORS.textSecondary,
   },
   scheduleParentBadge: {
     backgroundColor: '#FEF3C7',
@@ -1095,12 +1095,12 @@ const styles = StyleSheet.create({
   },
   scheduleDetailText: {
     fontSize: 14,
-    color: '#B0B8C2',
+    color: COLORS.textSecondary,
     marginLeft: 8,
   },
   scheduleActivities: {
     fontSize: 12,
-    color: '#B0B8C2',
+    color: COLORS.textSecondary,
     fontStyle: 'italic',
     lineHeight: 16,
   },
@@ -1109,7 +1109,7 @@ const styles = StyleSheet.create({
   },
   // Schools Section Styles
   schoolsCard: {
-    backgroundColor: '#1A2335',
+    backgroundColor: COLORS.cardBackground,
     borderRadius: 16,
     padding: 20,
     shadowColor: '#000',
@@ -1145,33 +1145,33 @@ const styles = StyleSheet.create({
   schoolsTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#F5F7FA',
+    color: COLORS.textPrimary,
     marginBottom: 4,
   },
   schoolsSubtitle: {
     fontSize: 14,
-    color: '#B0B8C2',
+    color: COLORS.textSecondary,
     lineHeight: 20,
   },
   schoolsSearchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0E1726',
+    backgroundColor: COLORS.inputBackground,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: COLORS.border,
   },
   schoolsSearchInput: {
     flex: 1,
     fontSize: 16,
-    color: '#F5F7FA',
+    color: COLORS.textPrimary,
     marginLeft: 12,
   },
   schoolsSearchButton: {
-    backgroundColor: '#2E86DE',
+    backgroundColor: COLORS.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1191,36 +1191,36 @@ const styles = StyleSheet.create({
   },
   // Loading and No Data States
   loadingCard: {
-    backgroundColor: '#1A2335',
+    backgroundColor: COLORS.cardBackground,
     borderRadius: 12,
     padding: 20,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: COLORS.border,
   },
   loadingText: {
     fontSize: 14,
-    color: '#B0B8C2',
+    color: COLORS.textSecondary,
     textAlign: 'center',
   },
   noDataCard: {
-    backgroundColor: '#1A2335',
+    backgroundColor: COLORS.cardBackground,
     borderRadius: 12,
     padding: 24,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: COLORS.border,
     gap: 8,
   },
   noDataTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#F5F7FA',
+    color: COLORS.textPrimary,
     textAlign: 'center',
   },
   noDataSubtitle: {
     fontSize: 14,
-    color: '#B0B8C2',
+    color: COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
   },

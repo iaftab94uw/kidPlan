@@ -27,6 +27,7 @@ import { useRouter } from 'expo-router';
   import * as FileSystem from 'expo-file-system/legacy';
   import * as Sharing from 'expo-sharing';
   import * as MediaLibrary from 'expo-media-library';
+  import { COLORS, SHADOWS } from '@/theme/colors';
 
   const { width } = Dimensions.get('window');
 

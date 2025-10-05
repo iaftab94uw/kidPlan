@@ -43,6 +43,7 @@ import { useFamilyDetails } from '@/hooks/useFamilyDetails';
 import { useAppEvents } from '@/hooks/useAppEvents';
 import { API_CONFIG, getApiUrl, getAuthHeaders } from '@/config/api';
 import { CalendarEvent, EventType } from '@/types/calendar';
+import { COLORS, SHADOWS } from '@/theme/colors';
 
 const { width } = Dimensions.get('window');
 
@@ -2341,7 +2342,7 @@ export default function Calendar() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: COLORS.background,
   },
   header: {
     flexDirection: 'row',
@@ -2350,7 +2351,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 20,
     paddingTop: 60,
-    backgroundColor: '#0e3c67',
+    backgroundColor: COLORS.primary,
   },
   headerTitle: {
     fontSize: 24,
@@ -2383,7 +2384,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     paddingHorizontal: 20,
     paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.cardBackground,
     gap: 8,
   },
   filterButton: {
@@ -2392,16 +2393,16 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: '#F3F4F6',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: COLORS.border,
   },
   filterButtonActive: {
-    backgroundColor: '#0e3c67',
+    backgroundColor: COLORS.primary,
     borderColor: '#0e3c67',
   },
   filterButtonText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#6B7280',
+    color: COLORS.textSecondary,
   },
   filterButtonTextActive: {
     color: '#FFFFFF',
@@ -2413,11 +2414,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.cardBackground,
   },
   // Custom Calendar Styles
   customCalendar: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.cardBackground,
     marginHorizontal: 20,
     marginTop: 16,
     borderRadius: 16,
@@ -2441,7 +2442,7 @@ const styles = StyleSheet.create({
   dayNameText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#6B7280',
+    color: COLORS.textSecondary,
   },
   calendarGrid: {
     flexDirection: 'row',
@@ -2459,10 +2460,10 @@ const styles = StyleSheet.create({
   calendarDayText: {
     fontSize: 16,
     fontWeight: '400',
-    color: '#111827',
+    color: COLORS.textPrimary,
   },
   selectedDay: {
-    backgroundColor: '#0e3c67',
+    backgroundColor: COLORS.primary,
     borderRadius: 18,
     paddingHorizontal: 10,
     paddingVertical: 6,
@@ -2489,11 +2490,11 @@ const styles = StyleSheet.create({
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#0e3c67',
+    backgroundColor: COLORS.primary,
     zIndex: 2,
   },
   selectedEventDot: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.cardBackground,
   },
   navButton: {
     width: 40,
@@ -2506,15 +2507,15 @@ const styles = StyleSheet.create({
   monthTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#111827',
+    color: COLORS.textPrimary,
   },
   monthYear: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#111827',
+    color: COLORS.textPrimary,
   },
   calendar: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.cardBackground,
     marginHorizontal: 20,
     marginTop: 16,
     borderRadius: 16,
@@ -2532,7 +2533,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.cardBackground,
     marginHorizontal: 20,
     marginTop: 16,
     borderRadius: 12,
@@ -2546,7 +2547,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginTop: 8,
     borderRadius: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.cardBackground,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -2565,7 +2566,7 @@ const styles = StyleSheet.create({
   dayHeader: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#6B7280',
+    color: COLORS.textSecondary,
     textAlign: 'center',
     width: (width - 76) / 7,
   },
@@ -2619,11 +2620,11 @@ const styles = StyleSheet.create({
   eventsTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#111827',
+    color: COLORS.textPrimary,
     marginBottom: 16,
   },
   eventCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.cardBackground,
     borderRadius: 12,
     marginBottom: 12,
     shadowColor: '#000',
@@ -2672,17 +2673,17 @@ const styles = StyleSheet.create({
   eventTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#111827',
+    color: COLORS.textPrimary,
   },
   eventDateRange: {
     fontSize: 12,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
     marginTop: 2,
   },
   eventType: {
     fontSize: 12,
     fontWeight: '500',
-    color: '#6B7280',
+    color: COLORS.textSecondary,
     backgroundColor: '#F3F4F6',
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -2715,10 +2716,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.cardBackground,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: COLORS.border,
     gap: 8,
   },
   dateButtonContent: {
@@ -2726,12 +2727,12 @@ const styles = StyleSheet.create({
   },
   dateButtonLabel: {
     fontSize: 12,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
     marginBottom: 2,
   },
   dateButtonText: {
     fontSize: 14,
-    color: '#111827',
+    color: COLORS.textPrimary,
     fontWeight: '500',
   },
   // Date Picker Modal Styles (matching profile settings)
@@ -2785,17 +2786,17 @@ const styles = StyleSheet.create({
   },
   eventMetaText: {
     fontSize: 14,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
     marginLeft: 8,
   },
   eventDescription: {
     fontSize: 14,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
     lineHeight: 20,
     marginTop: 8,
   },
   noEvents: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.cardBackground,
     padding: 32,
     borderRadius: 12,
     alignItems: 'center',
@@ -2807,11 +2808,11 @@ const styles = StyleSheet.create({
   },
   noEventsText: {
     fontSize: 16,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
     marginBottom: 16,
   },
   addEventButton: {
-    backgroundColor: '#0e3c67',
+    backgroundColor: COLORS.primary,
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
@@ -2821,7 +2822,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   loadingState: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.cardBackground,
     padding: 32,
     borderRadius: 12,
     alignItems: 'center',
@@ -2833,10 +2834,10 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
   },
   errorState: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.cardBackground,
     padding: 32,
     borderRadius: 12,
     alignItems: 'center',
@@ -2854,12 +2855,12 @@ const styles = StyleSheet.create({
   },
   errorSubtitle: {
     fontSize: 14,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
     textAlign: 'center',
     marginBottom: 16,
   },
   retryButton: {
-    backgroundColor: '#0e3c67',
+    backgroundColor: COLORS.primary,
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
@@ -2877,13 +2878,13 @@ const styles = StyleSheet.create({
   // Modal Styles
   modalContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.cardBackground,
   },
   keyboardAvoidingView: {
     flex: 1,
   },
   modalHeader: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.cardBackground,
     paddingTop: 8,
   },
   modalHeaderContent: {
@@ -2914,17 +2915,17 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#111827',
+    color: COLORS.textPrimary,
     textAlign: 'center',
   },
   modalSubtitle: {
     fontSize: 14,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
     marginTop: 2,
     textAlign: 'center',
   },
   saveButton: {
-    backgroundColor: '#0e3c67',
+    backgroundColor: COLORS.primary,
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 20,
@@ -2949,7 +2950,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: COLORS.background,
     padding: 20,
   },
   fieldGroup: {
@@ -2962,14 +2963,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   textInput: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.cardBackground,
     borderWidth: 2,
-    borderColor: '#E5E7EB',
+    borderColor: COLORS.border,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    color: '#111827',
+    color: COLORS.textPrimary,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -2979,16 +2980,16 @@ const styles = StyleSheet.create({
   },
   timeText: {
     fontSize: 16,
-    color: '#111827',
+    color: COLORS.textPrimary,
   },
   textArea: {
     height: 80,
     textAlignVertical: 'top',
   },
   dropdownButton: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.cardBackground,
     borderWidth: 2,
-    borderColor: '#E5E7EB',
+    borderColor: COLORS.border,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
@@ -3003,10 +3004,10 @@ const styles = StyleSheet.create({
   },
   dropdownButtonText: {
     fontSize: 16,
-    color: '#111827',
+    color: COLORS.textPrimary,
   },
   dropdownMenu: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.cardBackground,
     borderRadius: 12,
     marginTop: 8,
     shadowColor: '#000',
@@ -3029,7 +3030,7 @@ const styles = StyleSheet.create({
   },
   dropdownItemText: {
     fontSize: 16,
-    color: '#111827',
+    color: COLORS.textPrimary,
     marginLeft: 12,
     flex: 1,
   },
@@ -3069,9 +3070,9 @@ const styles = StyleSheet.create({
     paddingRight: 20,
   },
   memberOption: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.cardBackground,
     borderWidth: 2,
-    borderColor: '#E5E7EB',
+    borderColor: COLORS.border,
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -3092,7 +3093,7 @@ const styles = StyleSheet.create({
   memberLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#6B7280',
+    color: COLORS.textSecondary,
     textAlign: 'center',
   },
   memberLabelSelected: {
@@ -3103,7 +3104,7 @@ const styles = StyleSheet.create({
   // Time Picker Modal Styles
   timePickerModal: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.cardBackground,
   },
   timePickerHeader: {
     flexDirection: 'row',
@@ -3116,13 +3117,13 @@ const styles = StyleSheet.create({
   },
   timePickerCancel: {
     fontSize: 16,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
     fontWeight: '500',
   },
   timePickerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#111827',
+    color: COLORS.textPrimary,
   },
   timePickerDone: {
     fontSize: 16,
@@ -3139,11 +3140,11 @@ const styles = StyleSheet.create({
     borderBottomColor: '#F9FAFB',
   },
   timeSlotSelected: {
-    backgroundColor: '#0e3c67',
+    backgroundColor: COLORS.primary,
   },
   timeSlotText: {
     fontSize: 16,
-    color: '#111827',
+    color: COLORS.textPrimary,
     fontWeight: '500',
   },
   timeSlotTextSelected: {

@@ -1,42 +1,41 @@
 export const COLORS = {
   // Primary Colors
-  primary: '#2E86DE',
+  primary: '#0E3C67',
   accent: '#FFB84C',
 
   // Backgrounds
-  background: '#0E1726',
-  deepNavy: '#0B1C2E',
-  secondaryBackground: '#1A2335',
-  cardBackground: '#1A2335',
+  background: '#0A1E33',
+  secondaryBackground: '#102C4A',
+  cardBackground: '#133A63',
 
   // Text Colors
-  textPrimary: '#F5F7FA',
-  textSecondary: '#B0B8C2',
-  textMuted: '#6B7280',
+  textPrimary: '#FFFFFF',
+  textSecondary: '#BFD1E5',
+  textMuted: '#9CA3AF',
 
   // UI Elements
-  border: 'rgba(255, 255, 255, 0.08)',
-  borderAccent: 'rgba(46, 134, 222, 0.2)',
-  divider: 'rgba(255, 255, 255, 0.08)',
+  border: '#1C4A78',
+  borderLight: 'rgba(255, 255, 255, 0.1)',
+  divider: '#1C4A78',
 
   // Status Colors
   success: '#22C55E',
   warning: '#FFB84C',
   error: '#EF4444',
-  info: '#2E86DE',
+  info: '#3B82F6',
 
   // Gradient Colors
-  gradientStart: '#0B1C2E',
-  gradientEnd: '#132742',
+  gradientStart: '#0A1E33',
+  gradientEnd: '#102C4A',
 
   // Input Fields
-  inputBackground: '#0E1726',
-  inputBorder: 'rgba(255, 255, 255, 0.08)',
-  inputPlaceholder: '#9CA3AF',
+  inputBackground: '#0A1E33',
+  inputBorder: '#1C4A78',
+  inputPlaceholder: '#BFD1E5',
 
   // Shadows
   shadowColor: '#000000',
-  glowBlue: 'rgba(46, 134, 222, 0.3)',
+  glowPrimary: 'rgba(14, 60, 103, 0.5)',
   glowYellow: 'rgba(255, 184, 76, 0.4)',
 };
 
