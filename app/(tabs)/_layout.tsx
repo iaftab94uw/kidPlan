@@ -57,7 +57,7 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: COLORS.primary,
+          backgroundColor: COLORS.secondaryBackground,
           borderTopWidth: 0,
           paddingBottom: 20,
           paddingTop: 12,
@@ -69,7 +69,7 @@ export default function TabLayout() {
           elevation: 12,
           borderTopLeftRadius: 20,
           borderTopRightRadius: 20,
-          marginTop: 8,
+          marginTop: 0,
         },
         tabBarActiveTintColor: COLORS.textPrimary,
         tabBarInactiveTintColor: COLORS.textSecondary,

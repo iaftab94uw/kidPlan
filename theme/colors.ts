@@ -6,8 +6,10 @@ export const COLORS = {
   // Backgrounds
   background: '#0A1E33',
   secondaryBackground: '#102C4A',
-  cardBackground: '#133A63',
-
+  cardBackground: '#0A1E33',
+  white: '#FFFFFF',
+  black: '#000000',
+  deleteBackground: '#FEF2F2',
   // Text Colors
   textPrimary: '#FFFFFF',
   textSecondary: '#BFD1E5',

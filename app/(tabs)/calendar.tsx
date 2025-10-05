@@ -1222,7 +1222,7 @@ export default function Calendar() {
             style={styles.navButton}
             onPress={() => navigateMonth('prev')}
           >
-            <ChevronLeft size={24} color="#0e3c67" />
+            <ChevronLeft size={24} color={COLORS.white} />
           </TouchableOpacity>
           
           <Text style={styles.monthTitle}>
@@ -1233,7 +1233,7 @@ export default function Calendar() {
             style={styles.navButton}
             onPress={() => navigateMonth('next')}
           >
-            <ChevronRight size={24} color="#0e3c67" />
+            <ChevronRight size={24} color={COLORS.white} />
           </TouchableOpacity>
         </View>
 
@@ -1290,10 +1290,10 @@ export default function Calendar() {
                             style={styles.eventActionButton}
                             onPress={() => handleEditEvent(event)}
                           >
-                            <Edit size={16} color="#6B7280" />
+                            <Edit size={16} color={COLORS.white} />
                           </TouchableOpacity>
                           <TouchableOpacity
-                            style={styles.eventActionButton}
+                            style={styles.eventActionDeleteButton}
                             onPress={() => handleDeleteEvent(event)}
                           >
                             <Trash2 size={16} color="#DC2626" />
@@ -2351,7 +2351,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 20,
     paddingTop: 60,
-    backgroundColor: COLORS.primary,
+    backgroundColor: COLORS.background,
+    shadowColor: COLORS.shadowColor,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 15,
+    elevation: 8,
+
   },
   headerTitle: {
     fontSize: 24,
@@ -2366,7 +2372,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: COLORS.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -2375,7 +2381,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: COLORS.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -2423,11 +2429,11 @@ const styles = StyleSheet.create({
     marginTop: 16,
     borderRadius: 16,
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowColor: COLORS.shadowColor,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 15,
+    elevation: 8,
   },
   dayNamesRow: {
     flexDirection: 'row',
@@ -2494,13 +2500,13 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   selectedEventDot: {
-    backgroundColor: COLORS.cardBackground,
+    backgroundColor: COLORS.white,
   },
   navButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: COLORS.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -2537,11 +2543,12 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginTop: 16,
     borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowColor: COLORS.shadowColor,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 15,
+    elevation: 8,
+
   },
   calendarWrapper: {
     marginHorizontal: 20,
@@ -2624,16 +2631,18 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   eventCard: {
-    backgroundColor: COLORS.cardBackground,
-    borderRadius: 12,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-    flexDirection: 'row',
-    overflow: 'hidden',
+  backgroundColor: COLORS.cardBackground,
+  borderRadius: 12,
+  marginBottom: 12,
+  borderWidth: 1,
+  borderColor: COLORS.border,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.05,
+  shadowRadius: 4,
+  elevation: 2,
+  flexDirection: 'row',
+  overflow: 'hidden',
   },
   eventColorBar: {
     width: 4,
@@ -2661,6 +2670,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
+    marginLeft: -6
+
   },
   eventTitleContent: {
     flex: 1,
@@ -2684,7 +2695,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
     color: COLORS.textSecondary,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: COLORS.primary,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -2702,7 +2713,15 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+    eventActionDeleteButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: COLORS.deleteBackground,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -2822,15 +2841,17 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   loadingState: {
-    backgroundColor: COLORS.cardBackground,
-    padding: 32,
-    borderRadius: 12,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+  backgroundColor: COLORS.cardBackground,
+  padding: 32,
+  borderRadius: 12,
+  alignItems: 'center',
+  borderWidth: 1,
+  borderColor: COLORS.border,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.05,
+  shadowRadius: 4,
+  elevation: 2,
   },
   loadingText: {
     fontSize: 16,
@@ -3007,15 +3028,17 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
   },
   dropdownMenu: {
-    backgroundColor: COLORS.cardBackground,
-    borderRadius: 12,
-    marginTop: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-    overflow: 'hidden',
+  backgroundColor: COLORS.cardBackground,
+  borderRadius: 12,
+  marginTop: 8,
+  borderWidth: 1,
+  borderColor: COLORS.border,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.1,
+  shadowRadius: 8,
+  elevation: 4,
+  overflow: 'hidden',
   },
   dropdownItem: {
     flexDirection: 'row',
