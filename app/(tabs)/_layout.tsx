@@ -1,12 +1,13 @@
 import { Tabs } from 'expo-router';
 import { Calendar, Chrome as Home, Users, Camera, Menu } from 'lucide-react-native';
 import { View, Text } from 'react-native';
+import { COLORS, SHADOWS, SPACING, BORDER_RADIUS, TYPOGRAPHY } from '@/theme/colors';
 
-const TabBarIcon = ({ icon: Icon, color, focused, title }: { 
-  icon: any; 
-  color: string; 
-  focused: boolean; 
-  title: string; 
+const TabBarIcon = ({ icon: Icon, color, focused, title }: {
+  icon: any;
+  color: string;
+  focused: boolean;
+  title: string;
 }) => (
   <View style={{
     alignItems: 'center',
@@ -17,26 +18,26 @@ const TabBarIcon = ({ icon: Icon, color, focused, title }: {
     minWidth: 80,
   }}>
     <View style={{
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: focused ? '#0e3c67' : 'transparent',
+      paddingHorizontal: focused ? 16 : 12,
+      paddingVertical: focused ? 10 : 10,
+      borderRadius: BORDER_RADIUS.pill,
+      backgroundColor: focused ? COLORS.primary : 'transparent',
       alignItems: 'center',
       justifyContent: 'center',
       marginBottom: 4,
-      shadowColor: focused ? '#0e3c67' : 'transparent',
+      shadowColor: focused ? COLORS.primary : 'transparent',
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: focused ? 0.3 : 0,
-      shadowRadius: 4,
-      elevation: focused ? 4 : 0,
+      shadowOpacity: focused ? 0.2 : 0,
+      shadowRadius: 8,
+      elevation: focused ? 3 : 0,
     }}>
-      <Icon size={20} color={focused ? '#FFFFFF' : color} />
+      <Icon size={22} color={focused ? COLORS.textLight : COLORS.textSecondary} />
     </View>
-    <Text 
+    <Text
       style={{
-        fontSize: 10,
-        fontWeight: focused ? '700' : '600',
-        color: focused ? '#0e3c67' : color,
+        fontSize: TYPOGRAPHY.xs,
+        fontWeight: focused ? TYPOGRAPHY.bold : TYPOGRAPHY.medium,
+        color: focused ? COLORS.primary : COLORS.textMuted,
         textAlign: 'center',
         maxWidth: '100%',
         minWidth: 80,
@@ -56,22 +57,18 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
-          borderTopWidth: 0,
+          backgroundColor: COLORS.cardBackground,
+          borderTopWidth: 1,
+          borderTopColor: COLORS.borderLight,
           paddingBottom: 20,
           paddingTop: 12,
           height: 110,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-          elevation: 8,
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-          marginTop: 8,
+          ...SHADOWS.large,
+          borderTopLeftRadius: BORDER_RADIUS.xl,
+          borderTopRightRadius: BORDER_RADIUS.xl,
         },
-        tabBarActiveTintColor: '#0e3c67',
-        tabBarInactiveTintColor: '#6B7280',
+        tabBarActiveTintColor: COLORS.primary,
+        tabBarInactiveTintColor: COLORS.textSecondary,
         tabBarShowLabel: false,
         tabBarHideOnKeyboard: true,
         tabBarItemStyle: {

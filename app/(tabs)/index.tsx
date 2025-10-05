@@ -11,7 +11,9 @@ import {
   RefreshControl,
   TextInput
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { COLORS, SHADOWS, SPACING, BORDER_RADIUS, TYPOGRAPHY, GLASS } from '@/theme/colors';
 import { useAuth } from '@/hooks/useAuth';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
 import { useFamilyDetails } from '@/hooks/useFamilyDetails';
@@ -432,18 +434,23 @@ export default function Dashboard() {
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView 
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={['#0e3c67']}
-            tintColor="#0e3c67"
-          />
-        }
-      >
+    <LinearGradient
+      colors={COLORS.gradientBackground}
+      style={styles.container}
+      locations={[0, 0.5, 1]}
+    >
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[COLORS.primary]}
+              tintColor={COLORS.primary}
+            />
+          }
+        >
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
@@ -774,35 +781,39 @@ export default function Dashboard() {
         <View style={styles.bottomSpacing} />
       </ScrollView>
     </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+  },
+  safeArea: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 20,
+    paddingHorizontal: SPACING.xl,
+    paddingVertical: SPACING.xl,
     paddingTop: 60,
-    backgroundColor: '#0e3c67',
+    backgroundColor: 'transparent',
   },
   headerLeft: {
     flex: 1,
   },
   greeting: {
-    fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: TYPOGRAPHY.base,
+    color: COLORS.textSecondary,
     marginBottom: 4,
+    fontWeight: TYPOGRAPHY.medium,
   },
   userName: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontSize: TYPOGRAPHY.xl,
+    fontWeight: TYPOGRAPHY.bold,
+    color: COLORS.textPrimary,
   },
   notificationButton: {
     width: 44,
@@ -837,15 +848,10 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    borderRadius: 16,
+    ...GLASS.card,
+    padding: SPACING.lg,
+    borderRadius: BORDER_RADIUS.lg,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
   },
   statIcon: {
     width: 40,
@@ -858,12 +864,12 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#111827',
+    color: COLORS.textPrimary,
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 12,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
     textAlign: 'center',
     fontWeight: '500',
   },
@@ -880,7 +886,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#111827',
+    color: COLORS.textPrimary,
   },
   seeAllButton: {
     flexDirection: 'row',
@@ -900,7 +906,7 @@ const styles = StyleSheet.create({
   quickActionCard: {
     width: (width - 52) / 2,
     padding: 20,
-    borderRadius: 16,
+    borderRadius: BORDER_RADIUS.lg,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -914,11 +920,11 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   eventCard: {
-    backgroundColor: '#FFFFFF',
+    ...GLASS.card,
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    borderRadius: 16,
+    borderRadius: BORDER_RADIUS.lg,
     marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -940,7 +946,7 @@ const styles = StyleSheet.create({
   eventTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#111827',
+    color: COLORS.textPrimary,
     marginBottom: 6,
   },
   eventMeta: {
@@ -952,7 +958,7 @@ const styles = StyleSheet.create({
   },
   eventMetaText: {
     fontSize: 14,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
     marginLeft: 6,
   },
   eventTypeText: {
@@ -981,10 +987,10 @@ const styles = StyleSheet.create({
     paddingRight: 20,
   },
   memberCard: {
-    backgroundColor: '#FFFFFF',
+    ...GLASS.card,
     alignItems: 'center',
     padding: 16,
-    borderRadius: 12,
+    borderRadius: BORDER_RADIUS.md,
     marginRight: 12,
     width: 100,
     height: 136,
@@ -1004,19 +1010,19 @@ const styles = StyleSheet.create({
   memberName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#111827',
+    color: COLORS.textPrimary,
     marginBottom: 2,
     textAlign: 'center',
   },
   memberAge: {
     fontSize: 12,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
     textAlign: 'center',
   },
   addMemberCard: {
     width: 100,
     height: 136,
-    borderRadius: 12,
+    borderRadius: BORDER_RADIUS.md,
     backgroundColor: '#F3F4F6',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1028,15 +1034,15 @@ const styles = StyleSheet.create({
   },
   addMemberText: {
     fontSize: 12,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
     fontWeight: '500',
     marginTop: 4,
     textAlign: 'center',
   },
   scheduleCard: {
-    backgroundColor: '#FFFFFF',
+    ...GLASS.card,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: BORDER_RADIUS.md,
     marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -1056,18 +1062,18 @@ const styles = StyleSheet.create({
   scheduleTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#111827',
+    color: COLORS.textPrimary,
     marginBottom: 4,
   },
   scheduleDate: {
     fontSize: 14,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
   },
   scheduleParentBadge: {
     backgroundColor: '#FEF3C7',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 12,
+    borderRadius: BORDER_RADIUS.md,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
@@ -1092,7 +1098,7 @@ const styles = StyleSheet.create({
   },
   scheduleActivities: {
     fontSize: 12,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
     fontStyle: 'italic',
     lineHeight: 16,
   },
@@ -1101,8 +1107,8 @@ const styles = StyleSheet.create({
   },
   // Schools Section Styles
   schoolsCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    ...GLASS.card,
+    borderRadius: BORDER_RADIUS.lg,
     padding: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -1130,19 +1136,19 @@ const styles = StyleSheet.create({
   schoolsTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#111827',
+    color: COLORS.textPrimary,
     marginBottom: 4,
   },
   schoolsSubtitle: {
     fontSize: 14,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
     lineHeight: 20,
   },
   schoolsSearchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F3F4F6',
-    borderRadius: 12,
+    borderRadius: BORDER_RADIUS.md,
     paddingHorizontal: 16,
     paddingVertical: 12,
     marginBottom: 12,
@@ -1150,7 +1156,7 @@ const styles = StyleSheet.create({
   schoolsSearchInput: {
     flex: 1,
     fontSize: 16,
-    color: '#111827',
+    color: COLORS.textPrimary,
     marginLeft: 12,
   },
   schoolsSearchButton: {
@@ -1159,7 +1165,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: BORDER_RADIUS.md,
     shadowColor: '#059669',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
@@ -1174,8 +1180,8 @@ const styles = StyleSheet.create({
   },
   // Loading and No Data States
   loadingCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    ...GLASS.card,
+    borderRadius: BORDER_RADIUS.md,
     padding: 20,
     alignItems: 'center',
     borderWidth: 1,
@@ -1183,12 +1189,12 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 14,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
     textAlign: 'center',
   },
   noDataCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    ...GLASS.card,
+    borderRadius: BORDER_RADIUS.md,
     padding: 24,
     alignItems: 'center',
     borderWidth: 1,
@@ -1203,7 +1209,7 @@ const styles = StyleSheet.create({
   },
   noDataSubtitle: {
     fontSize: 14,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
   },

@@ -1,8 +1,8 @@
 import React from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
+import {
+  View,
+  Text,
+  StyleSheet,
   TouchableOpacity,
   SafeAreaView,
   Image,
@@ -10,8 +10,10 @@ import {
   Dimensions,
   Platform
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Calendar, Users, Camera, Shield } from 'lucide-react-native';
+import { COLORS, SHADOWS, SPACING, BORDER_RADIUS, TYPOGRAPHY, GLASS } from '@/theme/colors';
 
 const { width } = Dimensions.get('window');
 
@@ -42,159 +44,184 @@ export default function AuthWelcome() {
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.content}>
-          {/* Logo Section */}
-          <View style={styles.logoSection}>
-            <Image 
-              source={require('@/assets/images/icon.png')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-            <Text style={styles.welcomeTitle}>Welcome to KidPlan</Text>
-            <Text style={styles.welcomeSubtitle}>
-              The smart way to organise your family's schedule and create lasting memories
-            </Text>
-          </View>
-
-          {/* Features */}
-          <View style={styles.featuresSection}>
-            {features.map((feature, index) => (
-              <View key={index} style={styles.featureItem}>
-                <View style={styles.featureIcon}>
-                  <feature.icon size={24} color="#0e3c67" />
-                </View>
-                <View style={styles.featureContent}>
-                  <Text style={styles.featureTitle}>{feature.title}</Text>
-                  <Text style={styles.featureDescription}>{feature.description}</Text>
-                </View>
+    <LinearGradient
+      colors={COLORS.gradientBackground}
+      style={styles.container}
+      locations={[0, 0.5, 1]}
+    >
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <View style={styles.content}>
+            {/* Logo Section */}
+            <View style={styles.logoSection}>
+              <View style={styles.logoContainer}>
+                <Image
+                  source={require('@/assets/images/icon.png')}
+                  style={styles.logo}
+                  resizeMode="contain"
+                />
               </View>
-            ))}
-          </View>
+              <Text style={styles.welcomeTitle}>Welcome to KidPlan</Text>
+              <Text style={styles.welcomeSubtitle}>
+                The smart way to organise your family's schedule and create lasting memories
+              </Text>
+            </View>
 
-          {/* Action Buttons */}
-          <View style={styles.buttonSection}>
-            <TouchableOpacity 
-              style={styles.primaryButton}
-              onPress={() => router.push('/auth/signup')}
-            >
-              <Text style={styles.primaryButtonText}>Get Started</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.secondaryButton}
-              onPress={() => router.push('/auth/signin')}
-            >
-              <Text style={styles.secondaryButtonText}>Already have an account? Sign In</Text>
-            </TouchableOpacity>
+            {/* Features */}
+            <View style={styles.featuresSection}>
+              {features.map((feature, index) => (
+                <View key={index} style={styles.featureItem}>
+                  <View style={styles.featureIcon}>
+                    <feature.icon size={24} color={COLORS.primary} />
+                  </View>
+                  <View style={styles.featureContent}>
+                    <Text style={styles.featureTitle}>{feature.title}</Text>
+                    <Text style={styles.featureDescription}>{feature.description}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+
+            {/* Action Buttons */}
+            <View style={styles.buttonSection}>
+              <TouchableOpacity
+                style={styles.primaryButton}
+                onPress={() => router.push('/auth/signup')}
+              >
+                <LinearGradient
+                  colors={COLORS.gradientPrimary}
+                  style={styles.buttonGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <Text style={styles.primaryButtonText}>Get Started</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.secondaryButton}
+                onPress={() => router.push('/auth/signin')}
+              >
+                <Text style={styles.secondaryButtonText}>Already have an account? Sign In</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+  },
+  safeArea: {
+    flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 24,
+    paddingHorizontal: SPACING.xxl,
     justifyContent: 'space-between',
     minHeight: '100%',
   },
   logoSection: {
     alignItems: 'center',
-    paddingTop: 40,
-    paddingBottom: 20,
+    paddingTop: 60,
+    paddingBottom: SPACING.xl,
+  },
+  logoContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: BORDER_RADIUS.xxl,
+    ...GLASS.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: SPACING.lg,
   },
   logo: {
-    width: 100,
-    height: 100,
-    marginBottom: 16,
+    width: 80,
+    height: 80,
   },
   welcomeTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#0e3c67',
-    marginBottom: 8,
+    fontSize: TYPOGRAPHY.xxl,
+    fontWeight: TYPOGRAPHY.extrabold,
+    color: COLORS.textPrimary,
+    marginBottom: SPACING.sm,
     textAlign: 'center',
   },
   welcomeSubtitle: {
-    fontSize: 16,
-    color: '#6B7280',
+    fontSize: TYPOGRAPHY.base,
+    color: COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
-    paddingHorizontal: 16,
+    paddingHorizontal: SPACING.lg,
   },
   featuresSection: {
-    paddingVertical: 16,
+    paddingVertical: SPACING.lg,
+    gap: SPACING.md,
   },
   featureItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 16,
-    marginBottom: 8,
+    padding: SPACING.lg,
+    ...GLASS.card,
+    borderRadius: BORDER_RADIUS.lg,
   },
   featureIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#E6F3FF',
+    width: 48,
+    height: 48,
+    borderRadius: BORDER_RADIUS.md,
+    backgroundColor: `${COLORS.primary}15`,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: SPACING.md,
   },
   featureContent: {
     flex: 1,
   },
   featureTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#0e3c67',
+    fontSize: TYPOGRAPHY.md,
+    fontWeight: TYPOGRAPHY.semibold,
+    color: COLORS.textPrimary,
     marginBottom: 2,
   },
   featureDescription: {
-    fontSize: 13,
-    color: '#6B7280',
+    fontSize: TYPOGRAPHY.sm,
+    color: COLORS.textSecondary,
     lineHeight: 18,
   },
   buttonSection: {
-    paddingBottom: Platform.OS === 'android' ? 60 : 20,
+    paddingBottom: Platform.OS === 'android' ? 60 : SPACING.xl,
+    gap: SPACING.md,
   },
   primaryButton: {
-    backgroundColor: '#0e3c67',
-    paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: BORDER_RADIUS.pill,
+    overflow: 'hidden',
+    ...SHADOWS.medium,
+  },
+  buttonGradient: {
+    paddingVertical: SPACING.lg,
     alignItems: 'center',
-    marginBottom: 16,
-    shadowColor: '#0e3c67',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    justifyContent: 'center',
   },
   primaryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
+    color: COLORS.textLight,
+    fontSize: TYPOGRAPHY.md,
+    fontWeight: TYPOGRAPHY.bold,
   },
   secondaryButton: {
-    paddingVertical: 16,
+    paddingVertical: SPACING.lg,
     alignItems: 'center',
+    ...GLASS.cardDark,
+    borderRadius: BORDER_RADIUS.pill,
   },
   secondaryButtonText: {
-    color: '#0e3c67',
-    fontSize: 14,
-    fontWeight: '500',
+    color: COLORS.primary,
+    fontSize: TYPOGRAPHY.sm,
+    fontWeight: TYPOGRAPHY.semibold,
   },
 });
