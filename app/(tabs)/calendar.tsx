@@ -1184,7 +1184,7 @@ export default function Calendar() {
             colors={COLORS.gradientHero as any}
             style={styles.header}
             start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
+            end={{ x: 1, y: 0 }}
           >
             <Text style={styles.headerTitle}>Calendar</Text>
             <View style={styles.headerButtons}>

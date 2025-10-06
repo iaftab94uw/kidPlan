@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { COLORS } from '@/theme/colors';
+import { COLORS, SHADOWS, SPACING, BORDER_RADIUS, TYPOGRAPHY, GLASS } from '@/theme/colors';
 import { 
   School, 
   User, 
@@ -119,6 +119,11 @@ export default function More() {
 
   return (
     <>
+        <LinearGradient
+          colors={COLORS.gradientBackground as any}
+          locations={[0, 0.5, 1]}
+        />
+    
       {/* Top safe-area gradient to color status bar/notch */}
       <LinearGradient
         colors={COLORS.gradientHero as any}
@@ -128,10 +133,15 @@ export default function More() {
       />
       <SafeAreaView style={styles.container}>
         <ScrollView>
-        {/* Header */}
-        <View style={styles.header}>
+        {/* Header (gradient) */}
+        <LinearGradient
+          colors={COLORS.gradientHero as any}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.header}
+        >
           <Text style={styles.headerTitle}>More</Text>
-        </View>
+        </LinearGradient>
 
         {/* User Profile Card */}
         <View style={styles.profileCard}>
@@ -157,8 +167,16 @@ export default function More() {
           <TouchableOpacity 
             style={styles.editProfileButton}
             onPress={() => router.push('/profile-settings')}
+            activeOpacity={0.85}
           >
-            <Text style={styles.editProfileText}>Edit</Text>
+            <LinearGradient
+              colors={COLORS.gradientPrimary as any}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.editProfileGradient}
+            >
+              <Text style={styles.editProfileText}>Edit</Text>
+            </LinearGradient>
           </TouchableOpacity>
         </View>
 
@@ -180,9 +198,16 @@ export default function More() {
         </View>
 
         {/* Sign Out Button */}
-        <TouchableOpacity style={styles.signOutButton} onPress={handleLogout}>
-          <LogOut size={20} color="#DC2626" />
-          <Text style={styles.signOutText}>Sign Out</Text>
+        <TouchableOpacity style={styles.signOutButton} onPress={handleLogout} activeOpacity={0.85}>
+          <LinearGradient
+            colors={[COLORS.errorLight || '#FEE2E2', COLORS.error || '#DC2626']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.signOutGradient}
+          >
+            <LogOut size={20} color="#FFFFFF" />
+            <Text style={styles.signOutText}>Sign Out</Text>
+          </LinearGradient>
         </TouchableOpacity>
 
         {/* Bottom Spacing */}
@@ -206,7 +231,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 20,
     paddingTop: 60,
-    backgroundColor: '#0e3c67',
   },
   headerTitle: {
     fontSize: 24,
@@ -259,14 +283,14 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   editProfileButton: {
-    backgroundColor: '#F3F4F6',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: 0,
+    paddingVertical: 0,
     borderRadius: 8,
+    overflow: 'hidden',
   },
   editProfileText: {
     fontSize: 14,
-    color: '#374151',
+    color: '#FFFFFF',
     fontWeight: '500',
   },
   menuSection: {
@@ -339,26 +363,33 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   signOutButton: {
-    backgroundColor: '#FFFFFF',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginHorizontal: 20,
-    padding: 16,
+    padding: 0,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#FEE2E2',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    overflow: 'hidden',
+    marginHorizontal: 20,
+    ...SHADOWS.md,
+  },
+  signOutGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    flex: 1,
   },
   signOutText: {
     fontSize: 16,
-    color: '#DC2626',
+    color: '#FFFFFF',
     fontWeight: '500',
     marginLeft: 8,
+  },
+  editProfileGradient: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   bottomSpacing: {
     height: 32,

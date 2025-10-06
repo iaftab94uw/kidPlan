@@ -463,7 +463,7 @@ export default function Dashboard() {
           colors={COLORS.gradientHero as any}
           style={styles.header}
           start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+          end={{ x: 1, y: 0 }}
         >
           <View style={styles.headerLeft}>
             <Text style={styles.greeting}>{getGreeting()}!</Text>
