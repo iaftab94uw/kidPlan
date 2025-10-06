@@ -14,6 +14,8 @@ import { useRouter } from 'expo-router';
 import { ArrowLeft, Mail, CircleCheck as CheckCircle } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
 import Banner from '@/components/Banner';
+import { LinearGradient } from 'expo-linear-gradient';
+import { COLORS, SHADOWS, SPACING, BORDER_RADIUS, TYPOGRAPHY, GLASS } from '@/theme/colors';
 
 
 
@@ -108,323 +110,314 @@ export default function ForgotPassword() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
-      >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <Banner
-            type={banner.type}
-            message={banner.message}
-            visible={banner.visible}
-            onDismiss={dismissBanner}
-          />
+    <View style={styles.container}>
+      <LinearGradient
+        colors={COLORS.gradientBackground as any}
+        style={StyleSheet.absoluteFillObject}
+        locations={[0, 0.5, 1]}
+      />
 
-          {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity 
-              style={styles.backButton}
-              onPress={() => router.back()}
-            >
-              <ArrowLeft size={24} color="#0e3c67" />
-            </TouchableOpacity>
-            <Text style={styles.headerBrand}>KidPlan</Text>
-          </View>
+      <SafeAreaView style={styles.safeArea}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardView}
+        >
+          <ScrollView contentContainerStyle={styles.scrollContent}>
+            <Banner
+              type={banner.type}
+              message={banner.message}
+              visible={banner.visible}
+              onDismiss={dismissBanner}
+            />
 
-          {/* Content */}
-          <View style={styles.content}>
-            {!emailSent ? (
-              <>
-                {/* Title */}
-                <View style={styles.titleSection}>
-                  <View style={styles.iconContainer}>
-                    <Mail size={48} color="#0e3c67" />
-                  </View>
-                  <Text style={styles.title}>Forgot Password?</Text>
-                  <Text style={styles.subtitle}>
-                    No worries! Enter your email address and we'll send you instructions to reset your password.
-                  </Text>
-                </View>
+            <View style={styles.header}>
+              <TouchableOpacity
+                style={styles.backButton}
+                onPress={() => router.back()}
+                activeOpacity={0.7}
+              >
+                <ArrowLeft size={24} color={COLORS.primary} />
+              </TouchableOpacity>
+            </View>
 
-                {/* Form */}
-                <View style={styles.form}>
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Email Address</Text>
-                    <TextInput
-                      style={[
-                        styles.input,
-                        errors.email && styles.inputError
-                      ]}
-                      value={email}
-                      onChangeText={setEmail}
-                      placeholder="Enter your email"
-                      placeholderTextColor="#9CA3AF"
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                    />
-                    {errors.email && (
-                      <Text style={styles.errorText}>{errors.email}</Text>
-                    )}
-                  </View>
-
-                  <TouchableOpacity 
-                    style={[styles.resetButton, isLoading && styles.resetButtonDisabled]}
-                    onPress={handleResetPassword}
-                    disabled={isLoading}
+            <View style={styles.titleCard}>
+              <LinearGradient
+                colors={["rgba(255,255,255,0.95)", "rgba(255,255,255,0.85)"]}
+                style={styles.titleCardGradient}
+              >
+                <View style={styles.iconContainer}>
+                  <LinearGradient
+                    colors={COLORS.gradientPrimary as any}
+                    style={styles.iconGradient}
                   >
-                    <Text style={styles.resetButtonText}>
-                      {isLoading ? 'Sending...' : 'Send Reset Instructions'}
+                    <Mail size={28} color={COLORS.textLight} />
+                  </LinearGradient>
+                </View>
+                <Text style={styles.title}>Forgot Password?</Text>
+                <Text style={styles.subtitle}>
+                  No worries! Enter your email address and we'll send you instructions to reset your password.
+                </Text>
+              </LinearGradient>
+            </View>
+
+            <View style={styles.formCard}>
+              <LinearGradient
+                colors={["rgba(255,255,255,0.95)", "rgba(255,255,255,0.85)"]}
+                style={styles.formCardGradient}
+              >
+                {!emailSent ? (
+                  <>
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.label}>Email Address</Text>
+                      <TextInput
+                        style={[
+                          styles.input,
+                          errors.email && styles.inputError
+                        ]}
+                        value={email}
+                        onChangeText={setEmail}
+                        placeholder="Enter your email"
+                        placeholderTextColor={COLORS.inputPlaceholder}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                      />
+                      {errors.email && (
+                        <Text style={styles.errorText}>{errors.email}</Text>
+                      )}
+                    </View>
+
+                    <TouchableOpacity
+                      style={[styles.resetButton, isLoading && styles.resetButtonDisabled]}
+                      onPress={handleResetPassword}
+                      disabled={isLoading}
+                      activeOpacity={0.8}
+                    >
+                      <LinearGradient
+                        colors={isLoading ? [COLORS.textMuted, COLORS.textSecondary] as any : COLORS.gradientPrimary as any}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={styles.resetButtonGradient}
+                      >
+                        <Text style={styles.resetButtonText}>
+                          {isLoading ? 'Sending...' : 'Send Reset Instructions'}
+                        </Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  </>
+                ) : (
+                  <View style={styles.successSection}>
+                    <View style={styles.successIconContainer}>
+                      <CheckCircle size={64} color={COLORS.success} />
+                    </View>
+                    <Text style={styles.successTitle}>Check Your Email</Text>
+                    <Text style={styles.successSubtitle}>
+                      We've sent password reset instructions to:
                     </Text>
-                  </TouchableOpacity>
-                </View>
-              </>
-            ) : (
-              <>
-                {/* Success State */}
-                <View style={styles.successSection}>
-                  <View style={styles.successIconContainer}>
-                    <CheckCircle size={64} color="#059669" />
+                    <Text style={styles.emailAddress}>{email}</Text>
+                    <Text style={styles.instructionText}>
+                      Click the link in the email to reset your password. If you don't see the email, check your spam folder.
+                    </Text>
+
+                    <TouchableOpacity
+                      style={styles.resendButton}
+                      onPress={handleResendEmail}
+                    >
+                      <Text style={styles.resendButtonText}>Resend Email</Text>
+                    </TouchableOpacity>
                   </View>
-                  <Text style={styles.successTitle}>Check Your Email</Text>
-                  <Text style={styles.successSubtitle}>
-                    We've sent password reset instructions to:
-                  </Text>
-                  <Text style={styles.emailAddress}>{email}</Text>
-                  <Text style={styles.instructionText}>
-                    Click the link in the email to reset your password. If you don't see the email, check your spam folder.
-                  </Text>
+                )}
+              </LinearGradient>
+            </View>
 
-                  <TouchableOpacity 
-                    style={styles.resendButton}
-                    onPress={handleResendEmail}
-                  >
-                    <Text style={styles.resendButtonText}>Resend Email</Text>
-                  </TouchableOpacity>
-                </View>
-              </>
-            )}
-
-            {/* Footer */}
             <View style={styles.footer}>
               <Text style={styles.footerText}>Remember your password? </Text>
               <TouchableOpacity onPress={() => router.push('/auth/signin')}>
                 <Text style={styles.footerLink}>Sign In</Text>
               </TouchableOpacity>
             </View>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.background,
+  },
+  safeArea: {
+    flex: 1,
   },
   keyboardView: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 20,
-  },
-  banner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 20,
-  },
-  errorBanner: {
-    backgroundColor: '#FEF2F2',
-    borderWidth: 1,
-    borderColor: '#FECACA',
-  },
-  successBanner: {
-    backgroundColor: '#F0FDF4',
-    borderWidth: 1,
-    borderColor: '#BBF7D0',
-  },
-  bannerText: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '500',
-    marginLeft: 12,
-  },
-  bannerClose: {
-    padding: 4,
-  },
-  errorText: {
-    color: '#DC2626',
-  },
-  successText: {
-    color: '#059669',
+    paddingHorizontal: SPACING.xxl,
+    paddingBottom: Platform.OS === 'android' ? 40 : 20,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingTop: 20,
-    paddingBottom: 40,
+    paddingTop: SPACING.xl,
+    paddingBottom: SPACING.lg,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F3F4F6',
+    width: 44,
+    height: 44,
+    borderRadius: BORDER_RADIUS.md,
+    ...GLASS.card,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 16,
   },
-  headerBrand: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#0e3c67',
+  titleCard: {
+    marginBottom: SPACING.xl,
+    borderRadius: BORDER_RADIUS.xl,
+    overflow: 'hidden',
+    ...SHADOWS.large,
   },
-  content: {
-    flex: 1,
-  },
-  titleSection: {
+  titleCardGradient: {
+    padding: SPACING.xxl,
     alignItems: 'center',
-    marginBottom: 40,
   },
   iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#E6F3FF',
+    marginBottom: SPACING.lg,
+  },
+  iconGradient: {
+    width: 64,
+    height: 64,
+    borderRadius: BORDER_RADIUS.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 24,
+    ...SHADOWS.medium,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#0e3c67',
-    marginBottom: 12,
+    fontSize: TYPOGRAPHY.xxl,
+    fontWeight: TYPOGRAPHY.extrabold,
+    color: COLORS.textPrimary,
+    marginBottom: SPACING.sm,
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 16,
-    color: '#6B7280',
+    fontSize: TYPOGRAPHY.base,
+    color: COLORS.textSecondary,
     textAlign: 'center',
-    lineHeight: 24,
-    paddingHorizontal: 16,
   },
-  form: {
-    marginBottom: 40,
+  formCard: {
+    marginBottom: SPACING.lg,
+    borderRadius: BORDER_RADIUS.xl,
+    overflow: 'hidden',
+    ...SHADOWS.large,
+  },
+  formCardGradient: {
+    padding: SPACING.xxl,
   },
   inputGroup: {
-    marginBottom: 24,
+    marginBottom: SPACING.lg,
   },
   label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 8,
+    fontSize: TYPOGRAPHY.sm,
+    fontWeight: TYPOGRAPHY.semibold,
+    color: COLORS.textPrimary,
+    marginBottom: SPACING.sm,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    fontSize: 16,
-    color: '#111827',
-    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: COLORS.inputBorder,
+    borderRadius: BORDER_RADIUS.md,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
+    fontSize: TYPOGRAPHY.base,
+    color: COLORS.textPrimary,
+    backgroundColor: COLORS.inputBackground,
   },
   inputError: {
-    borderColor: '#DC2626',
+    borderColor: COLORS.error,
     borderWidth: 2,
   },
   errorText: {
-    fontSize: 12,
-    color: '#DC2626',
-    marginTop: 4,
+    fontSize: TYPOGRAPHY.xs,
+    color: COLORS.error,
+    marginTop: SPACING.xs,
   },
   resetButton: {
-    backgroundColor: '#0e3c67',
-    paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: BORDER_RADIUS.xl,
+    overflow: 'hidden',
+    ...SHADOWS.medium,
+  },
+  resetButtonGradient: {
+    paddingVertical: SPACING.lg,
     alignItems: 'center',
-    shadowColor: '#0e3c67',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    justifyContent: 'center',
+  },
+  resetButtonText: {
+    color: COLORS.textLight,
+    fontSize: TYPOGRAPHY.md,
+    fontWeight: TYPOGRAPHY.bold,
   },
   resetButtonDisabled: {
     opacity: 0.6,
   },
-  resetButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
   successSection: {
     alignItems: 'center',
-    paddingVertical: 40,
+    paddingVertical: SPACING.huge,
   },
   successIconContainer: {
-    marginBottom: 24,
+    marginBottom: SPACING.lg,
   },
   successTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#0e3c67',
-    marginBottom: 12,
+    fontSize: TYPOGRAPHY.xxl,
+    fontWeight: TYPOGRAPHY.extrabold,
+    color: COLORS.textPrimary,
+    marginBottom: SPACING.sm,
     textAlign: 'center',
   },
   successSubtitle: {
-    fontSize: 16,
-    color: '#6B7280',
+    fontSize: TYPOGRAPHY.base,
+    color: COLORS.textSecondary,
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: SPACING.sm,
   },
   emailAddress: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#0e3c67',
-    marginBottom: 20,
+    fontSize: TYPOGRAPHY.md,
+    fontWeight: TYPOGRAPHY.semibold,
+    color: COLORS.primary,
+    marginBottom: SPACING.lg,
     textAlign: 'center',
   },
   instructionText: {
-    fontSize: 14,
-    color: '#6B7280',
+    fontSize: TYPOGRAPHY.sm,
+    color: COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
-    marginBottom: 32,
-    paddingHorizontal: 16,
+    marginBottom: SPACING.xxl,
+    paddingHorizontal: SPACING.lg,
   },
   resendButton: {
-    backgroundColor: '#F3F4F6',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
+    backgroundColor: COLORS.cardBackground,
+    paddingHorizontal: SPACING.xxl,
+    paddingVertical: SPACING.md,
+    borderRadius: BORDER_RADIUS.sm,
   },
   resendButtonText: {
-    color: '#0e3c67',
-    fontSize: 14,
-    fontWeight: '600',
+    color: COLORS.primary,
+    fontSize: TYPOGRAPHY.sm,
+    fontWeight: TYPOGRAPHY.semibold,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 32,
-    paddingBottom: Platform.OS === 'android' ? 60 : 32,
+    paddingVertical: SPACING.xxl,
   },
   footerText: {
-    fontSize: 14,
-    color: '#6B7280',
+    fontSize: TYPOGRAPHY.sm,
+    color: COLORS.textSecondary,
   },
   footerLink: {
-    fontSize: 14,
-    color: '#0e3c67',
-    fontWeight: '600',
+    fontSize: TYPOGRAPHY.sm,
+    color: COLORS.primary,
+    fontWeight: TYPOGRAPHY.bold,
   },
 });
