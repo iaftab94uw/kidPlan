@@ -1,7 +1,17 @@
 import { Tabs } from 'expo-router';
 import { Calendar, Chrome as Home, Users, Camera, Menu } from 'lucide-react-native';
 import { View, Text } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, SHADOWS, SPACING, BORDER_RADIUS, TYPOGRAPHY } from '@/theme/colors';
+// try to load MaskedView if available for gradient text
+let MaskedView: any = null;
+try {
+  // optional dependency - don't crash if not installed
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  MaskedView = require('@react-native-masked-view/masked-view').default;
+} catch (e) {
+  MaskedView = null;
+}
 
 const TabBarIcon = ({ icon: Icon, color, focused, title }: {
   icon: any;
@@ -17,37 +27,105 @@ const TabBarIcon = ({ icon: Icon, color, focused, title }: {
     width: '100%',
     minWidth: 80,
   }}>
-    <View style={{
-      paddingHorizontal: focused ? 16 : 12,
-      paddingVertical: focused ? 10 : 10,
-      borderRadius: BORDER_RADIUS.pill,
-      backgroundColor: focused ? COLORS.primary : 'transparent',
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: 4,
-      shadowColor: focused ? COLORS.primary : 'transparent',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: focused ? 0.25 : 0,
-      shadowRadius: 8,
-      elevation: focused ? 4 : 0,
-    }}>
-      <Icon size={22} color={focused ? COLORS.textLight : COLORS.textSecondary} />
-    </View>
-    <Text
-      style={{
-        fontSize: TYPOGRAPHY.xs,
-        fontWeight: focused ? TYPOGRAPHY.bold : TYPOGRAPHY.medium,
-        color: focused ? COLORS.primary : COLORS.textMuted,
-        textAlign: 'center',
-        maxWidth: '100%',
-        minWidth: 80,
-        paddingHorizontal: 4,
-      }}
-      numberOfLines={1}
-      ellipsizeMode="tail"
-    >
-      {title}
-    </Text>
+    {focused ? (
+      <LinearGradient
+        colors={COLORS.gradientPrimary as any}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={{
+          paddingHorizontal: 16,
+          paddingVertical: 10,
+          borderRadius: BORDER_RADIUS.pill,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: 4,
+          shadowColor: COLORS.primary,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.25,
+          shadowRadius: 8,
+          elevation: 4,
+        }}
+      >
+        <Icon size={22} color={COLORS.textLight} />
+      </LinearGradient>
+    ) : (
+      <View style={{
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        borderRadius: BORDER_RADIUS.pill,
+        backgroundColor: 'transparent',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 4,
+      }}>
+        <Icon size={22} color={COLORS.textSecondary} />
+      </View>
+    )}
+    {focused ? (
+      MaskedView ? (
+        <MaskedView
+          style={{ width: 80, alignItems: 'center' }}
+          maskElement={
+            <View style={{ backgroundColor: 'transparent', alignItems: 'center' }}>
+              <Text
+                style={{
+                  fontSize: TYPOGRAPHY.xs,
+                  fontWeight: TYPOGRAPHY.bold,
+                  color: '#000',
+                  textAlign: 'center',
+                  maxWidth: '100%',
+                  minWidth: 80,
+                  paddingHorizontal: 4,
+                }}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {title}
+              </Text>
+            </View>
+          }
+        >
+          <LinearGradient
+            colors={COLORS.gradientPrimary as any}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={{ width: 80, alignItems: 'center' }}
+          />
+        </MaskedView>
+      ) : (
+        <Text
+          style={{
+            fontSize: TYPOGRAPHY.xs,
+            fontWeight: TYPOGRAPHY.bold,
+            color: COLORS.primary,
+            textAlign: 'center',
+            maxWidth: '100%',
+            minWidth: 80,
+            paddingHorizontal: 4,
+          }}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
+          {title}
+        </Text>
+      )
+    ) : (
+      <Text
+        style={{
+          fontSize: TYPOGRAPHY.xs,
+          fontWeight: TYPOGRAPHY.medium,
+          color: COLORS.textMuted,
+          textAlign: 'center',
+          maxWidth: '100%',
+          minWidth: 80,
+          paddingHorizontal: 4,
+        }}
+        numberOfLines={1}
+        ellipsizeMode="tail"
+      >
+        {title}
+      </Text>
+    )}
   </View>
 );
 
