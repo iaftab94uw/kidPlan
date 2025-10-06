@@ -1,101 +1,135 @@
 export const COLORS = {
-  // Primary Colors - Soft, Natural Palette
-  primary: '#6B9080',           // Sage green (main accent)
-  primaryLight: '#A4C3B2',      // Light sage
-  primaryDark: '#5A7A6A',       // Dark sage
+  // Primary Colors - Based on #0e3c67
+  primary: '#0e3c67',           // Deep ocean blue (main brand)
+  primaryLight: '#1a5a9e',      // Lighter ocean blue
+  primaryDark: '#0a2847',       // Darker ocean blue
+  primarySoft: '#e6f0f9',       // Very light blue for backgrounds
 
-  accent: '#E8B86D',            // Warm gold/amber
-  accentLight: '#F4D19B',       // Light gold
-  accentDark: '#D4A055',        // Deep gold
+  accent: '#3b82f6',            // Bright sky blue
+  accentLight: '#60a5fa',       // Light sky blue
+  accentDark: '#2563eb',        // Deep sky blue
 
-  secondary: '#EAE7DC',         // Warm cream/beige
+  secondary: '#f59e0b',         // Warm amber for highlights
+  secondaryLight: '#fbbf24',    // Light amber
+  secondaryDark: '#d97706',     // Deep amber
 
-  // Backgrounds - Soft Gradients
-  background: '#F8F6F0',        // Very light warm beige
-  backgroundGradientStart: '#EAF4F4',  // Light mint
-  backgroundGradientEnd: '#E8EDE7',    // Light sage
+  // Backgrounds - Gradients and layers
+  background: '#f8fafc',        // Very light blue-gray
+  backgroundLight: '#ffffff',   // Pure white
+  backgroundDark: '#f1f5f9',    // Light gray-blue
 
-  cardBackground: 'rgba(255, 255, 255, 0.85)',  // Frosted white
-  cardBackgroundDark: 'rgba(255, 255, 255, 0.75)', // More transparent
-  overlayBackground: 'rgba(234, 231, 220, 0.95)', // Warm overlay
+  cardBackground: 'rgba(255, 255, 255, 0.95)',  // Frosted white
+  cardBackgroundDark: 'rgba(255, 255, 255, 0.85)', // More transparent
+  overlayBackground: 'rgba(14, 60, 103, 0.95)', // Primary overlay
 
-  // Text Colors - Natural, readable
-  textPrimary: '#2C3531',       // Dark charcoal green
-  textSecondary: '#5E6572',     // Medium gray
-  textMuted: '#8B9A8F',         // Soft gray-green
-  textLight: '#FFFFFF',         // Pure white for dark backgrounds
+  // Text Colors - Excellent readability
+  textPrimary: '#0f172a',       // Almost black
+  textSecondary: '#475569',     // Medium gray
+  textMuted: '#94a3b8',         // Light gray
+  textLight: '#ffffff',         // Pure white
+  textOnPrimary: '#ffffff',     // White on primary color
 
-  // UI Elements - Soft, organic
-  border: 'rgba(107, 144, 128, 0.15)',  // Very light sage border
-  borderLight: 'rgba(107, 144, 128, 0.08)',
-  divider: 'rgba(107, 144, 128, 0.12)',
+  // UI Elements - Modern, clean
+  border: 'rgba(14, 60, 103, 0.12)',  // Light primary border
+  borderLight: 'rgba(14, 60, 103, 0.08)',
+  divider: 'rgba(14, 60, 103, 0.1)',
 
-  // Input Fields - Glassmorphic
-  inputBackground: 'rgba(255, 255, 255, 0.7)',
-  inputBackgroundFocus: 'rgba(255, 255, 255, 0.9)',
-  inputBorder: 'rgba(107, 144, 128, 0.2)',
-  inputBorderFocus: 'rgba(107, 144, 128, 0.4)',
-  inputPlaceholder: '#A4B8B0',
+  // Input Fields - Clean, modern
+  inputBackground: 'rgba(255, 255, 255, 0.9)',
+  inputBackgroundFocus: 'rgba(255, 255, 255, 1)',
+  inputBorder: 'rgba(14, 60, 103, 0.15)',
+  inputBorderFocus: 'rgba(14, 60, 103, 0.4)',
+  inputPlaceholder: '#94a3b8',
 
-  // Status Colors - Muted, Natural
-  success: '#6B9080',           // Sage green
-  successLight: '#A4C3B2',
-  warning: '#E8B86D',           // Warm amber
-  warningLight: '#F4D19B',
-  error: '#D4A373',             // Soft terracotta
-  errorLight: '#E8C4A5',
-  info: '#88BDBC',              // Soft teal
-  infoLight: '#B8D8D8',
+  // Status Colors - Professional
+  success: '#10b981',           // Green
+  successLight: '#34d399',
+  successBg: '#d1fae5',
+  warning: '#f59e0b',           // Amber
+  warningLight: '#fbbf24',
+  warningBg: '#fef3c7',
+  error: '#ef4444',             // Red
+  errorLight: '#f87171',
+  errorBg: '#fee2e2',
+  info: '#3b82f6',              // Blue
+  infoLight: '#60a5fa',
+  infoBg: '#dbeafe',
 
-  // Gradient Colors
-  gradientPrimary: ['#A4C3B2', '#6B9080'],
-  gradientWarm: ['#F4D19B', '#E8B86D'],
-  gradientBackground: ['#EAF4F4', '#E8EDE7', '#F8F6F0'],
+  // Gradient Combinations
+  gradientPrimary: ['#1a5a9e', '#0e3c67'],              // Light to dark primary
+  gradientPrimaryReverse: ['#0e3c67', '#1a5a9e'],       // Dark to light primary
+  gradientAccent: ['#60a5fa', '#3b82f6'],               // Light to dark accent
+  gradientWarm: ['#fbbf24', '#f59e0b'],                 // Warm gradient
+  gradientBackground: ['#f8fafc', '#e6f0f9', '#ffffff'], // Soft background
+  gradientHero: ['#0e3c67', '#1a5a9e', '#3b82f6'],     // Hero sections
+  gradientCard: ['rgba(255, 255, 255, 0.95)', 'rgba(255, 255, 255, 0.85)'],
 
-  // Shadows - Soft, natural shadows
+  // Shadows - Soft, modern
   shadowColor: '#000000',
-  shadowLight: 'rgba(107, 144, 128, 0.1)',
-  shadowMedium: 'rgba(107, 144, 128, 0.15)',
-  glowGreen: 'rgba(107, 144, 128, 0.2)',
-  glowGold: 'rgba(232, 184, 109, 0.25)',
+  shadowPrimary: 'rgba(14, 60, 103, 0.15)',
+  shadowAccent: 'rgba(59, 130, 246, 0.2)',
+  glowPrimary: 'rgba(14, 60, 103, 0.25)',
+  glowAccent: 'rgba(59, 130, 246, 0.3)',
 
   // Special Effects
-  glassBorder: 'rgba(255, 255, 255, 0.3)',
-  glassHighlight: 'rgba(255, 255, 255, 0.5)',
-  shimmer: 'rgba(255, 255, 255, 0.6)',
+  glassBorder: 'rgba(255, 255, 255, 0.4)',
+  glassHighlight: 'rgba(255, 255, 255, 0.6)',
+  shimmer: 'rgba(255, 255, 255, 0.8)',
+  overlay: 'rgba(0, 0, 0, 0.5)',
+  overlayLight: 'rgba(0, 0, 0, 0.3)',
 };
 
 export const SHADOWS = {
   // Soft, elevated shadows
-  small: {
+  none: {
+    shadowColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
+  },
+  xs: {
+    shadowColor: COLORS.shadowColor,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  sm: {
     shadowColor: COLORS.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 2,
   },
-  medium: {
+  md: {
     shadowColor: COLORS.shadowColor,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
     shadowRadius: 16,
     elevation: 4,
   },
-  large: {
+  lg: {
     shadowColor: COLORS.shadowColor,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
     shadowRadius: 24,
     elevation: 8,
   },
-  glow: (color: string) => ({
+  xl: {
+    shadowColor: COLORS.shadowColor,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.18,
+    shadowRadius: 32,
+    elevation: 12,
+  },
+  glow: (color: string = COLORS.glowPrimary) => ({
     shadowColor: color,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
     elevation: 6,
   }),
-  // Soft inner glow for glassmorphic effect
   inner: {
     shadowColor: '#FFFFFF',
     shadowOffset: { width: 0, height: -1 },
@@ -113,17 +147,19 @@ export const SPACING = {
   xxl: 24,
   xxxl: 32,
   huge: 48,
+  massive: 64,
 };
 
 export const BORDER_RADIUS = {
-  xs: 6,
-  sm: 10,
-  md: 16,
-  lg: 20,
-  xl: 28,
-  xxl: 36,
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  xxl: 28,
+  xxxl: 36,
   round: 999,
-  pill: 50,  // For pill-shaped buttons
+  pill: 50,
 };
 
 export const TYPOGRAPHY = {
@@ -138,7 +174,7 @@ export const TYPOGRAPHY = {
   xxxl: 40,
   huge: 56,
 
-  // Font weights (as strings for React Native)
+  // Font weights
   light: '300' as const,
   regular: '400' as const,
   medium: '500' as const,
@@ -153,13 +189,19 @@ export const GLASS = {
     backgroundColor: COLORS.cardBackground,
     borderWidth: 1,
     borderColor: COLORS.glassBorder,
-    ...SHADOWS.medium,
+    ...SHADOWS.md,
+  },
+  cardLight: {
+    backgroundColor: COLORS.cardBackground,
+    borderWidth: 1,
+    borderColor: COLORS.glassBorder,
+    ...SHADOWS.sm,
   },
   cardDark: {
     backgroundColor: COLORS.cardBackgroundDark,
     borderWidth: 1,
     borderColor: COLORS.glassBorder,
-    ...SHADOWS.medium,
+    ...SHADOWS.md,
   },
   overlay: {
     backgroundColor: COLORS.overlayBackground,

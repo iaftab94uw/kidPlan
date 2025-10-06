@@ -12,10 +12,10 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Calendar, Users, Camera, Shield } from 'lucide-react-native';
+import { Calendar, Users, Camera, Shield, Sparkles, Heart } from 'lucide-react-native';
 import { COLORS, SHADOWS, SPACING, BORDER_RADIUS, TYPOGRAPHY, GLASS } from '@/theme/colors';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 export default function AuthWelcome() {
   const router = useRouter();
@@ -24,189 +24,252 @@ export default function AuthWelcome() {
     {
       icon: Calendar,
       title: "Smart Scheduling",
-      description: "Sync school calendars and family events"
+      description: "Sync school calendars and manage family events effortlessly",
+      gradient: [COLORS.accent, COLORS.accentDark],
     },
     {
       icon: Users,
-      title: "Co-Parenting",
-      description: "Coordinate seamlessly with your partner"
+      title: "Family Co-ordination",
+      description: "Keep everyone in sync with shared calendars and updates",
+      gradient: [COLORS.primary, COLORS.primaryDark],
     },
     {
       icon: Camera,
       title: "Memory Sharing",
-      description: "Capture and share precious moments"
+      description: "Capture and share precious family moments securely",
+      gradient: [COLORS.secondary, COLORS.secondaryDark],
     },
     {
       icon: Shield,
-      title: "Secure & Private",
-      description: "Your family data stays protected"
+      title: "Private & Secure",
+      description: "Your family's data is encrypted and protected",
+      gradient: [COLORS.success, COLORS.successLight],
     }
   ];
 
   return (
-    <LinearGradient
-      colors={COLORS.gradientBackground}
-      style={styles.container}
-      locations={[0, 0.5, 1]}
-    >
+    <View style={styles.container}>
+      {/* Gradient Background */}
+      <LinearGradient
+        colors={COLORS.gradientHero}
+        style={StyleSheet.absoluteFillObject}
+        locations={[0, 0.5, 1]}
+      />
+
       <SafeAreaView style={styles.safeArea}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.content}>
-            {/* Logo Section */}
-            <View style={styles.logoSection}>
-              <View style={styles.logoContainer}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Hero Section */}
+          <View style={styles.heroSection}>
+            <View style={styles.logoContainer}>
+              <LinearGradient
+                colors={['rgba(255, 255, 255, 0.25)', 'rgba(255, 255, 255, 0.1)']}
+                style={styles.logoGradient}
+              >
                 <Image
                   source={require('@/assets/images/icon.png')}
                   style={styles.logo}
                   resizeMode="contain"
                 />
+              </LinearGradient>
+            </View>
+
+            <View style={styles.heroTextContainer}>
+              <View style={styles.sparkleContainer}>
+                <Sparkles size={24} color={COLORS.secondary} />
               </View>
               <Text style={styles.welcomeTitle}>Welcome to KidPlan</Text>
               <Text style={styles.welcomeSubtitle}>
-                The smart way to organise your family's schedule and create lasting memories
+                The smart way to organize your family's schedule and create lasting memories together
               </Text>
             </View>
+          </View>
 
-            {/* Features */}
-            <View style={styles.featuresSection}>
-              {features.map((feature, index) => (
-                <View key={index} style={styles.featureItem}>
-                  <View style={styles.featureIcon}>
-                    <feature.icon size={24} color={COLORS.primary} />
-                  </View>
+          {/* Features Cards */}
+          <View style={styles.featuresSection}>
+            <Text style={styles.featuresSectionTitle}>Why families love KidPlan</Text>
+
+            {features.map((feature, index) => (
+              <View key={index} style={styles.featureCard}>
+                <LinearGradient
+                  colors={['rgba(255, 255, 255, 0.95)', 'rgba(255, 255, 255, 0.85)']}
+                  style={styles.featureCardGradient}
+                >
+                  <LinearGradient
+                    colors={feature.gradient}
+                    style={styles.featureIconContainer}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  >
+                    <feature.icon size={24} color={COLORS.textLight} />
+                  </LinearGradient>
+
                   <View style={styles.featureContent}>
                     <Text style={styles.featureTitle}>{feature.title}</Text>
                     <Text style={styles.featureDescription}>{feature.description}</Text>
                   </View>
-                </View>
-              ))}
-            </View>
-
-            {/* Action Buttons */}
-            <View style={styles.buttonSection}>
-              <TouchableOpacity
-                style={styles.primaryButton}
-                onPress={() => router.push('/auth/signup')}
-              >
-                <LinearGradient
-                  colors={COLORS.gradientPrimary}
-                  style={styles.buttonGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                >
-                  <Text style={styles.primaryButtonText}>Get Started</Text>
                 </LinearGradient>
-              </TouchableOpacity>
+              </View>
+            ))}
+          </View>
 
-              <TouchableOpacity
-                style={styles.secondaryButton}
-                onPress={() => router.push('/auth/signin')}
+          {/* Action Buttons */}
+          <View style={styles.buttonSection}>
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={() => router.push('/auth/signup')}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={COLORS.gradientPrimary}
+                style={styles.buttonGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
               >
-                <Text style={styles.secondaryButtonText}>Already have an account? Sign In</Text>
-              </TouchableOpacity>
-            </View>
+                <Text style={styles.primaryButtonText}>Get Started Free</Text>
+                <Heart size={20} color={COLORS.textLight} fill={COLORS.textLight} />
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.secondaryButton}
+              onPress={() => router.push('/auth/signin')}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.secondaryButtonText}>Already have an account? Sign In</Text>
+            </TouchableOpacity>
+
+            <Text style={styles.footerText}>
+              Trusted by families worldwide 🌍
+            </Text>
           </View>
         </ScrollView>
       </SafeAreaView>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: COLORS.primary,
   },
   safeArea: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
+    paddingBottom: Platform.OS === 'android' ? 40 : 20,
   },
-  content: {
-    flex: 1,
+  heroSection: {
+    paddingTop: 40,
     paddingHorizontal: SPACING.xxl,
-    justifyContent: 'space-between',
-    minHeight: '100%',
-  },
-  logoSection: {
+    paddingBottom: SPACING.xxxl,
     alignItems: 'center',
-    paddingTop: 60,
-    paddingBottom: SPACING.xl,
   },
   logoContainer: {
+    marginBottom: SPACING.xxl,
+  },
+  logoGradient: {
     width: 120,
     height: 120,
-    borderRadius: BORDER_RADIUS.xxl,
-    ...GLASS.card,
+    borderRadius: BORDER_RADIUS.xxxl,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: SPACING.lg,
+    borderWidth: 3,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    ...SHADOWS.xl,
   },
   logo: {
-    width: 80,
-    height: 80,
+    width: 70,
+    height: 70,
+  },
+  heroTextContainer: {
+    alignItems: 'center',
+  },
+  sparkleContainer: {
+    marginBottom: SPACING.sm,
   },
   welcomeTitle: {
-    fontSize: TYPOGRAPHY.xxl,
+    fontSize: TYPOGRAPHY.xxxl,
     fontWeight: TYPOGRAPHY.extrabold,
-    color: COLORS.textPrimary,
-    marginBottom: SPACING.sm,
+    color: COLORS.textLight,
+    marginBottom: SPACING.md,
     textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   welcomeSubtitle: {
-    fontSize: TYPOGRAPHY.base,
-    color: COLORS.textSecondary,
+    fontSize: TYPOGRAPHY.md,
+    color: 'rgba(255, 255, 255, 0.9)',
     textAlign: 'center',
-    lineHeight: 24,
-    paddingHorizontal: SPACING.lg,
+    lineHeight: 26,
+    paddingHorizontal: SPACING.sm,
   },
   featuresSection: {
-    paddingVertical: SPACING.lg,
-    gap: SPACING.md,
+    paddingHorizontal: SPACING.xxl,
+    paddingBottom: SPACING.xxl,
   },
-  featureItem: {
+  featuresSectionTitle: {
+    fontSize: TYPOGRAPHY.lg,
+    fontWeight: TYPOGRAPHY.bold,
+    color: COLORS.textLight,
+    marginBottom: SPACING.lg,
+    textAlign: 'center',
+  },
+  featureCard: {
+    marginBottom: SPACING.md,
+    borderRadius: BORDER_RADIUS.xl,
+    overflow: 'hidden',
+    ...SHADOWS.lg,
+  },
+  featureCardGradient: {
     flexDirection: 'row',
-    alignItems: 'center',
     padding: SPACING.lg,
-    ...GLASS.card,
-    borderRadius: BORDER_RADIUS.lg,
+    alignItems: 'center',
   },
-  featureIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: BORDER_RADIUS.md,
-    backgroundColor: `${COLORS.primary}15`,
+  featureIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: BORDER_RADIUS.lg,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: SPACING.md,
+    ...SHADOWS.sm,
   },
   featureContent: {
     flex: 1,
   },
   featureTitle: {
     fontSize: TYPOGRAPHY.md,
-    fontWeight: TYPOGRAPHY.semibold,
+    fontWeight: TYPOGRAPHY.bold,
     color: COLORS.textPrimary,
-    marginBottom: 2,
+    marginBottom: 4,
   },
   featureDescription: {
     fontSize: TYPOGRAPHY.sm,
     color: COLORS.textSecondary,
-    lineHeight: 18,
+    lineHeight: 20,
   },
   buttonSection: {
-    paddingBottom: Platform.OS === 'android' ? 60 : SPACING.xl,
+    paddingHorizontal: SPACING.xxl,
+    paddingBottom: SPACING.xl,
     gap: SPACING.md,
   },
   primaryButton: {
-    borderRadius: BORDER_RADIUS.pill,
+    borderRadius: BORDER_RADIUS.xl,
     overflow: 'hidden',
-    ...SHADOWS.medium,
+    ...SHADOWS.xl,
   },
   buttonGradient: {
-    paddingVertical: SPACING.lg,
+    paddingVertical: SPACING.lg + 2,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: SPACING.sm,
   },
   primaryButtonText: {
     color: COLORS.textLight,
@@ -216,12 +279,20 @@ const styles = StyleSheet.create({
   secondaryButton: {
     paddingVertical: SPACING.lg,
     alignItems: 'center',
-    ...GLASS.cardDark,
-    borderRadius: BORDER_RADIUS.pill,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: BORDER_RADIUS.xl,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   secondaryButtonText: {
-    color: COLORS.primary,
+    color: COLORS.textLight,
     fontSize: TYPOGRAPHY.sm,
     fontWeight: TYPOGRAPHY.semibold,
+  },
+  footerText: {
+    textAlign: 'center',
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: TYPOGRAPHY.sm,
+    marginTop: SPACING.md,
   },
 });
