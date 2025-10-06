@@ -378,8 +378,8 @@ export default function Dashboard() {
     {
       icon: Calendar,
       title: "Add Event",
-      color: "#3B82F6",
-      background: "#EBF4FF",
+      color: COLORS.accent,
+      background: COLORS.infoBg,
       action: () => {
         // Navigate to calendar tab and trigger add event modal
         router.push('/(tabs)/calendar?action=addEvent');
@@ -388,15 +388,15 @@ export default function Dashboard() {
     {
       icon: User,
       title: "Add Member",
-      color: "#10B981",
-      background: "#ECFDF5",
+      color: COLORS.success,
+      background: COLORS.successBg,
       action: () => router.push('/add-family-member')
     },
     {
       icon: CalendarDays,
       title: "Schedule",
-      color: "#8B5CF6",
-      background: "#F3E8FF",
+      color: COLORS.primary,
+      background: COLORS.primarySoft,
       action: () => {
         // Navigate to family tab and trigger schedule modal
         router.push('/(tabs)/family?action=addSchedule');
@@ -405,8 +405,8 @@ export default function Dashboard() {
     {
       icon: Camera,
       title: "Add Photos",
-      color: "#F59E0B",
-      background: "#FFFBEB",
+      color: COLORS.secondary,
+      background: COLORS.warningBg,
       action: () => router.push('/(tabs)/photos')
     }
   ];
@@ -417,19 +417,19 @@ export default function Dashboard() {
       label: "Events Today",
       value: getTodayEvents().length.toString(),
       icon: Calendar,
-      color: "#3B82F6"
+      color: COLORS.accent
     },
     {
       label: "This Week",
       value: getThisWeekEvents().length.toString(),
       icon: Clock,
-      color: "#10B981"
+      color: COLORS.success
     },
     {
       label: "Family Members",
       value: (getAllFamilyMembers() || []).length.toString(),
       icon: Users,
-      color: "#8B5CF6"
+      color: COLORS.primary
     }
   ];
 

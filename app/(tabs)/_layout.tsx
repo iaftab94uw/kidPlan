@@ -27,9 +27,9 @@ const TabBarIcon = ({ icon: Icon, color, focused, title }: {
       marginBottom: 4,
       shadowColor: focused ? COLORS.primary : 'transparent',
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: focused ? 0.2 : 0,
+      shadowOpacity: focused ? 0.25 : 0,
       shadowRadius: 8,
-      elevation: focused ? 3 : 0,
+      elevation: focused ? 4 : 0,
     }}>
       <Icon size={22} color={focused ? COLORS.textLight : COLORS.textSecondary} />
     </View>
@@ -63,7 +63,7 @@ export default function TabLayout() {
           paddingBottom: 20,
           paddingTop: 12,
           height: 110,
-          ...SHADOWS.large,
+          ...SHADOWS.lg,
           borderTopLeftRadius: BORDER_RADIUS.xl,
           borderTopRightRadius: BORDER_RADIUS.xl,
         },
