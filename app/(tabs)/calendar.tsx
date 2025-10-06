@@ -1155,9 +1155,17 @@ export default function Calendar() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={COLORS.gradientBackground}
+        colors={COLORS.gradientBackground as any}
         style={StyleSheet.absoluteFillObject}
         locations={[0, 0.5, 1]}
+      />
+
+      {/* Top safe-area gradient (status bar/notch) */}
+      <LinearGradient
+        colors={COLORS.gradientHero as any}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.topSafeArea}
       />
 
       <SafeAreaView style={styles.safeArea}>
@@ -1173,7 +1181,7 @@ export default function Calendar() {
         >
           {/* Header with Gradient */}
           <LinearGradient
-            colors={COLORS.gradientHero}
+            colors={COLORS.gradientHero as any}
             style={styles.header}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
@@ -2347,7 +2355,8 @@ export default function Calendar() {
           </KeyboardAvoidingView>
         </Modal>
       </ScrollView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
 
@@ -2358,6 +2367,10 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+  },
+  topSafeArea: {
+    height: 60,
+    width: '100%',
   },
   header: {
     flexDirection: 'row',

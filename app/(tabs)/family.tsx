@@ -1155,9 +1155,17 @@ export default function Family() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={COLORS.gradientBackground}
+        colors={COLORS.gradientBackground as any}
         style={StyleSheet.absoluteFillObject}
         locations={[0, 0.5, 1]}
+      />
+
+      {/* Top safe-area gradient (status bar/notch) */}
+      <LinearGradient
+        colors={COLORS.gradientHero as any}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.topSafeArea}
       />
 
       <SafeAreaView style={styles.safeArea}>
@@ -1166,7 +1174,7 @@ export default function Family() {
             <Text style={styles.loadingText}>Loading family details...</Text>
           </View>
         ) : (
-          <ScrollView
+        <ScrollView
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -1178,7 +1186,7 @@ export default function Family() {
           >
           {/* Header with Gradient */}
           <LinearGradient
-            colors={COLORS.gradientHero}
+            colors={COLORS.gradientHero as any}
             style={styles.header}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
@@ -1710,7 +1718,6 @@ export default function Family() {
           </SafeAreaView>
           </KeyboardAvoidingView>
         </Modal>
-
         {/* Add Schedule Modal */}
         <Modal
           visible={showAddScheduleModal}
@@ -2043,7 +2050,6 @@ export default function Family() {
             </SafeAreaView>
           </KeyboardAvoidingView>
         </Modal>
-
         {/* Family Name Modal */}
         <Modal
           visible={showFamilyNameModal}
@@ -2119,7 +2125,6 @@ export default function Family() {
             </ScrollView>
           </SafeAreaView>
         </Modal>
-
         {/* Edit Family Member Modal */}
         <Modal
           visible={showEditMemberModal}
@@ -2322,7 +2327,6 @@ export default function Family() {
             </ScrollView>
           </SafeAreaView>
         </Modal>
-
         {/* Edit Schedule Modal */}
         <Modal
           visible={showEditScheduleModal}
@@ -2570,9 +2574,7 @@ export default function Family() {
             </SafeAreaView>
           </KeyboardAvoidingView>
         </Modal>
-        </ScrollView>
-      )}
-    </SafeAreaView>
+
     </View>
   );
 }
@@ -2584,6 +2586,10 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+  },
+  topSafeArea: {
+    height: 60,
+    width: '100%',
   },
   keyboardAvoidingView: {
     flex: 1,

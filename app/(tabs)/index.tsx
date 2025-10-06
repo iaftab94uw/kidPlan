@@ -435,10 +435,17 @@ export default function Dashboard() {
 
   return (
     <LinearGradient
-      colors={COLORS.gradientBackground}
+      colors={COLORS.gradientBackground as any}
       style={styles.container}
       locations={[0, 0.5, 1]}
     >
+      {/* Top safe-area gradient to color the status bar/notch */}
+      <LinearGradient
+        colors={COLORS.gradientHero as any}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.topSafeArea}
+      />
       <SafeAreaView style={styles.safeArea}>
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -453,7 +460,7 @@ export default function Dashboard() {
         >
         {/* Header with Gradient */}
         <LinearGradient
-          colors={COLORS.gradientHero}
+          colors={COLORS.gradientHero as any}
           style={styles.header}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
@@ -796,6 +803,10 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+  },
+  topSafeArea: {
+    height: 60,
+    width: '100%',
   },
   header: {
     flexDirection: 'row',

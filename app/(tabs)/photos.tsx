@@ -18,6 +18,8 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { COLORS } from '@/theme/colors';
   import { Plus, Camera, Search, Filter, MoveVertical as MoreVertical, FolderPlus, X, Check, Grid3X3, List, Trash2 } from 'lucide-react-native';
   import { useAuth } from '@/hooks/useAuth';
   import { useGallery } from '@/hooks/useGallery';
@@ -473,7 +475,14 @@ export default function Photos() {
     }
 
     return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
+      <>
+        <LinearGradient
+          colors={COLORS.gradientHero as any}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.topSafeArea}
+        />
+        <View style={[styles.container, { paddingTop: insets.top }]}>
         {/* Header - Fixed outside ScrollView */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Photos</Text>
@@ -1446,6 +1455,7 @@ export default function Photos() {
           </Modal>
         </ScrollView>
       </View>
+    </>
     );
   }
 
@@ -1453,6 +1463,10 @@ export default function Photos() {
     container: {
       flex: 1,
       backgroundColor: '#F9FAFB',
+    },
+    topSafeArea: {
+      height: 60,
+      width: '100%',
     },
     keyboardAvoidingView: {
       flex: 1,

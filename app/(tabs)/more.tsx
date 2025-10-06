@@ -10,6 +10,8 @@ import {
   Alert
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { COLORS } from '@/theme/colors';
 import { 
   School, 
   User, 
@@ -116,8 +118,16 @@ export default function More() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView>
+    <>
+      {/* Top safe-area gradient to color status bar/notch */}
+      <LinearGradient
+        colors={COLORS.gradientHero as any}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.topSafeArea}
+      />
+      <SafeAreaView style={styles.container}>
+        <ScrollView>
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>More</Text>
@@ -178,14 +188,19 @@ export default function More() {
         {/* Bottom Spacing */}
         <View style={styles.bottomSpacing} />
       </ScrollView>
-    </SafeAreaView>
-  );
+      </SafeAreaView>
+    </>
+    );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F9FAFB',
+  },
+  topSafeArea: {
+    height: 60,
+    width: '100%',
   },
   header: {
     paddingHorizontal: 20,
