@@ -118,12 +118,11 @@ export default function More() {
   };
 
   return (
-    <>
-        <LinearGradient
-          colors={COLORS.gradientBackground as any}
-          locations={[0, 0.5, 1]}
-        />
-    
+    <LinearGradient
+      colors={COLORS.gradientBackground as any}
+      style={styles.container}
+      locations={[0, 0.5, 1]}
+    >
       {/* Top safe-area gradient to color status bar/notch */}
       <LinearGradient
         colors={COLORS.gradientHero as any}
@@ -131,7 +130,7 @@ export default function More() {
         end={{ x: 1, y: 0 }}
         style={styles.topSafeArea}
       />
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.safeArea}>
         <ScrollView>
         {/* Header (gradient) */}
         <LinearGradient
@@ -214,14 +213,16 @@ export default function More() {
         <View style={styles.bottomSpacing} />
       </ScrollView>
       </SafeAreaView>
-    </>
+    </LinearGradient>
     );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+  },
+  safeArea: {
+    flex: 1,
   },
   topSafeArea: {
     height: 60,
