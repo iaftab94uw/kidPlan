@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
-// Removed react-native-calendars - using custom calendar component
+import { LinearGradient } from 'expo-linear-gradient';
 import moment from 'moment';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
   TouchableOpacity,
   SafeAreaView,
   Dimensions,
@@ -19,6 +19,7 @@ import {
   RefreshControl,
   KeyboardAvoidingView
 } from 'react-native';
+import { COLORS, SHADOWS, SPACING, BORDER_RADIUS, TYPOGRAPHY, GLASS } from '@/theme/colors';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { 
   ChevronLeft,
@@ -1152,35 +1153,47 @@ export default function Calendar() {
   }, [selectedDate, calendarEvents, eventTypeFilter]);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor="#0e3c67"
-            colors={['#0e3c67']}
-          />
-        }
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Calendar</Text>
-          <View style={styles.headerButtons}>
-            <TouchableOpacity 
-              style={styles.iconButton}
-              onPress={() => setShowEventTypeFilter(!showEventTypeFilter)}
-            >
-              <Filter size={20} color="#ffffff" />
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.addButton}
-              onPress={() => setShowAddEventModal(true)}
-            >
-              <Plus size={20} color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
-        </View>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={COLORS.gradientBackground}
+        style={StyleSheet.absoluteFillObject}
+        locations={[0, 0.5, 1]}
+      />
+
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={COLORS.primary}
+              colors={[COLORS.primary]}
+            />
+          }
+        >
+          {/* Header with Gradient */}
+          <LinearGradient
+            colors={COLORS.gradientHero}
+            style={styles.header}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <Text style={styles.headerTitle}>Calendar</Text>
+            <View style={styles.headerButtons}>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => setShowEventTypeFilter(!showEventTypeFilter)}
+              >
+                <Filter size={20} color={COLORS.textLight} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => setShowAddEventModal(true)}
+              >
+                <Plus size={20} color={COLORS.textLight} />
+              </TouchableOpacity>
+            </View>
+          </LinearGradient>
 
         {/* Event Type Filter */}
         {showEventTypeFilter && (
@@ -2341,21 +2354,24 @@ export default function Calendar() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: COLORS.background,
+  },
+  safeArea: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 20,
+    paddingHorizontal: SPACING.xl,
+    paddingVertical: SPACING.xl,
     paddingTop: 60,
-    backgroundColor: '#0e3c67',
+    paddingBottom: SPACING.xxl,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontSize: TYPOGRAPHY.xl,
+    fontWeight: TYPOGRAPHY.extrabold,
+    color: COLORS.textLight,
   },
   headerButtons: {
     flexDirection: 'row',

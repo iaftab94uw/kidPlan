@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
+import { LinearGradient } from 'expo-linear-gradient';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
   TouchableOpacity,
   SafeAreaView,
   Image,
@@ -16,6 +17,7 @@ import {
   Platform,
   RefreshControl
 } from 'react-native';
+import { COLORS, SHADOWS, SPACING, BORDER_RADIUS, TYPOGRAPHY, GLASS } from '@/theme/colors';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { 
@@ -1151,25 +1153,37 @@ export default function Family() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading family details...</Text>
-        </View>
-      ) : (
-        <ScrollView
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor="#0e3c67"
-              colors={['#0e3c67']}
-            />
-          }
-        >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Family</Text>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={COLORS.gradientBackground}
+        style={StyleSheet.absoluteFillObject}
+        locations={[0, 0.5, 1]}
+      />
+
+      <SafeAreaView style={styles.safeArea}>
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>Loading family details...</Text>
+          </View>
+        ) : (
+          <ScrollView
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={COLORS.primary}
+                colors={[COLORS.primary]}
+              />
+            }
+          >
+          {/* Header with Gradient */}
+          <LinearGradient
+            colors={COLORS.gradientHero}
+            style={styles.header}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <Text style={styles.headerTitle}>Family</Text>
           <TouchableOpacity 
             style={styles.addButton}
             onPress={() => {
@@ -1188,9 +1202,9 @@ export default function Family() {
               }
             }}
           >
-            <Plus size={20} color="#FFFFFF" />
+            <Plus size={20} color={COLORS.textLight} />
           </TouchableOpacity>
-        </View>
+        </LinearGradient>
 
         {/* Family Overview */}
         {familyData ? (
@@ -1543,9 +1557,12 @@ export default function Family() {
           )}
           </View>
         )}
+        </ScrollView>
+        )}
+      </SafeAreaView>
 
-        {/* Add Family Member Modal */}
-        <Modal
+      {/* Add Family Member Modal */}
+      <Modal
           visible={showAddMemberModal}
           animationType="slide"
           presentationStyle="formSheet"
@@ -2556,13 +2573,17 @@ export default function Family() {
         </ScrollView>
       )}
     </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: COLORS.background,
+  },
+  safeArea: {
+    flex: 1,
   },
   keyboardAvoidingView: {
     flex: 1,
@@ -2574,15 +2595,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 20,
+    paddingHorizontal: SPACING.xl,
+    paddingVertical: SPACING.xl,
     paddingTop: 60,
-    backgroundColor: '#0e3c67',
+    paddingBottom: SPACING.xxl,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontSize: TYPOGRAPHY.xl,
+    fontWeight: TYPOGRAPHY.extrabold,
+    color: COLORS.textLight,
   },
   addButton: {
     width: 40,

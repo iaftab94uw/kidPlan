@@ -451,19 +451,24 @@ export default function Dashboard() {
             />
           }
         >
-        {/* Header */}
-        <View style={styles.header}>
+        {/* Header with Gradient */}
+        <LinearGradient
+          colors={COLORS.gradientHero}
+          style={styles.header}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
           <View style={styles.headerLeft}>
             <Text style={styles.greeting}>{getGreeting()}!</Text>
             <Text style={styles.userName}>{getUserDisplayName()}</Text>
           </View>
           {/* <TouchableOpacity style={styles.notificationButton}>
-            <Bell size={24} color="#FFFFFF" />
+            <Bell size={24} color={COLORS.textLight} />
             <View style={styles.notificationBadge}>
               <Text style={styles.notificationCount}>3</Text>
             </View>
           </TouchableOpacity> */}
-        </View>
+        </LinearGradient>
 
         {/* Family Stats */}
         <View style={styles.statsContainer}>
@@ -799,21 +804,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.xl,
     paddingVertical: SPACING.xl,
     paddingTop: 60,
-    backgroundColor: 'transparent',
+    paddingBottom: SPACING.xxl,
   },
   headerLeft: {
     flex: 1,
   },
   greeting: {
     fontSize: TYPOGRAPHY.base,
-    color: COLORS.textSecondary,
+    color: 'rgba(255, 255, 255, 0.9)',
     marginBottom: 4,
     fontWeight: TYPOGRAPHY.medium,
   },
   userName: {
     fontSize: TYPOGRAPHY.xl,
     fontWeight: TYPOGRAPHY.bold,
-    color: COLORS.textPrimary,
+    color: COLORS.textLight,
   },
   notificationButton: {
     width: 44,
