@@ -563,21 +563,36 @@ export default function Photos() {
 
           {/* Quick Actions */}
           <View style={styles.quickActions}>
-            <TouchableOpacity 
-              style={[styles.quickActionButton, { flex: 1, marginRight: 6 }]}
+            <TouchableOpacity
               onPress={handleUploadPhoto}
               activeOpacity={0.8}
+              style={{ flex: 1, marginRight: 6 }}
             >
-              <Camera size={20} color="#FFFFFF" />
-              <Text style={styles.quickActionText}>Upload Photo</Text>
+              <LinearGradient
+                colors={COLORS.gradientPrimary as any}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.quickActionGradient}
+              >
+                <Camera size={20} color="#FFFFFF" />
+                <Text style={styles.quickActionText}>Upload Photo</Text>
+              </LinearGradient>
             </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.quickActionButton, { flex: 1, marginLeft: 6 }]}
+
+            <TouchableOpacity
               onPress={handleCreateAlbum}
               activeOpacity={0.8}
+              style={{ flex: 1, marginLeft: 6 }}
             >
-              <FolderPlus size={20} color="#FFFFFF" />
-              <Text style={styles.quickActionText}>Create Album</Text>
+              <LinearGradient
+                colors={COLORS.gradientPrimary as any}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.quickActionGradient}
+              >
+                <FolderPlus size={20} color="#FFFFFF" />
+                <Text style={styles.quickActionText}>Create Album</Text>
+              </LinearGradient>
             </TouchableOpacity>
           </View>
 
@@ -720,27 +735,46 @@ export default function Photos() {
             animationType="slide"
             presentationStyle="formSheet"
           >
-            <View style={[styles.modalContainer, { paddingTop: insets.top }]}>
-              <View style={styles.modalHeader}>
+            <View style={[styles.modalContainer, { }]}>
+              <LinearGradient
+                colors={COLORS.gradientHero as any}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.modalHeader}
+              >
+                
                 <View style={styles.modalHeaderContent}>
                   <TouchableOpacity 
                     onPress={() => setShowFilterModal(false)}
                     style={styles.closeButton}
                   >
-                    <X size={20} color="#6B7280" />
+                    <X size={20} color="#FFFFFF" />
                   </TouchableOpacity>
-                  <Text style={styles.modalTitle}>Filter Photos</Text>
+                  <Text style={[styles.modalTitle, { color: '#FFFFFF' }]}>Filter Photos</Text>
                   <TouchableOpacity 
-                    style={styles.doneButton}
                     onPress={() => setShowFilterModal(false)}
+                    style={styles.doneButton}
                   >
-                    <Text style={styles.doneButtonText}>Done</Text>
+                    <LinearGradient
+                      colors={COLORS.gradientPrimary as any}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.headerDoneGradient}
+                    >
+                      <Text style={[styles.doneButtonText, { color: '#FFFFFF' }]}>Done</Text>
+                    </LinearGradient>
                   </TouchableOpacity>
                 </View>
                 <View style={styles.modalHeaderDivider} />
-              </View>
+              </LinearGradient>
 
-              <ScrollView style={styles.modalContent}>
+              <LinearGradient
+                colors={COLORS.gradientBackground as any}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.modalBodyGradient}
+              >
+                <ScrollView style={{ backgroundColor: 'transparent' }}>
                 {/* Search */}
                 <View style={styles.searchSection}>
                   <Text style={styles.filterSectionTitle}>Search</Text>
@@ -761,34 +795,46 @@ export default function Photos() {
                   <Text style={styles.filterSectionTitle}>General</Text>
                   <View style={styles.filterOptions}>
                     <TouchableOpacity
-                      style={[
-                        styles.filterOption,
-                        activeFilter === 'all' && styles.filterOptionSelected
-                      ]}
                       onPress={() => setActiveFilter('all')}
+                      activeOpacity={0.8}
+                      style={styles.filterOptionTouchable}
                     >
-                      <Text style={[
-                        styles.filterOptionText,
-                        activeFilter === 'all' && styles.filterOptionTextSelected
-                      ]}>All Photos</Text>
-                      {activeFilter === 'all' && (
-                        <Check size={16} color="#FFFFFF" />
+                      {activeFilter === 'all' ? (
+                        <LinearGradient
+                          colors={COLORS.gradientPrimary as any}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={styles.filterOptionGradient}
+                        >
+                          <Text style={[styles.filterOptionText, styles.filterOptionTextSelected]}>All Photos</Text>
+                          <Check size={16} color="#FFFFFF" />
+                        </LinearGradient>
+                      ) : (
+                        <View style={styles.filterOptionInner}>
+                          <Text style={styles.filterOptionText}>All Photos</Text>
+                        </View>
                       )}
                     </TouchableOpacity>
-                    
+
                     <TouchableOpacity
-                      style={[
-                        styles.filterOption,
-                        activeFilter === 'recent' && styles.filterOptionSelected
-                      ]}
                       onPress={() => setActiveFilter('recent')}
+                      activeOpacity={0.8}
+                      style={styles.filterOptionTouchable}
                     >
-                      <Text style={[
-                        styles.filterOptionText,
-                        activeFilter === 'recent' && styles.filterOptionTextSelected
-                      ]}>Recent Photos</Text>
-                      {activeFilter === 'recent' && (
-                        <Check size={16} color="#FFFFFF" />
+                      {activeFilter === 'recent' ? (
+                        <LinearGradient
+                          colors={COLORS.gradientPrimary as any}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={styles.filterOptionGradient}
+                        >
+                          <Text style={[styles.filterOptionText, styles.filterOptionTextSelected]}>Recent Photos</Text>
+                          <Check size={16} color="#FFFFFF" />
+                        </LinearGradient>
+                      ) : (
+                        <View style={styles.filterOptionInner}>
+                          <Text style={styles.filterOptionText}>Recent Photos</Text>
+                        </View>
                       )}
                     </TouchableOpacity>
                   </View>
@@ -799,27 +845,36 @@ export default function Photos() {
                   <Text style={styles.filterSectionTitle}>Filter by Family Member</Text>
                   <View style={styles.memberFilterOptions}>
                     {familyMembers.map((member) => (
-                      <TouchableOpacity
-                        key={member.id}
-                        style={[
-                          styles.memberFilterOption,
-                          activeFilter === member.id && styles.memberFilterOptionSelected
-                        ]}
-                        onPress={() => setActiveFilter(member.id)}
-                      >
-                        <Image source={{ uri: member.avatar }} style={styles.memberFilterAvatar} />
-                        <Text style={[
-                          styles.memberFilterText,
-                          activeFilter === member.id && styles.memberFilterTextSelected
-                        ]}>
-                          {member.name}
-                        </Text>
-                        {activeFilter === member.id && (
-                          <View style={styles.memberFilterCheck}>
-                            <Check size={16} color="#FFFFFF" />
-                          </View>
-                        )}
-                      </TouchableOpacity>
+                      activeFilter === member.id ? (
+                        <TouchableOpacity
+                          key={member.id}
+                          onPress={() => setActiveFilter(member.id)}
+                          activeOpacity={0.8}
+                          style={{ marginBottom: 8 }}
+                        >
+                          <LinearGradient
+                            colors={COLORS.gradientPrimary as any}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={styles.memberFilterGradient}
+                          >
+                            <Image source={{ uri: member.avatar }} style={styles.memberFilterAvatar} />
+                            <Text style={[styles.memberFilterText, styles.memberFilterTextSelected]}>{member.name}</Text>
+                            <View style={styles.memberFilterCheck}>
+                              <Check size={16} color="#FFFFFF" />
+                            </View>
+                          </LinearGradient>
+                        </TouchableOpacity>
+                      ) : (
+                        <TouchableOpacity
+                          key={member.id}
+                          style={styles.memberFilterOption}
+                          onPress={() => setActiveFilter(member.id)}
+                        >
+                          <Image source={{ uri: member.avatar }} style={styles.memberFilterAvatar} />
+                          <Text style={styles.memberFilterText}>{member.name}</Text>
+                        </TouchableOpacity>
+                      )
                     ))}
                   </View>
                 </View>
@@ -829,32 +884,45 @@ export default function Photos() {
                   <Text style={styles.filterSectionTitle}>Filter by Album</Text>
                   <View style={styles.albumFilterOptions}>
                     {apiAlbums.map((album) => (
-                      <TouchableOpacity
-                        key={album._id}
-                        style={[
-                          styles.albumFilterOption,
-                          activeFilter === album.name && styles.albumFilterOptionSelected
-                        ]}
-                        onPress={() => setActiveFilter(album.name)}
-                      >
-                        <Image source={{ uri: album.coverImage || 'https://dummyjson.com/image/150' }} style={styles.albumFilterCover} />
-                        <View style={styles.albumFilterContent}>
-                          <Text style={[
-                            styles.albumFilterName,
-                            activeFilter === album.name && styles.albumFilterNameSelected
-                          ]}>
-                            {album.name}
-                          </Text>
-                          <Text style={styles.albumFilterCount}>Album</Text>
-                        </View>
-                        {activeFilter === album.name && (
-                          <Check size={16} color="#FFFFFF" />
-                        )}
-                      </TouchableOpacity>
+                      activeFilter === album.name ? (
+                        <TouchableOpacity
+                          key={album._id}
+                          onPress={() => setActiveFilter(album.name)}
+                          activeOpacity={0.8}
+                          style={{ marginBottom: 8 }}
+                        >
+                          <LinearGradient
+                            colors={COLORS.gradientPrimary as any}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={styles.albumFilterGradient}
+                          >
+                            <Image source={{ uri: album.coverImage || 'https://dummyjson.com/image/150' }} style={styles.albumFilterCover} />
+                            <View style={styles.albumFilterContent}>
+                              <Text style={[styles.albumFilterName, styles.albumFilterNameSelected]}>{album.name}</Text>
+                              <Text style={styles.albumFilterCount}>Album</Text>
+                            </View>
+                            <Check size={16} color="#FFFFFF" />
+                          </LinearGradient>
+                        </TouchableOpacity>
+                      ) : (
+                        <TouchableOpacity
+                          key={album._id}
+                          style={styles.albumFilterOption}
+                          onPress={() => setActiveFilter(album.name)}
+                        >
+                          <Image source={{ uri: album.coverImage || 'https://dummyjson.com/image/150' }} style={styles.albumFilterCover} />
+                          <View style={styles.albumFilterContent}>
+                            <Text style={styles.albumFilterName}>{album.name}</Text>
+                            <Text style={styles.albumFilterCount}>Album</Text>
+                          </View>
+                        </TouchableOpacity>
+                      )
                     ))}
                   </View>
                 </View>
               </ScrollView>
+              </LinearGradient>
             </View>
           </Modal>
 
@@ -1590,6 +1658,61 @@ export default function Photos() {
       minHeight: 50,
       zIndex: 1,
     },
+    quickActionGradient: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 16,
+      borderRadius: 12,
+      shadowColor: '#0e3c67',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 8,
+      elevation: 4,
+      minHeight: 50,
+      zIndex: 1,
+    },
+    headerDoneGradient: {
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    modalBodyGradient: {
+      flex: 1,
+      padding: 20,
+      backgroundColor: 'transparent',
+    },
+    filterOptionTouchable: {
+      flex: 1,
+      marginBottom: 8,
+    },
+    filterOptionGradient: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: 12,
+      borderRadius: 12,
+    },
+    filterOptionInner: {
+      backgroundColor: '#FFFFFF',
+      padding: 12,
+      borderRadius: 12,
+    },
+    memberFilterGradient: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 12,
+      borderRadius: 12,
+    },
+    albumFilterGradient: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 12,
+      borderRadius: 12,
+    },
     quickActionText: {
       color: '#FFFFFF',
       fontSize: 14,
@@ -1614,14 +1737,14 @@ export default function Photos() {
     },
     modalHeaderDivider: {
       height: 1,
-      backgroundColor: '#F3F4F6',
+      backgroundColor: 'rgba(255,255,255,0.12)',
       marginTop: 12,
     },
     closeButton: {
       width: 36,
       height: 36,
       borderRadius: 18,
-      backgroundColor: '#F3F4F6',
+      backgroundColor: 'rgba(255,255,255,0.16)',
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -1631,7 +1754,7 @@ export default function Photos() {
       color: '#111827',
     },
     doneButton: {
-      backgroundColor: '#0e3c67',
+      backgroundColor: 'Transparent',
       paddingHorizontal: 16,
       paddingVertical: 8,
       borderRadius: 16,
