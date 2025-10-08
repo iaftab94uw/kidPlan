@@ -469,12 +469,6 @@ export default function Dashboard() {
             <Text style={styles.greeting}>{getGreeting()}!</Text>
             <Text style={styles.userName}>{getUserDisplayName()}</Text>
           </View>
-          {/* <TouchableOpacity style={styles.notificationButton}>
-            <Bell size={24} color={COLORS.textLight} />
-            <View style={styles.notificationBadge}>
-              <Text style={styles.notificationCount}>3</Text>
-            </View>
-          </TouchableOpacity> */}
         </LinearGradient>
 
         {/* Family Stats */}

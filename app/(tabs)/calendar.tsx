@@ -2542,8 +2542,9 @@ const styles = StyleSheet.create({
   },
   eventDot: {
     position: 'absolute',
-    bottom: 6,
-    alignSelf: 'center',
+    bottom: 2,
+    left: '50%',
+    transform: [{ translateX: -2 }],
     width: 4,
     height: 4,
     borderRadius: 2,
@@ -2551,9 +2552,6 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   selectedEventDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
     backgroundColor: '#FFFFFF',
   },
   navButton: {

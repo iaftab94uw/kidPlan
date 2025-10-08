@@ -476,25 +476,20 @@ export default function Photos() {
 
     return (
       <>
+        {/* top safe area gradient */}
         <LinearGradient
           colors={COLORS.gradientHero as any}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.topSafeArea}
         />
-        <View style={[styles.container, { paddingTop: insets.top }]}>
-        {/* Header - Fixed outside ScrollView */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Photos</Text>
-          <View style={styles.headerActions}>
-            <TouchableOpacity 
-              style={styles.filterButton}
-              onPress={() => setShowFilterModal(true)}
-            >
-              <Filter size={20} color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
-        </View>
+
+        {/* page background gradient */}
+    <LinearGradient
+      colors={COLORS.gradientBackground as any}
+      style={styles.container}
+      locations={[0, 0.5, 1]}
+    >
 
         <ScrollView 
           showsVerticalScrollIndicator={false}
@@ -509,6 +504,25 @@ export default function Photos() {
           scrollEventThrottle={16}
           nestedScrollEnabled={true}
         >
+
+  {/* Header with Gradient */}
+          {/* Header - Fixed outside ScrollView */}
+          <LinearGradient
+            colors={COLORS.gradientHero as any}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.header}
+          >
+            <Text style={styles.headerTitle}>Photos</Text>
+            <View style={styles.headerActions}>
+              <TouchableOpacity 
+                style={styles.filterButton}
+                onPress={() => setShowFilterModal(true)}
+              >
+                <Filter size={20} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+          </LinearGradient>
 
           {/* Active Filter Display */}
           {activeFilter !== 'all' && (
@@ -1453,16 +1467,16 @@ export default function Photos() {
               </View>
             </View>
           </Modal>
-        </ScrollView>
-      </View>
-    </>
+          </ScrollView>
+        </LinearGradient>
+      </>
     );
   }
 
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#F9FAFB',
+      backgroundColor: 'transparent',
     },
     topSafeArea: {
       height: 60,
@@ -1476,8 +1490,10 @@ export default function Photos() {
       justifyContent: 'space-between',
       alignItems: 'center',
       paddingHorizontal: 20,
-      paddingVertical: 20,
-      backgroundColor: '#0e3c67',
+      paddingBottom: 20,
+      paddingTop: 60,
+      // background is provided by the LinearGradient wrapper
+      backgroundColor: 'transparent',
     },
     headerTitle: {
       fontSize: 24,
