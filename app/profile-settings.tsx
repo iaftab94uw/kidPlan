@@ -179,8 +179,8 @@ export default function ProfileSettings() {
       const updateData = {
         fullName: profileData.name.trim(),
         profilePhoto: finalImageUrl || user?.profilePhoto || '',
-        birthdate: profileData.dateOfBirth ? formatDateForAPI(profileData.dateOfBirth) : '',
-        address: profileData.address || '',
+        // birthdate: profileData.dateOfBirth ? formatDateForAPI(profileData.dateOfBirth) : '',
+        // address: profileData.address || '',
       };
 
       // Call the update profile API
@@ -243,26 +243,26 @@ export default function ProfileSettings() {
       keyboardType: 'email-address' as const,
       editable: false
     },
-    {
-      icon: MapPin,
-      label: 'Address',
-      value: profileData.address,
-      key: 'address',
-      placeholder: 'Enter your address',
-      multiline: true,
-      keyboardType: 'default' as const,
-      editable: true
-    },
-    {
-      icon: Calendar,
-      label: 'Date of Birth',
-      value: profileData.dateOfBirth,
-      key: 'dateOfBirth',
-      placeholder: 'DD/MM/YYYY',
-      keyboardType: 'default' as const,
-      isDatePicker: true,
-      editable: true
-    }
+    // {
+    //   icon: MapPin,
+    //   label: 'Address',
+    //   value: profileData.address,
+    //   key: 'address',
+    //   placeholder: 'Enter your address',
+    //   multiline: true,
+    //   keyboardType: 'default' as const,
+    //   editable: true
+    // },
+    // {
+    //   icon: Calendar,
+    //   label: 'Date of Birth',
+    //   value: profileData.dateOfBirth,
+    //   key: 'dateOfBirth',
+    //   placeholder: 'DD/MM/YYYY',
+    //   keyboardType: 'default' as const,
+    //   isDatePicker: true,
+    //   editable: true
+    // }
   ];
 
   return (
