@@ -1131,13 +1131,10 @@ export default function Calendar() {
             )}
             {hasEvents && (
               isSelected ? (
-                <LinearGradient
-                  colors={COLORS.gradientPrimary as any}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={[styles.eventDot, { position: 'absolute', bottom: 2, left: '50%', transform: [{ translateX: -3 }], width: 6, height: 6, borderRadius: 3, zIndex: 2 }]}
-                />
+                // selected: white dot centered on the pill
+                <View style={[styles.eventDot, styles.selectedEventDot]} />
               ) : (
+                // non-selected: gradient dot
                 <LinearGradient
                   colors={COLORS.gradientPrimary as any}
                   start={{ x: 0, y: 0 }}
@@ -2545,9 +2542,8 @@ const styles = StyleSheet.create({
   },
   eventDot: {
     position: 'absolute',
-    bottom: 2,
-    left: '50%',
-    transform: [{ translateX: -2 }],
+    bottom: 6,
+    alignSelf: 'center',
     width: 4,
     height: 4,
     borderRadius: 2,
@@ -2555,6 +2551,9 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   selectedEventDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
     backgroundColor: '#FFFFFF',
   },
   navButton: {
