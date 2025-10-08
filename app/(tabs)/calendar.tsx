@@ -1108,18 +1108,43 @@ export default function Calendar() {
               setSelectedDate(newDate);
             }}
           >
-            <Text style={[
-              styles.calendarDayText,
-              isSelected && styles.selectedDayText,
-              isToday && !isSelected && styles.todayDayText
-            ]}>
-              {day}
-            </Text>
+            {isSelected ? (
+              <LinearGradient
+                colors={COLORS.gradientPrimary as any}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={{
+                  borderRadius: 18,
+                  height: 46,
+                  width: 48,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text style={[styles.calendarDayText, styles.selectedDayText]}>{day}</Text>
+              </LinearGradient>
+            ) : (
+              <Text style={[
+                styles.calendarDayText,
+                isToday && !isSelected && styles.todayDayText
+              ]}>{day}</Text>
+            )}
             {hasEvents && (
-              <View style={[
-                styles.eventDot,
-                isSelected && styles.selectedEventDot
-              ]} />
+              isSelected ? (
+                <LinearGradient
+                  colors={COLORS.gradientPrimary as any}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={[styles.eventDot, { position: 'absolute', bottom: 2, left: '50%', transform: [{ translateX: -3 }], width: 6, height: 6, borderRadius: 3, zIndex: 2 }]}
+                />
+              ) : (
+                <LinearGradient
+                  colors={COLORS.gradientPrimary as any}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.eventDot}
+                />
+              )
             )}
           </TouchableOpacity>
         );
@@ -1358,8 +1383,16 @@ export default function Calendar() {
               <TouchableOpacity 
                 style={styles.addEventButton}
                 onPress={() => setShowAddEventModal(true)}
+                activeOpacity={0.85}
               >
-                <Text style={styles.addEventText}>Add Event</Text>
+                <LinearGradient
+                  colors={COLORS.gradientPrimary as any}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={{ paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8, alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <Text style={styles.addEventText}>Add Event</Text>
+                </LinearGradient>
               </TouchableOpacity>
             </View>
           )}
@@ -2841,14 +2874,15 @@ const styles = StyleSheet.create({
   },
   addEventButton: {
     backgroundColor: '#0e3c67',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingHorizontal: 0,
+    paddingVertical: 0,
     borderRadius: 8,
   },
   addEventText: {
     color: '#FFFFFF',
     fontWeight: '600',
   },
+  
   loadingState: {
     backgroundColor: '#FFFFFF',
     padding: 32,
