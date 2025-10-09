@@ -1227,35 +1227,59 @@ export default function Calendar() {
 
         {/* Event Type Filter */}
         {showEventTypeFilter && (
-          <View style={styles.filterContainer}>
-            <TouchableOpacity
-              style={[
-                styles.filterButton,
-                eventTypeFilter === 'all' && styles.filterButtonActive
-              ]}
-              onPress={() => setEventTypeFilter('all')}
-            >
-              <Text style={[
-                styles.filterButtonText,
-                eventTypeFilter === 'all' && styles.filterButtonTextActive
-              ]}>All</Text>
-            </TouchableOpacity>
-            {(['Personal', 'School', 'School_Event', 'School_Holiday', 'Activity', 'Holiday', 'Medical'] as EventType[]).map((type) => (
+          <LinearGradient
+            colors={COLORS.gradientBackground as any}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.filterContainerGradient}
+          >
+            <View style={styles.filterContainer}>
               <TouchableOpacity
-                key={type}
-                style={[
-                  styles.filterButton,
-                  eventTypeFilter === type && styles.filterButtonActive
-                ]}
-                onPress={() => setEventTypeFilter(type)}
+                onPress={() => setEventTypeFilter('all')}
+                activeOpacity={0.8}
+                style={styles.filterButtonTouchable}
               >
-                <Text style={[
-                  styles.filterButtonText,
-                  eventTypeFilter === type && styles.filterButtonTextActive
-                ]}>{type}</Text>
+                {eventTypeFilter === 'all' ? (
+                  <LinearGradient
+                    colors={COLORS.gradientPrimary as any}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.filterButtonGradient}
+                  >
+                    <Text style={[styles.filterButtonText, styles.filterButtonTextActive]}>All</Text>
+                  </LinearGradient>
+                ) : (
+                  <View style={styles.filterButton}>{/* reuse existing style for unselected */}
+                    <Text style={styles.filterButtonText}>All</Text>
+                  </View>
+                )}
               </TouchableOpacity>
-            ))}
-          </View>
+
+              {(['Personal', 'School', 'School_Event', 'School_Holiday', 'Activity', 'Holiday', 'Medical'] as EventType[]).map((type) => (
+                <TouchableOpacity
+                  key={type}
+                  onPress={() => setEventTypeFilter(type)}
+                  activeOpacity={0.8}
+                  style={styles.filterButtonTouchable}
+                >
+                  {eventTypeFilter === type ? (
+                    <LinearGradient
+                      colors={COLORS.gradientPrimary as any}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.filterButtonGradient}
+                    >
+                      <Text style={[styles.filterButtonText, styles.filterButtonTextActive]}>{type}</Text>
+                    </LinearGradient>
+                  ) : (
+                    <View style={styles.filterButton}>
+                      <Text style={styles.filterButtonText}>{type}</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </LinearGradient>
         )}
 
         {/* Month Navigation Header */}
@@ -2444,6 +2468,24 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: '#FFFFFF',
     gap: 8,
+  },
+  filterContainerGradient: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 12,
+    marginHorizontal: 12,
+    marginTop: 8,
+  },
+  filterButtonTouchable: {
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  filterButtonGradient: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   filterButton: {
     paddingHorizontal: 16,
