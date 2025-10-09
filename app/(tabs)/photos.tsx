@@ -1165,41 +1165,60 @@ export default function Photos() {
             statusBarTranslucent={false}
           >
             <View style={[styles.modalContainer, { paddingTop: insets.top }]}>
-              {/* Modern Header */}
-              <View style={styles.modalHeader}>
-                <View style={styles.modalHeaderContent}>
-                  <TouchableOpacity 
-                    onPress={() => setShowUploadMediaModal(false)}
-                    style={styles.closeButton}
-                  >
-                    <X size={24} color="#6B7280" />
-                  </TouchableOpacity>
-                  <View style={styles.modalTitleContainer}>
-                    <Text style={styles.modalTitle}>
-                      {selectedAlbumForUpload ? 'Upload to Album' : 'Upload to Gallery'}
-                    </Text>
-                    <Text style={styles.modalSubtitle}>
-                      {selectedAlbumForUpload ? 'Add photos to this album' : 'Add photos to your gallery'}
-                    </Text>
-                  </View>
-                  <TouchableOpacity 
-                    style={[
-                      styles.createButton,
-                      (isAddingMedia || uploadProgress.isUploading || !newMedia.imageUrl.trim()) && styles.createButtonDisabled
-                    ]}
-                    onPress={handleUploadMedia}
-                    disabled={isAddingMedia || uploadProgress.isUploading || !newMedia.imageUrl.trim()}
-                  >
-                    {(isAddingMedia || uploadProgress.isUploading) ? (
-                      <ActivityIndicator size="small" color="#FFFFFF" />
+              {/* Modern Header (hero gradient) */}
+              <LinearGradient
+                colors={COLORS.gradientHero as any}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.modalHeaderGradient}
+              >
+                <View style={styles.modalHeader}>
+                  <View style={styles.modalHeaderContent}>
+                    <TouchableOpacity 
+                      onPress={() => setShowUploadMediaModal(false)}
+                      style={styles.closeButton}
+                    >
+                      <X size={24} color="#6B7280" />
+                    </TouchableOpacity>
+                    <View style={styles.modalTitleContainer}>
+                      <Text style={styles.modalTitle}>
+                        {selectedAlbumForUpload ? 'Upload to Album' : 'Upload to Gallery'}
+                      </Text>
+                      <Text style={styles.modalSubtitle}>
+                        {selectedAlbumForUpload ? 'Add photos to this album' : 'Add photos to your gallery'}
+                      </Text>
+                    </View>
+                    {(isAddingMedia || uploadProgress.isUploading || !newMedia.imageUrl.trim()) ? (
+                      <View style={[styles.createButton, styles.createButtonDisabled]}>
+                        {(isAddingMedia || uploadProgress.isUploading) ? (
+                          <ActivityIndicator size="small" color="#FFFFFF" />
+                        ) : (
+                          <Text style={styles.createButtonText}>Upload</Text>
+                        )}
+                      </View>
                     ) : (
-                      <Text style={styles.createButtonText}>Upload</Text>
+                      <TouchableOpacity onPress={handleUploadMedia} activeOpacity={0.85}>
+                        <LinearGradient
+                          colors={COLORS.gradientPrimary as any}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={[styles.createButton, styles.createButtonGradient]}
+                        >
+                          <Text style={styles.createButtonText}>Upload</Text>
+                        </LinearGradient>
+                      </TouchableOpacity>
                     )}
-                  </TouchableOpacity>
+                  </View>
                 </View>
-              </View>
+              </LinearGradient>
 
-              <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+              <LinearGradient
+                colors={COLORS.gradientBackground as any}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.modalContentGradient}
+              >
+                <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
                 <View style={styles.formContainer}>
                   {/* Photo Selection Section */}
                   <View style={styles.coverImageSection}>
@@ -1290,6 +1309,7 @@ export default function Photos() {
                   </View>
                 </View>
               </ScrollView>
+              </LinearGradient>
             </View>
           </Modal>
 
@@ -1722,7 +1742,7 @@ export default function Photos() {
     // Modal Styles
     modalContainer: {
       flex: 1,
-      backgroundColor: '#F8FAFC',
+      backgroundColor: COLORS.background,
     },
     modalHeader: {
       backgroundColor: '#FFFFFF',
@@ -1770,8 +1790,25 @@ export default function Photos() {
     },
     modalContent: {
       flex: 1,
-      backgroundColor: '#F9FAFB',
+      backgroundColor: 'transparent',
       padding: 20,
+    },
+    modalContentGradient: {
+      flex: 1,
+      paddingTop: 0,
+      paddingBottom: 0,
+      backgroundColor: 'transparent',
+    },
+
+    modalHeaderGradient: {
+      paddingTop: 8,
+      paddingBottom: 0,
+      paddingHorizontal: 0,
+    },
+
+    createButtonGradient: {
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     searchSection: {
       marginBottom: 24,
