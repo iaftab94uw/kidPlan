@@ -1581,6 +1581,12 @@ export default function Family() {
           >
             <SafeAreaView style={styles.modalContainer}>
             {/* Enhanced Modal Header */}
+            <LinearGradient
+              colors={COLORS.gradientHero as any}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.modalHeaderGradient}
+            >
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderContent}>
                 <TouchableOpacity 
@@ -1593,26 +1599,36 @@ export default function Family() {
                   <Text style={styles.modalTitle}>Add Family Member</Text>
                   <Text style={styles.modalSubtitle}>Create a new family profile</Text>
                 </View>
-                <TouchableOpacity 
-                  style={[
-                    styles.saveButton,
-                    (!newMember.name.trim() || !newMember.role || !newMember.age.trim() || isSavingMember) && styles.saveButtonDisabled
-                  ]}
-                  onPress={handleSaveMember}
-                  disabled={!newMember.name.trim() || !newMember.role || !newMember.age.trim() || isSavingMember}
-                >
-                  <Text style={[
-                    styles.saveButtonText,
-                    (!newMember.name.trim() || !newMember.role || !newMember.age.trim() || isSavingMember) && styles.saveButtonTextDisabled
-                  ]}>
-                    {isSavingMember ? 'Saving...' : 'Save'}
-                  </Text>
-                </TouchableOpacity>
+                {(!newMember.name.trim() || !newMember.role || !newMember.age.trim() || isSavingMember) ? (
+                  <View style={[styles.saveButton, styles.saveButtonDisabled]}>
+                    <Text style={[styles.saveButtonText, styles.saveButtonTextDisabled]}>
+                      {isSavingMember ? 'Saving...' : 'Save'}
+                    </Text>
+                  </View>
+                ) : (
+                  <TouchableOpacity onPress={handleSaveMember} activeOpacity={0.85}>
+                    <LinearGradient
+                      colors={COLORS.gradientPrimary as any}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.saveButtonGradient}
+                    >
+                      <Text style={styles.saveButtonText}>{isSavingMember ? 'Saving...' : 'Save'}</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                )}
               </View>
               <View style={styles.modalHeaderDivider} />
             </View>
+            </LinearGradient>
 
-            <ScrollView style={styles.modalContent}>
+            <LinearGradient
+              colors={COLORS.gradientBackground as any}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.modalContentGradient}
+            >
+              <ScrollView style={styles.modalContent}>
               {/* Profile Photo */}
               <View style={styles.photoSection}>
                 <Text style={styles.photoSectionTitle}>Profile Photo</Text>
@@ -1714,7 +1730,8 @@ export default function Family() {
               
               {/* Bottom spacing for Android native buttons */}
               <View style={styles.bottomSpacing} />
-            </ScrollView>
+              </ScrollView>
+            </LinearGradient>
           </SafeAreaView>
           </KeyboardAvoidingView>
         </Modal>
@@ -2999,8 +3016,34 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: 'transparent',
     padding: 20,
+  },
+
+  modalContentGradient: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    paddingTop: 0,
+    paddingBottom: 0,
+  },
+
+  modalHeaderGradient: {
+    paddingTop: 8,
+    paddingBottom: 0,
+    paddingHorizontal: 0,
+  },
+
+  saveButtonGradient: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#0e3c67',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   photoSection: {
     alignItems: 'center',
