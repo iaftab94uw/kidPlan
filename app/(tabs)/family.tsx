@@ -1747,6 +1747,12 @@ export default function Family() {
           >
             <SafeAreaView style={styles.modalContainer}>
               {/* Modal Header */}
+              <LinearGradient
+                colors={COLORS.gradientHero as any}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.modalHeaderGradient}
+              >
               <View style={styles.modalHeader}>
                 <View style={styles.modalHeaderContent}>
                   <TouchableOpacity 
@@ -1759,26 +1765,36 @@ export default function Family() {
                     <Text style={styles.modalTitle}>Add Schedule</Text>
                     <Text style={styles.modalSubtitle}>Create a new co-parenting schedule</Text>
                   </View>
-                  <TouchableOpacity 
-                    style={[
-                      styles.saveButton,
-                      (!newSchedule.name.trim() || !newSchedule.parent || !newSchedule.location.trim() || isCreatingSchedule) && styles.saveButtonDisabled
-                    ]}
-                    onPress={handleSaveSchedule}
-                    disabled={!newSchedule.name.trim() || !newSchedule.parent || !newSchedule.location.trim() || isCreatingSchedule}
-                  >
-                    <Text style={[
-                      styles.saveButtonText,
-                      (!newSchedule.name.trim() || !newSchedule.parent || !newSchedule.location.trim() || isCreatingSchedule) && styles.saveButtonTextDisabled
-                    ]}>
-                      {isCreatingSchedule ? 'Creating...' : 'Save'}
-                    </Text>
-                  </TouchableOpacity>
+                  {(!newSchedule.name.trim() || !newSchedule.parent || !newSchedule.location.trim() || isCreatingSchedule) ? (
+                    <View style={[styles.saveButton, styles.saveButtonDisabled]}>
+                      <Text style={[styles.saveButtonText, styles.saveButtonTextDisabled]}>
+                        {isCreatingSchedule ? 'Creating...' : 'Save'}
+                      </Text>
+                    </View>
+                  ) : (
+                    <TouchableOpacity onPress={handleSaveSchedule} activeOpacity={0.85}>
+                      <LinearGradient
+                        colors={COLORS.gradientPrimary as any}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={styles.saveButtonGradient}
+                      >
+                        <Text style={styles.saveButtonText}>{isCreatingSchedule ? 'Creating...' : 'Save'}</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  )}
                 </View>
                 <View style={styles.modalHeaderDivider} />
               </View>
+              </LinearGradient>
 
-              <ScrollView style={styles.modalContent}>
+              <LinearGradient
+                colors={COLORS.gradientBackground as any}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.modalContentGradient}
+              >
+                <ScrollView style={styles.modalContent}>
                 {/* Schedule Name */}
                 <View style={styles.coParentingFieldGroup}>
                   <Text style={styles.coParentingfieldLabel}>Name of Schedule</Text>
@@ -1943,6 +1959,7 @@ export default function Family() {
                   />
                 </View>
               </ScrollView>
+            </LinearGradient>
 
               {/* Date Pickers */}
               {/* Start Date Picker - iOS Only */}
