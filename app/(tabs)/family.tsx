@@ -1378,12 +1378,19 @@ export default function Family() {
               <Text style={styles.emptyStateSubtitle}>
                 Add co-parents to share family responsibilities
               </Text>
-              <TouchableOpacity 
-                style={styles.emptyStateButton}
+              <TouchableOpacity
                 onPress={() => setShowAddMemberModal(true)}
+                activeOpacity={0.85}
               >
-                <Plus size={16} color="#FFFFFF" />
-                <Text style={styles.emptyStateButtonText}>Add Co-Parent</Text>
+                <LinearGradient
+                  colors={COLORS.gradientPrimary as any}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.emptyStateButtonGradient}
+                >
+                  <Plus size={16} color="#FFFFFF" />
+                  <Text style={styles.emptyStateButtonText}>Add Co-Parent</Text>
+                </LinearGradient>
               </TouchableOpacity>
             </View>
           )}
@@ -1430,51 +1437,82 @@ export default function Family() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Co-Parenting Schedule</Text>
-              <TouchableOpacity 
-                style={styles.addScheduleButton}
+              <TouchableOpacity
                 onPress={() => setShowAddScheduleModal(true)}
+                activeOpacity={0.85}
+                style={{ borderRadius: 16, overflow: 'hidden' }}
               >
-                <Plus size={16} color="#FFFFFF" />
+                <LinearGradient
+                  colors={COLORS.gradientPrimary as any}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.addScheduleButton}
+                >
+                  <Plus size={16} color="#FFFFFF" />
+                </LinearGradient>
               </TouchableOpacity>
             </View>
           
           {/* Filter Options */}
           <View style={styles.filterContainer}>
             <TouchableOpacity
-              style={[
-                styles.filterButton,
-                currentScheduleFilter === 'all' && styles.filterButtonActive
-              ]}
               onPress={() => fetchFamilySchedules(1, 'all')}
+              activeOpacity={0.85}
             >
-              <Text style={[
-                styles.filterButtonText,
-                currentScheduleFilter === 'all' && styles.filterButtonTextActive
-              ]}>All</Text>
+              {currentScheduleFilter === 'all' ? (
+                <LinearGradient
+                  colors={COLORS.gradientPrimary as any}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={[styles.filterButton, styles.filterButtonActiveGradient]}
+                >
+                  <Text style={[styles.filterButtonText, styles.filterButtonTextActive]}>All</Text>
+                </LinearGradient>
+              ) : (
+                <View style={styles.filterButton}>
+                  <Text style={styles.filterButtonText}>All</Text>
+                </View>
+              )}
             </TouchableOpacity>
+
             <TouchableOpacity
-              style={[
-                styles.filterButton,
-                currentScheduleFilter === 'primary' && styles.filterButtonActive
-              ]}
               onPress={() => fetchFamilySchedules(1, 'primary')}
+              activeOpacity={0.85}
             >
-              <Text style={[
-                styles.filterButtonText,
-                currentScheduleFilter === 'primary' && styles.filterButtonTextActive
-              ]}>Primary Parent</Text>
+              {currentScheduleFilter === 'primary' ? (
+                <LinearGradient
+                  colors={COLORS.gradientPrimary as any}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={[styles.filterButton, styles.filterButtonActiveGradient]}
+                >
+                  <Text style={[styles.filterButtonText, styles.filterButtonTextActive]}>Primary Parent</Text>
+                </LinearGradient>
+              ) : (
+                <View style={styles.filterButton}>
+                  <Text style={styles.filterButtonText}>Primary Parent</Text>
+                </View>
+              )}
             </TouchableOpacity>
+
             <TouchableOpacity
-              style={[
-                styles.filterButton,
-                currentScheduleFilter === 'secondary' && styles.filterButtonActive
-              ]}
               onPress={() => fetchFamilySchedules(1, 'secondary')}
+              activeOpacity={0.85}
             >
-              <Text style={[
-                styles.filterButtonText,
-                currentScheduleFilter === 'secondary' && styles.filterButtonTextActive
-              ]}>Secondary Parent</Text>
+              {currentScheduleFilter === 'secondary' ? (
+                <LinearGradient
+                  colors={COLORS.gradientPrimary as any}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={[styles.filterButton, styles.filterButtonActiveGradient]}
+                >
+                  <Text style={[styles.filterButtonText, styles.filterButtonTextActive]}>Secondary Parent</Text>
+                </LinearGradient>
+              ) : (
+                <View style={styles.filterButton}>
+                  <Text style={styles.filterButtonText}>Secondary Parent</Text>
+                </View>
+              )}
             </TouchableOpacity>
           </View>
 
@@ -1555,11 +1593,18 @@ export default function Family() {
                 Create your first co-parenting schedule to organize family time
               </Text>
               <TouchableOpacity 
-                style={styles.emptyStateButton}
                 onPress={() => setShowAddScheduleModal(true)}
+                activeOpacity={0.85}
               >
-                <Plus size={16} color="#FFFFFF" />
-                <Text style={styles.emptyStateButtonText}>Add Schedule</Text>
+                <LinearGradient
+                  colors={COLORS.gradientPrimary as any}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.emptyStateButtonGradient}
+                >
+                  <Plus size={16} color="#FFFFFF" />
+                  <Text style={styles.emptyStateButtonText}>Add Schedule</Text>
+                </LinearGradient>
               </TouchableOpacity>
             </View>
           )}
@@ -3458,11 +3503,33 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  emptyStateButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 20,
+    shadowColor: '#0e3c67',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
   emptyStateButtonText: {
     color: '#FFFFFF',
     fontWeight: '600',
     fontSize: 14,
     marginLeft: 8,
+  },
+  filterButtonActiveGradient: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    shadowColor: '#0e3c67',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 2,
   },
   // Family Name Modal Styles
   familyNameSection: {
