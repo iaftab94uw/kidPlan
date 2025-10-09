@@ -1431,6 +1431,12 @@ export default function Calendar() {
           >
             <SafeAreaView style={styles.modalContainer}>
             {/* Modal Header */}
+            <LinearGradient
+              colors={COLORS.gradientHero as any}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.modalHeaderGradient}
+            >
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderContent}>
                 <TouchableOpacity 
@@ -1448,26 +1454,36 @@ export default function Calendar() {
                     })}
                   </Text>
                 </View>
-                <TouchableOpacity 
-                  style={[
-                    styles.saveButton,
-                    (!newEvent.title.trim() || isCreatingEvent) && styles.saveButtonDisabled
-                  ]}
-                  onPress={handleSaveEvent}
-                  disabled={!newEvent.title.trim() || isCreatingEvent}
-                >
-                  <Text style={[
-                    styles.saveButtonText,
-                    (!newEvent.title.trim() || isCreatingEvent) && styles.saveButtonTextDisabled
-                  ]}>
-                    {isCreatingEvent ? 'Creating...' : 'Save'}
-                  </Text>
-                </TouchableOpacity>
+                {(!newEvent.title.trim() || isCreatingEvent) ? (
+                  <View style={[styles.saveButton, styles.saveButtonDisabled]}>
+                    <Text style={[styles.saveButtonText, styles.saveButtonTextDisabled]}>
+                      {isCreatingEvent ? 'Creating...' : 'Save'}
+                    </Text>
+                  </View>
+                ) : (
+                  <TouchableOpacity onPress={handleSaveEvent} activeOpacity={0.85}>
+                    <LinearGradient
+                      colors={COLORS.gradientPrimary as any}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.saveButtonGradient}
+                    >
+                      <Text style={styles.saveButtonText}>{isCreatingEvent ? 'Creating...' : 'Save'}</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                )}
               </View>
               <View style={styles.modalHeaderDivider} />
             </View>
+            </LinearGradient>
 
-            <ScrollView style={styles.modalContent}>
+            <LinearGradient
+              colors={COLORS.gradientBackground as any}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.modalContentGradient}
+            >
+              <ScrollView style={styles.modalContent}>
               {/* Event Title */}
               <View style={styles.fieldGroup}>
                 <Text style={styles.fieldLabel}>Event Title</Text>
@@ -1669,7 +1685,8 @@ export default function Calendar() {
                   numberOfLines={3}
                 />
               </View>
-            </ScrollView>
+              </ScrollView>
+            </LinearGradient>
           </SafeAreaView>
 
           {/* Custom Time Pickers */}
@@ -3036,6 +3053,18 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  saveButtonGradient: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#0e3c67',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
   saveButtonDisabled: {
     backgroundColor: '#E5E7EB',
     shadowOpacity: 0,
@@ -3051,8 +3080,21 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: 'transparent',
     padding: 20,
+  },
+
+  modalContentGradient: {
+    flex: 1,
+    paddingTop: 0,
+    paddingBottom: 0,
+    backgroundColor: 'transparent',
+  },
+
+  modalHeaderGradient: {
+    paddingTop: 8,
+    paddingBottom: 0,
+    paddingHorizontal: 0,
   },
   fieldGroup: {
     marginBottom: 24,
