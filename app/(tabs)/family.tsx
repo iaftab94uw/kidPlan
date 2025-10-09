@@ -2136,7 +2136,13 @@ export default function Family() {
           presentationStyle="formSheet"
         >
           <SafeAreaView style={styles.modalContainer}>
-            {/* Modal Header */}
+            {/* Modal Header (hero gradient) */}
+            <LinearGradient
+              colors={COLORS.gradientHero as any}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.modalHeaderGradient}
+            >
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderContent}>
                 <TouchableOpacity 
@@ -2161,47 +2167,60 @@ export default function Family() {
               </View>
               <View style={styles.modalHeaderDivider} />
             </View>
+            </LinearGradient>
 
-            <ScrollView style={styles.modalContent}>
-              <View style={styles.familyNameSection}>
-                <View style={styles.familyNameIcon}>
-                  <Users size={48} color="#0e3c67" />
-                </View>
-                <Text style={styles.familyNameTitle}>Create Your Family</Text>
-                <Text style={styles.familyNameDescription}>
-                  Give your family a name to get started. This will help organize your family activities and members.
-                </Text>
-                
-                <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>Family Name</Text>
-                  <TextInput
-                    style={[styles.textInput, styles.familyNameInput]}
-                    value={familyName}
-                    onChangeText={setFamilyName}
-                    placeholder="e.g., The Smith Family"
-                    placeholderTextColor="#9CA3AF"
-                    autoFocus
-                  />
-                </View>
-
-
-                <TouchableOpacity 
-                  style={[
-                    styles.createFamilyButton,
-                    (!familyName.trim() || isCreatingFamily) && styles.createFamilyButtonDisabled
-                  ]}
-                  onPress={isEditingFamilyName ? updateFamilyName : createFamily}
-                  disabled={!familyName.trim() || isCreatingFamily}
-                >
-                  <Text style={[
-                    styles.createFamilyButtonText,
-                    (!familyName.trim() || isCreatingFamily) && styles.createFamilyButtonTextDisabled
-                  ]}>
-                    {isCreatingFamily ? (isEditingFamilyName ? 'Updating...' : 'Creating...') : (isEditingFamilyName ? 'Update Family' : 'Create Family')}
+            <LinearGradient
+              colors={COLORS.gradientBackground as any}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.modalContentGradient}
+            >
+              <ScrollView style={styles.modalContent}>
+                <View style={styles.familyNameSection}>
+                  <View style={styles.familyNameIcon}>
+                    <Users size={48} color="#0e3c67" />
+                  </View>
+                  <Text style={styles.familyNameTitle}>Create Your Family</Text>
+                  <Text style={styles.familyNameDescription}>
+                    Give your family a name to get started. This will help organize your family activities and members.
                   </Text>
-                </TouchableOpacity>
-              </View>
-            </ScrollView>
+                  
+                  <View style={styles.fieldGroup}>
+                    <Text style={styles.fieldLabel}>Family Name</Text>
+                    <TextInput
+                      style={[styles.textInput, styles.familyNameInput]}
+                      value={familyName}
+                      onChangeText={setFamilyName}
+                      placeholder="e.g., The Smith Family"
+                      placeholderTextColor="#9CA3AF"
+                      autoFocus
+                    />
+                  </View>
+
+
+                  {(!familyName.trim() || isCreatingFamily) ? (
+                    <View style={[styles.createFamilyButton, styles.createFamilyButtonDisabled]}>
+                      <Text style={[styles.createFamilyButtonText, styles.createFamilyButtonTextDisabled]}>
+                        {isCreatingFamily ? (isEditingFamilyName ? 'Updating...' : 'Creating...') : (isEditingFamilyName ? 'Update Family' : 'Create Family')}
+                      </Text>
+                    </View>
+                  ) : (
+                    <TouchableOpacity onPress={isEditingFamilyName ? updateFamilyName : createFamily} activeOpacity={0.85}>
+                      <LinearGradient
+                        colors={COLORS.gradientPrimary as any}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={[styles.createFamilyButton, styles.createFamilyButtonGradient]}
+                      >
+                        <Text style={styles.createFamilyButtonText}>
+                          {isCreatingFamily ? (isEditingFamilyName ? 'Updating...' : 'Creating...') : (isEditingFamilyName ? 'Update Family' : 'Create Family')}
+                        </Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </ScrollView>
+            </LinearGradient>
           </SafeAreaView>
         </Modal>
         {/* Edit Family Member Modal */}
@@ -3576,6 +3595,10 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 6,
     minWidth: 200,
+  },
+  createFamilyButtonGradient: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   createFamilyButtonDisabled: {
     backgroundColor: '#E5E7EB',
