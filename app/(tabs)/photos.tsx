@@ -1011,24 +1011,36 @@ export default function Photos() {
                       <Text style={styles.modalTitle}>Create New Album</Text>
                       <Text style={styles.modalSubtitle}>Organize your memories</Text>
                     </View>
-                    <TouchableOpacity 
-                      style={[
-                        styles.createButton,
-                        (isCreatingAlbum || uploadProgress.isUploading || !newAlbum.name.trim()) && styles.createButtonDisabled
-                      ]}
-                      onPress={handleSaveAlbum}
-                      disabled={isCreatingAlbum || uploadProgress.isUploading || !newAlbum.name.trim()}
-                    >
-                      {(isCreatingAlbum || uploadProgress.isUploading) ? (
-                        <ActivityIndicator size="small" color="#FFFFFF" />
-                      ) : (
-                        <Text style={styles.createButtonText}>Create</Text>
-                      )}
-                    </TouchableOpacity>
+                    {(isCreatingAlbum || uploadProgress.isUploading || !newAlbum.name.trim()) ? (
+                      <View style={[styles.createButton, styles.createButtonDisabled]}>
+                        {(isCreatingAlbum || uploadProgress.isUploading) ? (
+                          <ActivityIndicator size="small" color="#FFFFFF" />
+                        ) : (
+                          <Text style={styles.createButtonText}>Create</Text>
+                        )}
+                      </View>
+                    ) : (
+                      <TouchableOpacity onPress={handleSaveAlbum} activeOpacity={0.85}>
+                        <LinearGradient
+                          colors={COLORS.gradientPrimary as any}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={[styles.createButton, styles.createButtonGradient]}
+                        >
+                          <Text style={styles.createButtonText}>Create</Text>
+                        </LinearGradient>
+                      </TouchableOpacity>
+                    )}
                   </View>
                 </View>
 
-                <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+                <LinearGradient
+                  colors={COLORS.gradientBackground as any}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.modalContentGradient}
+                >
+                  <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
                 <View style={styles.formContainer}>
                   {/* Cover Image Section */}
                   <View style={styles.coverImageSection}>
@@ -1153,6 +1165,7 @@ export default function Photos() {
                   </View>
                 </View>
               </ScrollView>
+              </LinearGradient>
             </View>
             </KeyboardAvoidingView>
           </Modal>
