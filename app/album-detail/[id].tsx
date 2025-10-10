@@ -880,7 +880,7 @@ export default function AlbumDetail() {
                 <Text style={styles.tipsTitle}>💡 Tips</Text>
                 <View style={styles.tipsList}>
                   <Text style={styles.tipItem}>• Add meaningful captions to make photos easier to find</Text>
-                  <Text style={styles.tipItem}>• Photos are automatically organized by date</Text>
+                  <Text style={styles.tipItem}>• Photos are automatically organised by date</Text>
                   <Text style={styles.tipItem}>• You can always edit captions later</Text>
                 </View>
               </View>

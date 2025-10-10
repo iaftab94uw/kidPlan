@@ -20,6 +20,8 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useAuth } from '@/hooks/useAuth';
 import { ArrowLeft, Camera, User, Mail, MapPin, Calendar, CreditCard as Edit3 } from 'lucide-react-native';
 import { uploadImage } from '@/config/supabase';
+import { LinearGradient } from 'expo-linear-gradient';
+import { COLORS } from '@/theme/colors';
 
 export default function ProfileSettings() {
   const router = useRouter();
@@ -224,7 +226,7 @@ export default function ProfileSettings() {
     );
   };
 
-  const profileFields = [
+  const profileFields: any[] = [
     {
       icon: User,
       label: 'Full Name',
@@ -266,31 +268,44 @@ export default function ProfileSettings() {
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
+  <SafeAreaView style={[styles.container, { backgroundColor: COLORS.background }]}>
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
+              <LinearGradient
+              colors={COLORS.gradientBackground as any}
+              style={styles.container}
+              locations={[0, 0.5, 1]}
+            >
+        
         <ScrollView>
         {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <ArrowLeft size={24} color="#FFFFFF" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Profile Settings</Text>
-          <TouchableOpacity 
-            style={styles.editButton}
-            onPress={() => isEditing ? handleSave() : setIsEditing(true)}
-            disabled={isUploadingImage}
-          >
-            <Text style={styles.editButtonText}>
-              {isEditing ? (isUploadingImage ? 'Saving...' : 'Save') : 'Edit'}
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <LinearGradient
+          colors={COLORS.gradientHero as any}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.header}
+        >
+          <View style={styles.headerContent}>
+            <TouchableOpacity 
+              style={styles.backButton}
+              onPress={() => router.back()}
+            >
+              <ArrowLeft size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Profile Settings</Text>
+            <TouchableOpacity 
+              style={styles.editButton}
+              onPress={() => isEditing ? handleSave() : setIsEditing(true)}
+              disabled={isUploadingImage}
+            >
+              <Text style={styles.editButtonText}>
+                {isEditing ? (isUploadingImage ? 'Saving...' : 'Save') : 'Edit'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </LinearGradient>
 
         {/* Profile Photo Section */}
         <View style={styles.photoSection}>
@@ -437,6 +452,8 @@ export default function ProfileSettings() {
         {/* Bottom Spacing */}
         <View style={styles.bottomSpacing} />
         </ScrollView>
+              </LinearGradient>
+
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -457,7 +474,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 20,
     paddingTop: 60,
-    backgroundColor: '#0e3c67',
+    backgroundColor: 'transparent',
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    paddingTop: 60,
+    width: '100%'
   },
   backButton: {
     width: 40,

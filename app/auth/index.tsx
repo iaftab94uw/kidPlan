@@ -82,7 +82,7 @@ export default function AuthWelcome() {
               </View>
               <Text style={styles.welcomeTitle}>Welcome to KidPlan</Text>
               <Text style={styles.welcomeSubtitle}>
-                The smart way to organize your family's schedule and create lasting memories together
+                The smart way to organise your family's schedule and create lasting memories together
               </Text>
             </View>
           </View>

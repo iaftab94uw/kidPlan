@@ -1170,9 +1170,16 @@ export default function Family() {
 
       <SafeAreaView style={styles.safeArea}>
         {loading ? (
+                        <LinearGradient
+                        colors={COLORS.gradientBackground as any}
+                        style={styles.container}
+                        locations={[0, 0.5, 1]}
+                      >
+          
           <View style={styles.loadingContainer}>
             <Text style={styles.loadingText}>Loading family details...</Text>
           </View>
+          </LinearGradient>
         ) : (
         <ScrollView
             refreshControl={
@@ -1590,7 +1597,7 @@ export default function Family() {
               </View>
               <Text style={styles.emptyStateTitle}>No schedules yet</Text>
               <Text style={styles.emptyStateSubtitle}>
-                Create your first co-parenting schedule to organize family time
+                Create your first co-parenting schedule to organise family time
               </Text>
               <TouchableOpacity 
                 onPress={() => setShowAddScheduleModal(true)}
@@ -2182,7 +2189,7 @@ export default function Family() {
                   </View>
                   <Text style={styles.familyNameTitle}>Create Your Family</Text>
                   <Text style={styles.familyNameDescription}>
-                    Give your family a name to get started. This will help organize your family activities and members.
+                    Give your family a name to get started. This will help organise your family activities and members.
                   </Text>
                   
                   <View style={styles.fieldGroup}>
@@ -3767,7 +3774,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: 'Transparent',
   },
   loadingText: {
     fontSize: 16,

@@ -448,12 +448,19 @@ export default function Photos() {
     // Show loading state while checking gallery
     if (galleryLoading) {
       return (
+                                <LinearGradient
+                                colors={COLORS.gradientBackground as any}
+                                style={styles.container}
+                                locations={[0, 0.5, 1]}
+              >
+        
         <View style={[styles.container, { paddingTop: insets.top }]}>
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#0e3c67" />
             <Text style={styles.loadingText}>Loading gallery...</Text>
           </View>
         </View>
+        </LinearGradient>
       );
     }
 
@@ -652,7 +659,7 @@ export default function Photos() {
                 <FolderPlus size={48} color="#9CA3AF" />
                 <Text style={styles.emptyStateTitle}>No Albums Yet</Text>
                 <Text style={styles.emptyStateSubtitle}>
-                  Create your first album to organize your photos
+                  Create your first album to organise your photos
                 </Text>
                 <TouchableOpacity 
                   style={styles.emptyStateButton}
@@ -1006,7 +1013,7 @@ export default function Photos() {
                     </TouchableOpacity>
                     <View style={styles.modalTitleContainer}>
                       <Text style={styles.modalTitle}>Create New Album</Text>
-                      <Text style={styles.modalSubtitle}>Organize your memories</Text>
+                      <Text style={styles.modalSubtitle}>Organise your memories</Text>
                     </View>
                     {(isCreatingAlbum || uploadProgress.isUploading || !newAlbum.name.trim()) ? (
                       <View style={[styles.createButton, styles.createButtonDisabled]}>
@@ -1290,7 +1297,7 @@ export default function Photos() {
                     <Text style={styles.tipsTitle}>💡 Tips</Text>
                     <Text style={styles.tipText}>
                       • Add meaningful captions to make your photos easier to find{'\n'}
-                      • Photos are automatically organized by date{'\n'}
+                      • Photos are automatically organised by date{'\n'}
                       • You can always edit captions later
                     </Text>
                   </View>
@@ -1411,7 +1418,7 @@ export default function Photos() {
                   <View style={styles.viewAllEmptyState}>
                     <Text style={styles.viewAllEmptyTitle}>No Albums Yet</Text>
                     <Text style={styles.viewAllEmptyDescription}>
-                      Create your first album to organize your photos!
+                      Create your first album to organise your photos!
                     </Text>
                   </View>
                 )}
@@ -2009,7 +2016,7 @@ export default function Photos() {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: '#F9FAFB',
+      backgroundColor: 'Transparent',
     },
     loadingText: {
       fontSize: 16,

@@ -13,6 +13,8 @@ import {
 } from 'react-native';
 import { ArrowLeft, Bell, BellOff } from 'lucide-react-native';
 import { useNotifications } from '@/hooks/useNotifications';
+import { LinearGradient } from 'expo-linear-gradient';
+import { COLORS } from '@/theme/colors';
 
 export default function NotificationSettings() {
   const router = useRouter();
@@ -46,8 +48,28 @@ export default function NotificationSettings() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
+
+
+      <SafeAreaView style={[styles.container, { backgroundColor: COLORS.background }]}>            >
+        <LinearGradient
+      colors={COLORS.gradientBackground as any}
+      style={styles.container}
+      locations={[0, 0.5, 1]}
+    >
+    {/* Main Content */}
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+
+                {/* Header */}
+                <LinearGradient
+                  colors={COLORS.gradientHero as any}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.header}
+                >
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
@@ -58,13 +80,8 @@ export default function NotificationSettings() {
         <Text style={styles.headerTitle}>Notification Settings</Text>
         <View style={styles.headerSpacer} />
       </View>
-
-      {/* Main Content */}
-      <ScrollView 
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+                </LinearGradient>
+        
         {/* Hero Section */}
         <View style={styles.heroSection}>
           <View style={styles.heroIconContainer}>
@@ -181,7 +198,9 @@ export default function NotificationSettings() {
           </View>
         )}
       </ScrollView>
+                          </LinearGradient>
     </SafeAreaView>
+
   );
 }
 
@@ -191,9 +210,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
   },
   header: {
-    backgroundColor: '#0e3c67',
+    backgroundColor: 'Transparent',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 20,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -229,8 +248,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    // paddingHorizontal: 20,
+    // paddingTop: 20,
     paddingBottom: 40,
   },
   // Hero Section

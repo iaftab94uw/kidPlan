@@ -268,7 +268,7 @@ export default function Gallery() {
             <View style={styles.emptyContainer}>
               <FolderPlus size={48} color="#9CA3AF" />
               <Text style={styles.emptyTitle}>No albums yet</Text>
-              <Text style={styles.emptySubtitle}>Create your first album to organize your photos</Text>
+              <Text style={styles.emptySubtitle}>Create your first album to organise your photos</Text>
             </View>
           ) : (
             <ScrollView 
