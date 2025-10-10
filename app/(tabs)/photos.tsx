@@ -185,6 +185,38 @@ export default function Photos() {
       }
     };
 
+    // Handle photo share
+    const handleSharePhoto = async (photo: Media) => {
+      try {
+        const isAvailable = await Sharing.isAvailableAsync();
+        
+        if (!isAvailable) {
+          Alert.alert('Error', 'Sharing is not available on this device.');
+          return;
+        }
+
+        Alert.alert('Sharing', 'Preparing photo for sharing...');
+        
+        const filename = `photo_${photo._id}_${Date.now()}.jpg`;
+        const fileUri = FileSystem.documentDirectory + filename;
+        
+        const downloadResult = await FileSystem.downloadAsync(photo.url, fileUri);
+        
+        if (downloadResult.status === 200) {
+          await Sharing.shareAsync(downloadResult.uri, {
+            mimeType: 'image/jpeg',
+            dialogTitle: 'Share Photo',
+            UTI: 'public.jpeg'
+          });
+        } else {
+          Alert.alert('Error', 'Failed to prepare photo for sharing. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error sharing photo:', error);
+        Alert.alert('Error', 'Failed to share photo. Please try again.');
+      }
+    };
+
     // Handle photo preview
     const handlePhotoPreview = (photo: Media) => {
       setSelectedPhoto(photo);
@@ -225,38 +257,6 @@ export default function Photos() {
       } catch (error) {
         console.error('Error downloading photo:', error);
         Alert.alert('Error', 'Failed to download photo. Please try again.');
-      }
-    };
-
-    // Handle photo share
-    const handleSharePhoto = async (photo: Media) => {
-      try {
-        const isAvailable = await Sharing.isAvailableAsync();
-        
-        if (!isAvailable) {
-          Alert.alert('Error', 'Sharing is not available on this device.');
-          return;
-        }
-
-        Alert.alert('Sharing', 'Preparing photo for sharing...');
-        
-        const filename = `photo_${photo._id}_${Date.now()}.jpg`;
-        const fileUri = FileSystem.documentDirectory + filename;
-        
-        const downloadResult = await FileSystem.downloadAsync(photo.url, fileUri);
-        
-        if (downloadResult.status === 200) {
-          await Sharing.shareAsync(downloadResult.uri, {
-            mimeType: 'image/jpeg',
-            dialogTitle: 'Share Photo',
-            UTI: 'public.jpeg'
-          });
-        } else {
-          Alert.alert('Error', 'Failed to prepare photo for sharing. Please try again.');
-        }
-      } catch (error) {
-        console.error('Error sharing photo:', error);
-        Alert.alert('Error', 'Failed to share photo. Please try again.');
       }
     };
 
@@ -993,18 +993,15 @@ export default function Photos() {
             presentationStyle="formSheet"
             statusBarTranslucent={false}
           >
-            <KeyboardAvoidingView 
+            <KeyboardAvoidingView
               behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
               style={styles.keyboardAvoidingView}
             >
               <View style={[styles.modalContainer, { paddingTop: insets.top }]}>
-                {/* Modern Header */}
+                {/* Header */}
                 <View style={styles.modalHeader}>
                   <View style={styles.modalHeaderContent}>
-                    <TouchableOpacity 
-                      onPress={() => setShowCreateAlbumModal(false)}
-                      style={styles.closeButton}
-                    >
+                    <TouchableOpacity onPress={() => setShowCreateAlbumModal(false)} style={styles.closeButton}>
                       <X size={24} color="#6B7280" />
                     </TouchableOpacity>
                     <View style={styles.modalTitleContainer}>
@@ -1034,6 +1031,7 @@ export default function Photos() {
                   </View>
                 </View>
 
+                {/* Content with background gradient */}
                 <LinearGradient
                   colors={COLORS.gradientBackground as any}
                   start={{ x: 0, y: 0 }}
@@ -1041,132 +1039,108 @@ export default function Photos() {
                   style={styles.modalContentGradient}
                 >
                   <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
-                <View style={styles.formContainer}>
-                  {/* Cover Image Section */}
-                  <View style={styles.coverImageSection}>
-                    <Text style={styles.sectionTitle}>Cover Photo</Text>
-                    
-                    {newAlbum.coverImage && !uploadProgress.isUploading ? (
-                      <View style={styles.imagePreviewContainer}>
-                        <Image 
-                          source={{ uri: newAlbum.coverImage }} 
-                          style={styles.coverImagePreview}
-                          resizeMode="cover"
-                        />
-                        <TouchableOpacity 
-                          style={styles.floatingChangeButton}
-                          onPress={handleSelectCoverPhoto}
-                          activeOpacity={0.8}
-                        >
-                          <Camera size={20} color="#FFFFFF" />
-                        </TouchableOpacity>
-                        <View style={styles.changePhotoHint}>
-                          <Text style={styles.changePhotoHintText}>Tap to change photo</Text>
-                  </View>
-                      </View>
-                    ) : (
-                    <TouchableOpacity 
-                        style={styles.selectPhotoCard}
-                      onPress={handleSelectCoverPhoto}
-                      disabled={uploadProgress.isUploading}
-                    >
-                        <View style={styles.selectPhotoIconContainer}>
-                          <Camera size={32} color="#0e3c67" />
-                        </View>
-                        <Text style={styles.selectPhotoTitle}>
-                          {uploadProgress.isUploading ? 'Uploading...' : 'Add Cover Photo'}
-                        </Text>
-                        <Text style={styles.selectPhotoSubtitle}>
-                          Tap to select from gallery
-                      </Text>
-                    </TouchableOpacity>
-                    )}
+                    <View style={styles.formContainer}>
+                      {/* Cover Image Section */}
+                      <View style={styles.coverImageSection}>
+                        <Text style={styles.sectionTitle}>Cover Photo</Text>
 
-                    {/* Upload Progress */}
-                    {uploadProgress.isUploading && (
-                      <View style={styles.uploadProgressCard}>
-                        <View style={styles.progressHeader}>
-                          <Text style={styles.progressTitle}>Uploading Photo</Text>
-                          <Text style={styles.progressPercentage}>{Math.round(uploadProgress.progress)}%</Text>
-                        </View>
-                        <View style={styles.progressBarContainer}>
-                          <View 
-                            style={[
-                              styles.progressBarFill, 
-                              { width: `${uploadProgress.progress}%` }
-                            ]} 
-                          />
-                        </View>
-                      </View>
-                    )}
+                        {newAlbum.coverImage && !uploadProgress.isUploading ? (
+                          <View style={styles.imagePreviewContainer}>
+                            <Image
+                              source={{ uri: newAlbum.coverImage }}
+                              style={styles.coverImagePreview}
+                              resizeMode="cover"
+                            />
+                            <TouchableOpacity
+                              style={styles.floatingChangeButton}
+                              onPress={handleSelectCoverPhoto}
+                              activeOpacity={0.8}
+                            >
+                              <Camera size={20} color="#FFFFFF" />
+                            </TouchableOpacity>
+                            <View style={styles.changePhotoHint}>
+                              <Text style={styles.changePhotoHintText}>Tap to change photo</Text>
+                            </View>
+                          </View>
+                        ) : (
+                          <TouchableOpacity
+                            style={styles.selectPhotoCard}
+                            onPress={handleSelectCoverPhoto}
+                            disabled={uploadProgress.isUploading}
+                          >
+                            <View style={styles.selectPhotoIconContainer}>
+                              <Camera size={32} color="#0e3c67" />
+                            </View>
+                            <Text style={styles.selectPhotoTitle}>
+                              {uploadProgress.isUploading ? 'Uploading...' : 'Add Cover Photo'}
+                            </Text>
+                            <Text style={styles.selectPhotoSubtitle}>Tap to select from gallery</Text>
+                          </TouchableOpacity>
+                        )}
 
-                    {/* Upload Error */}
-                    {uploadProgress.error && (
-                      <View style={styles.uploadErrorCard}>
-                        <Text style={styles.uploadErrorTitle}>Upload Failed</Text>
-                        <Text style={styles.uploadErrorText}>{uploadProgress.error}</Text>
-                        <TouchableOpacity 
-                          style={styles.retryButton}
-                          onPress={handleSelectCoverPhoto}
-                        >
-                          <Text style={styles.retryButtonText}>Try Again</Text>
-                        </TouchableOpacity>
-                      </View>
-                    )}
-                  </View>
+                        {/* Upload Progress */}
+                        {uploadProgress.isUploading && (
+                          <View style={styles.uploadProgressCard}>
+                            <View style={styles.progressHeader}>
+                              <Text style={styles.progressTitle}>Uploading Photo</Text>
+                              <Text style={styles.progressPercentage}>{Math.round(uploadProgress.progress)}%</Text>
+                            </View>
+                            <View style={styles.progressBarContainer}>
+                              <View style={[styles.progressBarFill, { width: `${uploadProgress.progress}%` }]} />
+                            </View>
+                          </View>
+                        )}
 
-                  {/* Album Details Section */}
-                  <View style={styles.detailsSection}>
-                    <Text style={styles.sectionTitle}>Album Details</Text>
-                    
-                    {/* Album Name */}
-                    <View style={styles.inputGroup}>
-                      <Text style={styles.inputLabel}>Album Name *</Text>
-                      <View style={styles.inputContainer}>
-                        <TextInput
-                          style={styles.modernTextInput}
-                          value={newAlbum.name}
-                          onChangeText={(text) => setNewAlbum(prev => ({ ...prev, name: text }))}
-                          placeholder="Enter album name"
-                          placeholderTextColor="#9CA3AF"
-                          maxLength={50}
-                        />
-                        <Text style={styles.characterCount}>{newAlbum.name.length}/50</Text>
+                        {/* Album Details */}
+                        <View style={styles.detailsSection}>
+                          <Text style={styles.sectionTitle}>Album Details</Text>
+                          <View style={styles.inputGroup}>
+                            <Text style={styles.inputLabel}>Album Name *</Text>
+                            <View style={styles.inputContainer}>
+                              <TextInput
+                                style={styles.modernTextInput}
+                                value={newAlbum.name}
+                                onChangeText={(text) => setNewAlbum(prev => ({ ...prev, name: text }))}
+                                placeholder="Enter album name"
+                                placeholderTextColor="#9CA3AF"
+                                maxLength={50}
+                              />
+                              <Text style={styles.characterCount}>{newAlbum.name.length}/50</Text>
+                            </View>
+                          </View>
+
+                          <View style={styles.inputGroup}>
+                            <Text style={styles.inputLabel}>Description</Text>
+                            <View style={styles.textAreaContainer}>
+                              <TextInput
+                                style={styles.modernTextArea}
+                                value={newAlbum.description}
+                                onChangeText={(text) => setNewAlbum(prev => ({ ...prev, description: text }))}
+                                placeholder="Tell the story behind this album..."
+                                placeholderTextColor="#9CA3AF"
+                                multiline
+                                numberOfLines={4}
+                                maxLength={200}
+                              />
+                              <Text style={styles.characterCount}>{newAlbum.description.length}/200</Text>
+                            </View>
+                          </View>
+                        </View>
+
+                        {/* Tips */}
+                        <View style={styles.tipsSection}>
+                          <Text style={styles.tipsTitle}>💡 Tips</Text>
+                          <View style={styles.tipsList}>
+                            <Text style={styles.tipItem}>• Choose a meaningful cover photo</Text>
+                            <Text style={styles.tipItem}>• Use descriptive names for easy finding</Text>
+                            <Text style={styles.tipItem}>• Add details to remember special moments</Text>
+                          </View>
+                        </View>
                       </View>
                     </View>
-
-                    {/* Description */}
-                    <View style={styles.inputGroup}>
-                      <Text style={styles.inputLabel}>Description</Text>
-                      <View style={styles.textAreaContainer}>
-                        <TextInput
-                          style={styles.modernTextArea}
-                          value={newAlbum.description}
-                          onChangeText={(text) => setNewAlbum(prev => ({ ...prev, description: text }))}
-                          placeholder="Tell the story behind this album..."
-                          placeholderTextColor="#9CA3AF"
-                          multiline
-                          numberOfLines={4}
-                          maxLength={200}
-                        />
-                        <Text style={styles.characterCount}>{newAlbum.description.length}/200</Text>
-                      </View>
-                    </View>
-                  </View>
-
-                  {/* Tips Section */}
-                  <View style={styles.tipsSection}>
-                    <Text style={styles.tipsTitle}>💡 Tips</Text>
-                    <View style={styles.tipsList}>
-                      <Text style={styles.tipItem}>• Choose a meaningful cover photo</Text>
-                      <Text style={styles.tipItem}>• Use descriptive names for easy finding</Text>
-                      <Text style={styles.tipItem}>• Add details to remember special moments</Text>
-                    </View>
-                  </View>
-                </View>
-              </ScrollView>
-              </LinearGradient>
-            </View>
+                  </ScrollView>
+                </LinearGradient>
+              </View>
             </KeyboardAvoidingView>
           </Modal>
 
@@ -1333,38 +1307,71 @@ export default function Photos() {
             presentationStyle="formSheet"
             statusBarTranslucent={false}
           >
-            <View style={[styles.modalContainer, { paddingTop: insets.top }]}>
-              {/* Header */}
-              <View style={styles.modalHeader}>
+            <View style={[styles.modalContainer, { }]}>
+              {/* Header (hero gradient) */}
+              <LinearGradient
+                colors={COLORS.gradientHero as any}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.modalHeader}
+              >
                 <View style={styles.modalHeaderContent}>
                   <TouchableOpacity 
                     onPress={() => setShowViewAllAlbumsModal(false)}
                     style={styles.closeButton}
                   >
-                    <X size={24} color="#6B7280" />
+                    <X size={24} color="#FFFFFF" />
                   </TouchableOpacity>
                   <View style={styles.modalTitleContainer}>
-                    <Text style={styles.modalTitle}>All Albums</Text>
-                    <Text style={styles.modalSubtitle}>{apiAlbums?.length || 0} albums</Text>
+                    <Text style={[styles.modalTitle, { color: '#FFFFFF' }]}>All Albums</Text>
+                    <Text style={[styles.modalSubtitle, { color: '#E6EEF9' }]}>{apiAlbums?.length || 0} albums</Text>
                   </View>
                   <View style={styles.viewModeButtons}>
                     <TouchableOpacity 
-                      style={[styles.viewModeButton, albumsViewMode === 'grid' && styles.viewModeButtonActive]}
+                      style={styles.viewModeButton}
                       onPress={() => setAlbumsViewMode('grid')}
                     >
-                      <Grid3X3 size={18} color={albumsViewMode === 'grid' ? '#FFFFFF' : '#6B7280'} />
+                      {albumsViewMode === 'grid' ? (
+                        <LinearGradient
+                          colors={COLORS.gradientPrimary as any}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={[styles.viewModeButton, styles.viewModeButtonActive]}
+                        >
+                          <Grid3X3 size={18} color="#FFFFFF" />
+                        </LinearGradient>
+                      ) : (
+                        <Grid3X3 size={18} color="#6B7280" />
+                      )}
                     </TouchableOpacity>
                     <TouchableOpacity 
-                      style={[styles.viewModeButton, albumsViewMode === 'list' && styles.viewModeButtonActive]}
+                      style={styles.viewModeButton}
                       onPress={() => setAlbumsViewMode('list')}
                     >
-                      <List size={18} color={albumsViewMode === 'list' ? '#FFFFFF' : '#6B7280'} />
+                      {albumsViewMode === 'list' ? (
+                        <LinearGradient
+                          colors={COLORS.gradientPrimary as any}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={[styles.viewModeButton, styles.viewModeButtonActive]}
+                        >
+                          <List size={18} color="#FFFFFF" />
+                        </LinearGradient>
+                      ) : (
+                        <List size={18} color="#6B7280" />
+                      )}
                     </TouchableOpacity>
                   </View>
                 </View>
-              </View>
+              </LinearGradient>
 
-              <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+              <LinearGradient
+                colors={COLORS.gradientBackground as any}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.modalContentGradient}
+              >
+                <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
                 {apiAlbums && apiAlbums.length > 0 ? (
                   <View style={styles.viewAllSection}>
                     <View style={albumsViewMode === 'grid' ? styles.viewAllAlbumsGrid : styles.viewAllAlbumsList}>
@@ -1409,6 +1416,7 @@ export default function Photos() {
                   </View>
                 )}
               </ScrollView>
+              </LinearGradient>
             </View>
           </Modal>
 
@@ -1419,87 +1427,121 @@ export default function Photos() {
             presentationStyle="formSheet"
             statusBarTranslucent={false}
           >
-            <View style={[styles.modalContainer, { paddingTop: insets.top }]}>
-              {/* Header */}
-              <View style={styles.modalHeader}>
-                <View style={styles.modalHeaderContent}>
-                  <TouchableOpacity 
-                    onPress={() => setShowViewAllPhotosModal(false)}
-                    style={styles.closeButton}
-                  >
-                    <X size={24} color="#6B7280" />
-                  </TouchableOpacity>
-                  <View style={styles.modalTitleContainer}>
-                    <Text style={styles.modalTitle}>All Photos</Text>
-                    <Text style={styles.modalSubtitle}>{getFilteredPhotos().length} photos</Text>
-                  </View>
-                  <View style={styles.viewModeButtons}>
+            <View style={[styles.modalContainer, { }]}>
+              {/* Header (hero gradient) */}
+              <LinearGradient
+                colors={COLORS.gradientHero as any}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.modalHeader}
+              >
+                  <View style={styles.modalHeaderContent}>
                     <TouchableOpacity 
-                      style={[styles.viewModeButton, photosViewMode === 'grid' && styles.viewModeButtonActive]}
-                      onPress={() => setPhotosViewMode('grid')}
+                      onPress={() => setShowViewAllPhotosModal(false)}
+                      style={styles.closeButton}
                     >
-                      <Grid3X3 size={18} color={photosViewMode === 'grid' ? '#FFFFFF' : '#6B7280'} />
+                      <X size={24} color="#FFFFFF" />
                     </TouchableOpacity>
-                    <TouchableOpacity 
-                      style={[styles.viewModeButton, photosViewMode === 'list' && styles.viewModeButtonActive]}
-                      onPress={() => setPhotosViewMode('list')}
-                    >
-                      <List size={18} color={photosViewMode === 'list' ? '#FFFFFF' : '#6B7280'} />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-
-              <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
-                {getFilteredPhotos().length > 0 ? (
-                  <View style={styles.viewAllSection}>
-                    <View style={photosViewMode === 'grid' ? styles.viewAllPhotosGrid : styles.viewAllPhotosList}>
-                      {getFilteredPhotos().map((photo) => (
-                        <TouchableOpacity 
-                          key={photo._id}
-                          style={photosViewMode === 'grid' ? styles.viewAllPhotoCard : styles.viewAllPhotoCardList}
-                          onPress={() => {
-                            setShowViewAllPhotosModal(false);
-                            handlePhotoPreview(photo);
-                          }}
-                          activeOpacity={0.8}
-                        >
-                          <Image 
-                            source={{ uri: photo.url }} 
-                            style={photosViewMode === 'grid' ? styles.viewAllPhotoImage : styles.viewAllPhotoImageList}
-                            resizeMode="cover"
-                          />
-                          {photosViewMode === 'list' ? (
-                            <View style={styles.viewAllPhotoListContent}>
-                              <Text style={styles.viewAllPhotoListTitle} numberOfLines={2}>
-                                {photo.caption || 'Untitled Photo'}
-                              </Text>
-                              <Text style={styles.viewAllPhotoListDate}>
-                                {new Date(photo.createdAt).toLocaleDateString('en-GB')}
-                              </Text>
-                            </View>
-                          ) : (
-                            photo.caption && (
-                              <View style={styles.viewAllPhotoOverlay}>
-                                <Text style={styles.viewAllPhotoCaption} numberOfLines={1}>
-                                  {photo.caption}
-                                </Text>
-                              </View>
-                            )
-                          )}
-                        </TouchableOpacity>
-                      ))}
+                    <View style={styles.modalTitleContainer}>
+                      <Text style={[styles.modalTitle, { color: '#FFFFFF' }]}>All Photos</Text>
+                      <Text style={[styles.modalSubtitle, { color: '#E6EEF9' }]}>{getFilteredPhotos().length} photos</Text>
+                    </View>
+                    <View style={styles.viewModeButtons}>
+                      <TouchableOpacity 
+                        style={styles.viewModeButton}
+                        onPress={() => setPhotosViewMode('grid')}
+                      >
+                        {photosViewMode === 'grid' ? (
+                          <LinearGradient
+                            colors={COLORS.gradientPrimary as any}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={[styles.viewModeButton, styles.viewModeButtonActive]}
+                          >
+                            <Grid3X3 size={18} color="#FFFFFF" />
+                          </LinearGradient>
+                        ) : (
+                          <Grid3X3 size={18} color="#6B7280" />
+                        )}
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        style={styles.viewModeButton}
+                        onPress={() => setPhotosViewMode('list')}
+                      >
+                        {photosViewMode === 'list' ? (
+                          <LinearGradient
+                            colors={COLORS.gradientPrimary as any}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={[styles.viewModeButton, styles.viewModeButtonActive]}
+                          >
+                            <List size={18} color="#FFFFFF" />
+                          </LinearGradient>
+                        ) : (
+                          <List size={18} color="#6B7280" />
+                        )}
+                      </TouchableOpacity>
                     </View>
                   </View>
-                ) : (
-                  <View style={styles.viewAllEmptyState}>
-                    <Text style={styles.viewAllEmptyTitle}>No Photos Yet</Text>
-                    <Text style={styles.viewAllEmptyDescription}>
-                      Upload your first photo to get started!
-                    </Text>
-                  </View>
-                )}
-              </ScrollView>
+              </LinearGradient>
+
+              <LinearGradient
+                colors={COLORS.gradientBackground as any}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.modalContentGradient}
+              >
+                <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+                  {getFilteredPhotos().length > 0 ? (
+                    <View style={styles.viewAllSection}>
+                      <View style={photosViewMode === 'grid' ? styles.viewAllPhotosGrid : styles.viewAllPhotosList}>
+                        {getFilteredPhotos().map((photo) => (
+                          <TouchableOpacity 
+                            key={photo._id}
+                            style={photosViewMode === 'grid' ? styles.viewAllPhotoCard : styles.viewAllPhotoCardList}
+                            onPress={() => {
+                              setShowViewAllPhotosModal(false);
+                              handlePhotoPreview(photo);
+                            }}
+                            activeOpacity={0.8}
+                          >
+                            <Image 
+                              source={{ uri: photo.url }} 
+                              style={photosViewMode === 'grid' ? styles.viewAllPhotoImage : styles.viewAllPhotoImageList}
+                              resizeMode="cover"
+                            />
+                            {photosViewMode === 'list' ? (
+                              <View style={styles.viewAllPhotoListContent}>
+                                <Text style={styles.viewAllPhotoListTitle} numberOfLines={2}>
+                                  {photo.caption || 'Untitled Photo'}
+                                </Text>
+                                <Text style={styles.viewAllPhotoListDate}>
+                                  {new Date(photo.createdAt).toLocaleDateString('en-GB')}
+                                </Text>
+                              </View>
+                            ) : (
+                              photo.caption && (
+                                <View style={styles.viewAllPhotoOverlay}>
+                                  <Text style={styles.viewAllPhotoCaption} numberOfLines={1}>
+                                    {photo.caption}
+                                  </Text>
+                                </View>
+                              )
+                            )}
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    </View>
+                  ) : (
+                    <View style={styles.viewAllEmptyState}>
+                      <Text style={styles.viewAllEmptyTitle}>No Photos Yet</Text>
+                      <Text style={styles.viewAllEmptyDescription}>
+                        Upload your first photo to get started!
+                      </Text>
+                    </View>
+                  )}
+                </ScrollView>
+              </LinearGradient>
             </View>
           </Modal>
 
