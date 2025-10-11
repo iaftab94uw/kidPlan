@@ -112,13 +112,13 @@ export default function Settings() {
     {
       title: "Support",
       items: [
-        {
-          icon: HelpCircle,
-          title: "Help & FAQ",
-          subtitle: "Get answers to common questions",
-          action: "navigate",
-          color: "#0e3c67"
-        },
+        // {
+        //   icon: HelpCircle,
+        //   title: "Help & FAQ",
+        //   subtitle: "Get answers to common questions",
+        //   action: "navigate",
+        //   color: "#0e3c67"
+        // },
         {
           icon: Zap,
           title: "Feature Requests",

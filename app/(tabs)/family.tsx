@@ -2236,7 +2236,13 @@ export default function Family() {
           animationType="slide"
           presentationStyle="formSheet"
         >
-          <SafeAreaView style={styles.modalContainer}>
+                        <LinearGradient
+                          colors={COLORS.gradientBackground as any}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={styles.modalContainer}
+                        >
+          
             {/* Enhanced Modal Header */}
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderContent}>
@@ -2250,6 +2256,13 @@ export default function Family() {
                   <Text style={styles.modalTitle}>Edit Family Member</Text>
                   <Text style={styles.modalSubtitle}>Update family member details</Text>
                 </View>
+              <LinearGradient
+                colors={COLORS.gradientPrimary as any}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={{borderRadius: 20}}
+              >
+
                 <TouchableOpacity 
                   style={[
                     styles.saveButton,
@@ -2265,6 +2278,9 @@ export default function Family() {
                     {isEditingMember ? 'Updating...' : 'Update'}
                   </Text>
                 </TouchableOpacity>
+                
+                </LinearGradient>
+
               </View>
               <View style={styles.modalHeaderDivider} />
             </View>
@@ -2430,7 +2446,7 @@ export default function Family() {
                 </View>
               </View>
             </ScrollView>
-          </SafeAreaView>
+          </LinearGradient>
         </Modal>
         {/* Edit Schedule Modal */}
         <Modal
@@ -2687,7 +2703,7 @@ export default function Family() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: 'transparent',
   },
   safeArea: {
     flex: 1,
@@ -3037,7 +3053,7 @@ const styles = StyleSheet.create({
   // Modal Styles
   modalContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'transparent',
   },
   modalHeader: {
     backgroundColor: '#FFFFFF',
@@ -3079,7 +3095,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   saveButton: {
-    backgroundColor: '#0e3c67',
+    backgroundColor: 'transparent',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 20,
@@ -3774,7 +3790,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'Transparent',
+    backgroundColor: 'transparent',
   },
   loadingText: {
     fontSize: 16,

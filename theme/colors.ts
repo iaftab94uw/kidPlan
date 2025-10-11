@@ -21,6 +21,7 @@ export const COLORS = {
   cardBackground: 'rgba(255, 255, 255, 0.95)',  // Frosted white
   cardBackgroundDark: 'rgba(255, 255, 255, 0.85)', // More transparent
   overlayBackground: 'rgba(14, 60, 103, 0.95)', // Primary overlay
+  syncedButton: '#22C55E',
 
   // Text Colors - Excellent readability
   textPrimary: '#0f172a',       // Almost black

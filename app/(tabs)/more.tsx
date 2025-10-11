@@ -91,13 +91,13 @@ export default function More() {
           action: () => {},
           color: "#0e3c67"
         },
-        {
-          icon: HelpCircle,
-          title: "Help & FAQ",
-          subtitle: "Get answers to common questions",
-          action: () => {},
-          color: "#0e3c67"
-        }
+        // {
+        //   icon: HelpCircle,
+        //   title: "Help & FAQ",
+        //   subtitle: "Get answers to common questions",
+        //   action: () => {},
+        //   color: "#0e3c67"
+        // }
       ]
     }
   ];

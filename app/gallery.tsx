@@ -17,6 +17,8 @@ import { ArrowLeft, Grid2x2 as Grid, List, Filter, FolderPlus, Camera } from 'lu
 import { useAuth } from '@/hooks/useAuth';
 import { useGallery } from '@/hooks/useGallery';
 import { Album, Media } from '@/types/gallery';
+import { LinearGradient } from 'expo-linear-gradient';
+import { COLORS } from '@/theme/colors';
 
 const { width } = Dimensions.get('window');
 
@@ -168,12 +170,16 @@ export default function Gallery() {
   // Show loading state while checking gallery
   if (galleryLoading) {
     return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
+                              <LinearGradient
+                              colors={COLORS.gradientBackground as any}
+                              style={styles.container}
+                              locations={[0, 0.5, 1]}
+                            >
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#0e3c67" />
           <Text style={styles.loadingText}>Loading gallery...</Text>
         </View>
-      </View>
+      </LinearGradient>
     );
   }
 

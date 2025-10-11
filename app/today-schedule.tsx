@@ -27,6 +27,8 @@ import {
   Trash2,
   School
 } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { COLORS } from '@/theme/colors';
 
 export default function TodaySchedule() {
   const router = useRouter();
@@ -371,7 +373,12 @@ export default function TodaySchedule() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+                                <LinearGradient
+                                  colors={COLORS.gradientBackground as any}
+                                  start={{ x: 0, y: 0 }}
+                                  end={{ x: 1, y: 0 }}
+                                  style={styles.container}
+                                >    
       <ScrollView
         refreshControl={
           <RefreshControl
@@ -544,7 +551,7 @@ export default function TodaySchedule() {
         {/* Bottom Spacing */}
         <View style={styles.bottomSpacing} />
       </ScrollView>
-    </SafeAreaView>
+    </LinearGradient>
   );
 }
 

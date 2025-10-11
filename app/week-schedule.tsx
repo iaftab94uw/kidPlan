@@ -30,6 +30,8 @@ import {
   Trash2,
   School
 } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { COLORS } from '@/theme/colors';
 
 export default function WeekSchedule() {
   const router = useRouter();
@@ -408,7 +410,12 @@ export default function WeekSchedule() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+                            <LinearGradient
+                              colors={COLORS.gradientBackground as any}
+                              start={{ x: 0, y: 0 }}
+                              end={{ x: 1, y: 0 }}
+                              style={styles.container}
+                            >
       <ScrollView
         refreshControl={
           <RefreshControl
@@ -428,9 +435,6 @@ export default function WeekSchedule() {
             <ArrowLeft size={24} color="#FFFFFF" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>This Week's Schedule</Text>
-          <TouchableOpacity style={styles.addButton}>
-            <Plus size={20} color="#FFFFFF" />
-          </TouchableOpacity>
         </View>
 
         {/* Week Overview */}
@@ -588,7 +592,7 @@ export default function WeekSchedule() {
         {/* Bottom Spacing */}
         <View style={styles.bottomSpacing} />
       </ScrollView>
-    </SafeAreaView>
+    </LinearGradient>
   );
 }
 

@@ -939,7 +939,7 @@ export default function Photos() {
             animationType="slide"
             presentationStyle="formSheet"
           >
-            <View style={[styles.modalContainer, { paddingTop: insets.top }]}>
+            <View style={[styles.modalContainer, { }]}>
               <View style={styles.modalHeader}>
                 <View style={styles.modalHeaderContent}>
                   <TouchableOpacity 
@@ -956,6 +956,12 @@ export default function Photos() {
                 </View>
                 <View style={styles.modalHeaderDivider} />
               </View>
+
+                                                            <LinearGradient
+                                colors={COLORS.gradientBackground as any}
+                                style={styles.container}
+                                locations={[0, 0, 1]}
+                    >
 
               <View style={styles.modalContent}>
                 <View style={styles.createGalleryContainer}>
@@ -990,6 +996,7 @@ export default function Photos() {
                   </View>
                 </View>
               </View>
+              </LinearGradient>
             </View>
           </Modal>
 
@@ -1804,7 +1811,7 @@ export default function Photos() {
     // Modal Styles
     modalContainer: {
       flex: 1,
-      backgroundColor: COLORS.background,
+      backgroundColor: 'transparent',
     },
     modalHeader: {
       backgroundColor: '#FFFFFF',

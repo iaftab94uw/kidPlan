@@ -25,6 +25,8 @@ import { useSchoolEvents } from '@/hooks/useSchoolEvents';
 import { useAppEvents } from '@/hooks/useAppEvents';
 import { School as SchoolType } from '@/types/schools';
 import { API_CONFIG, getApiUrl, getAuthHeaders } from '@/config/api';
+import { LinearGradient } from 'expo-linear-gradient';
+import { COLORS } from '@/theme/colors';
 
 const { width } = Dimensions.get('window');
 
@@ -374,8 +376,19 @@ export default function Schools() {
         animationType="slide"
         presentationStyle="pageSheet"
       >
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
+          <LinearGradient
+            colors={COLORS.gradientBackground as any}
+            style={styles.container}
+            locations={[0, 0, 1]}
+          >
+            <SafeAreaView style={styles.modalContainer}>
+                      <LinearGradient
+                        colors={COLORS.gradientHero as any}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={styles.modalHeader}
+                      >
+            
             <TouchableOpacity 
               style={styles.modalCloseButton}
               onPress={() => setShowSchoolDetail(false)}
@@ -384,7 +397,7 @@ export default function Schools() {
             </TouchableOpacity>
             <Text style={styles.modalTitle}>School Details</Text>
             <View style={styles.modalSpacer} />
-          </View>
+          </LinearGradient>
           
           <ScrollView 
             style={styles.modalContent}
@@ -433,7 +446,9 @@ export default function Schools() {
               )}
               
               {/* Sync Button */}
+              
               <View style={styles.syncSection}>
+                
                 <TouchableOpacity 
                   style={[
                     styles.syncButton, 
@@ -609,7 +624,8 @@ export default function Schools() {
               </View>
             ) : null}
           </ScrollView>
-        </SafeAreaView>
+            </SafeAreaView>
+        </LinearGradient>
       </Modal>
     );
   };
@@ -677,7 +693,13 @@ export default function Schools() {
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+                <LinearGradient
+                  colors={COLORS.gradientHero as any}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.header}
+                >
+      
         <TouchableOpacity 
           style={styles.backButton}
           onPress={() => router.back()}
@@ -686,7 +708,7 @@ export default function Schools() {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Schools</Text>
         <View style={styles.filterButtonPlaceholder} />
-      </View>
+      </LinearGradient>
 
       {/* Search Section */}
       <View style={styles.searchSection}>
@@ -766,12 +788,21 @@ export default function Schools() {
           </View>
         )}
         
+        
         <View style={styles.searchActions}>
+          
           <TouchableOpacity 
             style={styles.searchButton}
             onPress={handleSearch}
             disabled={isSearching}
           >
+                                <LinearGradient
+                      colors={COLORS.gradientHero as any}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.searchButton2}
+                    >
+
             {isSearching ? (
               <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
@@ -785,8 +816,9 @@ export default function Schools() {
                     : 'Show Schools')
               }
             </Text>
+                      </LinearGradient>
+
           </TouchableOpacity>
-          
           {(searchQuery.trim() || searchPostcode.trim()) && (
             <TouchableOpacity 
               style={styles.resetButton}
@@ -800,7 +832,11 @@ export default function Schools() {
       </View>
 
       {/* Results Section */}
-      <View style={styles.resultsSection}>
+                <LinearGradient
+                  colors={COLORS.gradientBackground as any}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.resultsSection}>
         <View style={styles.resultsHeader}>
           <Text style={styles.resultsTitle}>
             {loading ? 'Searching...' : `${pagination.total} Schools Found`}
@@ -884,7 +920,7 @@ export default function Schools() {
             </TouchableOpacity>
           </View>
         )}
-      </View>
+      </LinearGradient>
 
       {renderSchoolDetail()}
       {renderFilterModal()}
@@ -1012,14 +1048,29 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   searchButton: {
-    backgroundColor: '#0e3c67',
+    backgroundColor: 'transparent',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
+    // paddingVertical: 16,
+    // paddingHorizontal: 20,
     borderRadius: 12,
     flex: 1,
+    shadowColor: '#0e3c67',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+    searchButton2: {
+    backgroundColor: 'transparent',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+    flex: 1,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
     shadowColor: '#0e3c67',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
@@ -1093,6 +1144,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   schoolHeader: {
     flexDirection: 'row',
@@ -1256,7 +1309,7 @@ const styles = StyleSheet.create({
   // Modal styles
   modalContainer: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: 'transparent',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1264,7 +1317,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 20,
     paddingTop: 60,
-    backgroundColor: '#0e3c67',
+    backgroundColor: 'transparent',
   },
   modalCloseButton: {
     width: 40,
@@ -1286,7 +1339,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#0e3c67',
+    backgroundColor: 'transparent',
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 12,
@@ -1327,6 +1380,9 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: '#6B7280',
     gap: 8,
+    borderWidth: 0.5,
+    borderColor: '#6B7280',
+
   },
   syncInfoBannerText: {
     color: '#6B7280',
@@ -1501,6 +1557,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderLeftWidth: 4,
     borderLeftColor: '#0e3c67',
+    borderWidth: 0.5,
+    borderColor: '#0e3c67',
+
   },
   termHeader: {
     marginBottom: 8,
@@ -1530,6 +1589,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderLeftWidth: 4,
     borderLeftColor: '#F59E0B',
+    borderWidth: 0.5,
+    borderColor: '#F59E0B',
+
   },
   holidayHeader: {
     marginBottom: 8,
