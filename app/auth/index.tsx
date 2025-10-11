@@ -24,13 +24,13 @@ export default function AuthWelcome() {
     {
       icon: Calendar,
       title: "Smart Scheduling",
-      description: "Sync school calendars and manage family events effortlessly",
+      description: "Synchronise school calendars and manage family events effortlessly",
       gradient: [COLORS.accent, COLORS.accentDark],
     },
     {
       icon: Users,
       title: "Family Co-ordination",
-      description: "Keep everyone in sync with shared calendars and updates",
+      description: "Keep everyone in synchronisation with shared calendars and updates",
       gradient: [COLORS.primary, COLORS.primaryDark],
     },
     {

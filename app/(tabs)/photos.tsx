@@ -967,7 +967,7 @@ export default function Photos() {
                 <View style={styles.createGalleryContainer}>
                   <Text style={styles.createGalleryTitle}>Welcome to Photos!</Text>
                   <Text style={styles.createGalleryDescription}>
-                    To start organizing your family photos, we need to create a gallery for you first. 
+                    To start organising your family photos, we need to create a gallery for you first. 
                     This will allow you to create albums and upload photos.
                   </Text>
                   

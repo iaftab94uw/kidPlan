@@ -1274,7 +1274,7 @@ export default function Family() {
               </View>
               <Text style={styles.emptyFamilyTitle}>No Family Created Yet</Text>
               <Text style={styles.emptyFamilyDescription}>
-                Create your family to start organizing family activities and managing members
+                Create your family to start organising family activities and managing members
               </Text>
               <TouchableOpacity 
                 style={styles.emptyFamilyButton}
