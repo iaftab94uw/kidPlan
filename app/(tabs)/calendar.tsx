@@ -1554,7 +1554,7 @@ export default function Calendar() {
 
               {/* Time Fields */}
           {/* Edit Event Date Picker */}
-          {showEditEventDatePicker && (
+          {showEditEventDatePicker && Platform.OS === 'ios' && (
             <Modal
               visible={showEditEventDatePicker}
               animationType="slide"
@@ -1589,6 +1589,20 @@ export default function Calendar() {
                 </SafeAreaView>
               </View>
             </Modal>
+          )}
+          {showEditEventDatePicker && Platform.OS === 'android' && (
+            <DateTimePicker
+              value={newEvent.eventDate ? new Date(newEvent.eventDate) : selectedDate}
+              mode="date"
+              display="default"
+              onChange={(event, selectedDateValue) => {
+                if (event.type === 'set' && selectedDateValue) {
+                  setNewEvent(prev => ({ ...prev, eventDate: selectedDateValue.toISOString() }));
+                }
+                setShowEditEventDatePicker(false);
+              }}
+              accentColor="#0e3c67"
+            />
           )}
               <View style={styles.timeRow}>
                 <View style={styles.timeField}>
@@ -1902,7 +1916,7 @@ export default function Calendar() {
               </View>
 
               {/* Edit Event Date Picker */}
-              {showEditEventDatePicker && (
+              {showEditEventDatePicker && Platform.OS === 'ios' && (
                 <Modal
                   visible={showEditEventDatePicker}
                   animationType="slide"
@@ -1937,6 +1951,20 @@ export default function Calendar() {
                     </SafeAreaView>
                   </View>
                 </Modal>
+              )}
+              {showEditEventDatePicker && Platform.OS === 'android' && (
+                <DateTimePicker
+                  value={newEvent.eventDate ? new Date(newEvent.eventDate) : selectedDate}
+                  mode="date"
+                  display="default"
+                  onChange={(event, selectedDateValue) => {
+                    if (event.type === 'set' && selectedDateValue) {
+                      setNewEvent(prev => ({ ...prev, eventDate: selectedDateValue.toISOString() }));
+                    }
+                    setShowEditEventDatePicker(false);
+                  }}
+                  accentColor="#0e3c67"
+                />
               )}
               
               {/* Time Fields */}
