@@ -427,7 +427,12 @@ export default function WeekSchedule() {
         }
       >
         {/* Header */}
-        <View style={styles.header}>
+                <LinearGradient
+                  colors={COLORS.gradientHero as any}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.header}
+                >
           <TouchableOpacity 
             style={styles.backButton}
             onPress={() => router.back()}
@@ -435,7 +440,7 @@ export default function WeekSchedule() {
             <ArrowLeft size={24} color="#FFFFFF" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>This Week's Schedule</Text>
-        </View>
+        </LinearGradient>
 
         {/* Week Overview */}
         <View style={styles.weekOverview}>

@@ -390,7 +390,12 @@ export default function TodaySchedule() {
         }
       >
         {/* Header */}
-        <View style={styles.header}>
+                        <LinearGradient
+                          colors={COLORS.gradientHero as any}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={styles.header}
+                        >        
           <TouchableOpacity 
             style={styles.backButton}
             onPress={() => router.back()}
@@ -401,7 +406,7 @@ export default function TodaySchedule() {
           {/* <TouchableOpacity style={styles.addButton}>
             <Plus size={20} color="#FFFFFF" />
           </TouchableOpacity> */}
-        </View>
+        </LinearGradient>
 
         {/* Date Header */}
         <View style={styles.dateHeader}>
