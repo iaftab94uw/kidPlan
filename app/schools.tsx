@@ -691,6 +691,19 @@ export default function Schools() {
   const filteredSchools = getFilteredSchools();
 
   return (
+    <LinearGradient
+    colors={COLORS.gradientBackground as any}
+    style={styles.container}
+    locations={[0, 0.5, 1]}
+  >
+    {/* Top safe-area gradient to color status bar/notch */}
+    <LinearGradient
+      colors={COLORS.gradientHero as any}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 0 }}
+      style={styles.topSafeArea}
+    />
+
     <SafeAreaView style={styles.container}>
       {/* Header */}
                 <LinearGradient
@@ -925,6 +938,7 @@ export default function Schools() {
       {renderSchoolDetail()}
       {renderFilterModal()}
     </SafeAreaView>
+    </LinearGradient>
   );
 }
 
@@ -1033,6 +1047,13 @@ const styles = StyleSheet.create({
   milesSlider: {
     width: '100%',
     height: 40,
+  },
+  safeArea: {
+    flex: 1,
+  },
+  topSafeArea: {
+    height: 63,
+    width: '100%',
   },
   milesRange: {
     flexDirection: 'row',

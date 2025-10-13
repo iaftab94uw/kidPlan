@@ -7,7 +7,8 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Image,
-  Alert
+  Alert,
+  Linking
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -40,6 +41,14 @@ export default function More() {
         }
       ]
     );
+  };
+
+  const openPrivacyPolicy = () => {
+    Linking.openURL('https://sites.google.com/view/kidplan-app-privacy-policy/home');
+  };
+
+  const openTermsOfUse = () => {
+    Linking.openURL('https://sites.google.com/view/kidplan--app-terms-of-use/home');
   };
 
   const menuSections = [
@@ -81,14 +90,14 @@ export default function More() {
           icon: FileText,
           title: "Terms & Conditions",
           subtitle: "Read our terms of service",
-          action: () => {},
+          action: openTermsOfUse,
           color: "#0e3c67"
         },
         {
           icon: FileText,
           title: "Privacy Policy",
           subtitle: "How we protect your data",
-          action: () => {},
+          action: openPrivacyPolicy,
           color: "#0e3c67"
         },
         // {
@@ -225,7 +234,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   topSafeArea: {
-    height: 60,
+    height: 63,
     width: '100%',
   },
   header: {

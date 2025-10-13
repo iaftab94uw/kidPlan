@@ -2709,7 +2709,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   topSafeArea: {
-    height: 60,
+    height: 63,
     width: '100%',
   },
   keyboardAvoidingView: {
