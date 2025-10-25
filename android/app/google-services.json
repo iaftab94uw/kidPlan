@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "320977684496",
+    "project_id": "kidplanapp",
+    "storage_bucket": "kidplanapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:320977684496:android:d113a1674e9549e6f0e295",
+        "android_client_info": {
+          "package_name": "com.kidplan.boltexponativewind"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDmU-rqJMDOFXrBGz6zsnnL6aKtMt58rdE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
