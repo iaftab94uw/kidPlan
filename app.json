@@ -2,7 +2,7 @@
   "expo": {
     "name": "kidPlan App",
     "slug": "bolt-expo-nativewind",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
@@ -38,7 +38,8 @@
         "WRITE_EXTERNAL_STORAGE",
         "READ_MEDIA_IMAGES"
       ],
-      "package": "com.kidplan.boltexponativewind"
+      "package": "com.kidplan.boltexponativewind",
+      "versionCode": 2
     },
     "web": {
       "bundler": "metro",

@@ -20,7 +20,8 @@ import {
   CircleHelp as HelpCircle, 
   FileText,
   ChevronRight,
-  LogOut
+  LogOut,
+  Mail
 } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -49,6 +50,27 @@ export default function More() {
 
   const openTermsOfUse = () => {
     Linking.openURL('https://sites.google.com/view/kidplan--app-terms-of-use/home');
+  };
+
+  const openContactUs = async () => {
+    try {
+      const canOpen = await Linking.canOpenURL('mailto:tobi@kidplan.app');
+      if (canOpen) {
+        await Linking.openURL('mailto:tobi@kidplan.app');
+      } else {
+        Alert.alert(
+          'Email Not Available',
+          'No email app is configured on this device. Please set up an email account in your device settings or email us directly at tobi@kidplan.app',
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (error) {
+      Alert.alert(
+        'Unable to Open Email',
+        'Please email us directly at tobi@kidplan.app or set up an email account in your device settings.',
+        [{ text: 'OK' }]
+      );
+    }
   };
 
   const menuSections = [
@@ -107,6 +129,18 @@ export default function More() {
         //   action: () => {},
         //   color: "#0e3c67"
         // }
+      ]
+    },
+    {
+      title: "Support",
+      items: [
+        {
+          icon: Mail,
+          title: "Contact Us",
+          subtitle: "Get in touch with our team",
+          action: openContactUs,
+          color: "#0e3c67"
+        }
       ]
     }
   ];

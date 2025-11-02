@@ -7,10 +7,12 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Switch,
-  Image
+  Image,
+  Linking,
+  Alert
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { User, Bell, Shield, Smartphone, CircleHelp as HelpCircle, LogOut, ChevronRight, Moon, Globe, Calendar, Users, Camera, Zap, CreditCard } from 'lucide-react-native';
+import { User, Bell, Shield, Smartphone, CircleHelp as HelpCircle, LogOut, ChevronRight, Moon, Globe, Calendar, Users, Camera, Zap, CreditCard, Mail } from 'lucide-react-native';
 
 export default function Settings() {
   const router = useRouter();
@@ -120,6 +122,13 @@ export default function Settings() {
         //   color: "#0e3c67"
         // },
         {
+          icon: Mail,
+          title: "Contact Us",
+          subtitle: "Get in touch with our team",
+          action: "email",
+          color: "#0e3c67"
+        },
+        {
           icon: Zap,
           title: "Feature Requests",
           subtitle: "Suggest new features",
@@ -131,9 +140,28 @@ export default function Settings() {
   ];
 
   const renderSettingItem = (item: any) => {
-    const handlePress = () => {
+    const handlePress = async () => {
       if (item.action === 'navigate' && item.route) {
         router.push(item.route);
+      } else if (item.action === 'email') {
+        try {
+          const canOpen = await Linking.canOpenURL('mailto:tobi@kidplan.app');
+          if (canOpen) {
+            await Linking.openURL('mailto:tobi@kidplan.app');
+          } else {
+            Alert.alert(
+              'Email Not Available',
+              'No email app is configured on this device. Please set up an email account in your device settings or email us directly at tobi@kidplan.app',
+              [{ text: 'OK' }]
+            );
+          }
+        } catch (error) {
+          Alert.alert(
+            'Unable to Open Email',
+            'Please email us directly at tobi@kidplan.app or set up an email account in your device settings.',
+            [{ text: 'OK' }]
+          );
+        }
       }
     };
 
