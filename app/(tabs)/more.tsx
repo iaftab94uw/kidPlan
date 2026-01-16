@@ -54,20 +54,20 @@ export default function More() {
 
   const openContactUs = async () => {
     try {
-      const canOpen = await Linking.canOpenURL('mailto:tobi@kidplan.app');
+      const canOpen = await Linking.canOpenURL('mailto:info@kidplan.app');
       if (canOpen) {
-        await Linking.openURL('mailto:tobi@kidplan.app');
+        await Linking.openURL('mailto:info@kidplan.app');
       } else {
         Alert.alert(
           'Email Not Available',
-          'No email app is configured on this device. Please set up an email account in your device settings or email us directly at tobi@kidplan.app',
+          'No email app is configured on this device. Please set up an email account in your device settings or email us directly at info@kidplan.app',
           [{ text: 'OK' }]
         );
       }
     } catch (error) {
       Alert.alert(
         'Unable to Open Email',
-        'Please email us directly at tobi@kidplan.app or set up an email account in your device settings.',
+        'Please email us directly at info@kidplan.app or set up an email account in your device settings.',
         [{ text: 'OK' }]
       );
     }
